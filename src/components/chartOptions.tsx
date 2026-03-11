@@ -1,9 +1,27 @@
 import type React from "react";
 
-export const ChartOptions: React.FC = () => {
+interface ChartOptionsProps {
+  animationDuration: number;
+  setAnimationDuration: (v: number) => void;
+}
+
+export const ChartOptions: React.FC<ChartOptionsProps> = ({
+  animationDuration,
+  setAnimationDuration,
+}) => {
   return (
     <div className="chart-options p-4">
       <h3 className="text-lg font-bold mb-2">Chart Options</h3>
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-1">Animation (ms)</label>
+        <input
+          type="number"
+          className="w-full p-2 border border-gray-300 rounded"
+          value={animationDuration}
+          onChange={(e) => setAnimationDuration(Number(e.target.value))}
+        />
+      </div>
+      {/* existing controls could remain below */}
       <div className="mb-4">
         <label className="block text-sm font-medium mb-1">Title</label>
         <input

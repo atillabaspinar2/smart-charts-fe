@@ -1,5 +1,5 @@
 //create a new chart area component that will be used to display the charts
-import React from "react";
+import React, { useRef, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import { ChartOptions } from "./chartOptions";
 import {
@@ -11,14 +11,12 @@ import {
 } from "./chartOptionSettings";
 
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  ComputerVideoIcon,
-  Download,
-  Image01Icon,
-  Video02Icon,
-} from "@hugeicons/core-free-icons";
+import { ComputerVideoIcon, Image01Icon } from "@hugeicons/core-free-icons";
+import { recordCanvas } from "./record";
 
 export const ChartArea: React.FC<{ type: string }> = ({ type }) => {
+  const [recordKey, setRecordKey] = useState<number>(0);
+  const [animationDuration, setAnimationDuration] = useState<number>(1000);
   let options: any = {};
 
   switch (type) {
@@ -41,14 +39,55 @@ export const ChartArea: React.FC<{ type: string }> = ({ type }) => {
       options = {};
   }
 
+  const chartRef = useRef<any>(null); // echarts-for-react does not export a proper ref type
+
+  const [isRecording, setIsRecording] = useState(false);
+
+  const startRecording = async () => {
+    // force React to remount the chart so any built-in animation runs again
+    setRecordKey(Date.now());
+
+    // wait two frames for the new chart to finish initial render
+    await new Promise((r) =>
+      requestAnimationFrame(() => requestAnimationFrame(r)),
+    );
+
+    const echartsInstance: any =
+      chartRef.current && chartRef.current.getEchartsInstance();
+    const canvas = echartsInstance?.getDom()?.querySelector("canvas");
+
+    if (canvas) {
+      setIsRecording(true);
+      try {
+        // include a small buffer beyond the animation so the chart settles
+        const buffer = 500;
+        await recordCanvas(canvas, animationDuration + buffer);
+      } catch (err) {
+        console.error("Recording failed", err);
+      } finally {
+        setIsRecording(false);
+      }
+    }
+  };
+
   return (
     <div className="chart-area grid grid-cols-1 md:grid-cols-[80%_1fr] gap-4">
       <div className="relative">
         <ReactECharts
-          key={type}
-          option={options}
+          ref={chartRef}
+          key={`${type}-${recordKey}`}
+          option={{ ...options, animationDuration }}
+          // @ts-ignore: preserveDrawingBuffer is valid for the underlying canvas
+          opts={{ renderer: "canvas", preserveDrawingBuffer: true }}
           style={{ width: "100%", height: "400px" }}
         />
+        <button
+          onClick={startRecording}
+          disabled={isRecording}
+          className={`${isRecording ? "bg-red-500 animate-pulse" : "bg-blue-600"} text-white px-4 py-2 rounded`}
+        >
+          {isRecording ? "Recording Frame by Frame..." : "Download Video"}
+        </button>
         <div className="chart-context absolute flex gap-1 right-4 top-4">
           <div className="chart-context-menu  bg-white rounded shadow p-2">
             <HugeiconsIcon icon={Image01Icon} size={14} onClick={() => {}} />
@@ -62,7 +101,10 @@ export const ChartArea: React.FC<{ type: string }> = ({ type }) => {
           </div>
         </div>
       </div>
-      <ChartOptions />
+      <ChartOptions
+        animationDuration={animationDuration}
+        setAnimationDuration={setAnimationDuration}
+      />
     </div>
   );
 };
