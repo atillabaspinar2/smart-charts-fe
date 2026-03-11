@@ -17,6 +17,7 @@ import { recordCanvas } from "./record";
 export const ChartArea: React.FC<{ type: string }> = ({ type }) => {
   const [recordKey, setRecordKey] = useState<number>(0);
   const [animationDuration, setAnimationDuration] = useState<number>(1000);
+  const [mediaType, setMediaType] = useState<string>("webm");
   let options: any = {};
 
   switch (type) {
@@ -61,7 +62,8 @@ export const ChartArea: React.FC<{ type: string }> = ({ type }) => {
       try {
         // include a small buffer beyond the animation so the chart settles
         const buffer = 500;
-        await recordCanvas(canvas, animationDuration + buffer);
+        const durationMs = animationDuration + buffer;
+        await recordCanvas(canvas, durationMs, mediaType);
       } catch (err) {
         console.error("Recording failed", err);
       } finally {
@@ -104,6 +106,8 @@ export const ChartArea: React.FC<{ type: string }> = ({ type }) => {
       <ChartOptions
         animationDuration={animationDuration}
         setAnimationDuration={setAnimationDuration}
+        mediaType={mediaType}
+        setMediaType={setMediaType}
       />
     </div>
   );

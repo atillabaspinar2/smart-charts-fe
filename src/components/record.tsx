@@ -1,12 +1,19 @@
 export const recordCanvas = (
   canvas: HTMLCanvasElement,
   durationMs: number = 5000,
+  format: string = "webm",
 ) => {
   return new Promise<void>((resolve, reject) => {
     try {
       const stream = canvas.captureStream(30);
+      let mimeType: string;
+      if (format === "mp4") {
+        mimeType = "video/mp4"; // not widely supported but try
+      } else {
+        mimeType = "video/webm; codecs=vp9";
+      }
       const recorder = new MediaRecorder(stream, {
-        mimeType: "video/webm; codecs=vp9",
+        mimeType,
       });
 
       const chunks: BlobPart[] = [];
@@ -15,11 +22,11 @@ export const recordCanvas = (
       };
 
       recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: "video/webm" });
+        const blob = new Blob(chunks, { type: mimeType });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = "chart-video.webm";
+        link.download = `chart-video.${format}`;
         link.click();
         resolve();
       };

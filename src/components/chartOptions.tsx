@@ -3,11 +3,15 @@ import type React from "react";
 interface ChartOptionsProps {
   animationDuration: number;
   setAnimationDuration: (v: number) => void;
+  mediaType: string;
+  setMediaType: (v: string) => void;
 }
 
 export const ChartOptions: React.FC<ChartOptionsProps> = ({
   animationDuration,
   setAnimationDuration,
+  mediaType,
+  setMediaType,
 }) => {
   return (
     <div className="chart-options p-4">
@@ -20,6 +24,17 @@ export const ChartOptions: React.FC<ChartOptionsProps> = ({
           value={animationDuration}
           onChange={(e) => setAnimationDuration(Number(e.target.value))}
         />
+      </div>
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-1">Media Format</label>
+        <select
+          className="w-full p-2 border border-gray-300 rounded"
+          value={mediaType}
+          onChange={(e) => setMediaType(e.target.value)}
+        >
+          <option value="webm">WebM</option>
+          <option value="mp4">MP4</option>
+        </select>
       </div>
       {/* existing controls could remain below */}
       <div className="mb-4">
