@@ -13,6 +13,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ComputerVideoIcon, Image01Icon } from "@hugeicons/core-free-icons";
 import { recordCanvas } from "./record";
+import { TabView } from "./TabView";
 
 export const ChartArea: React.FC<{ type: string }> = ({ type }) => {
   const [recordKey, setRecordKey] = useState<number>(0);
@@ -152,6 +153,13 @@ export const ChartArea: React.FC<{ type: string }> = ({ type }) => {
         backgroundColor={backgroundColor}
         setBackgroundColor={setBackgroundColor}
       />
+      {/* collapsible tab area for additional chart data or controls */}
+      <TabView title="Chart Data">
+        <p className="text-sm text-gray-600">
+          Placeholder for data / editors. Multiple tabs or charts will be added
+          here later.
+        </p>
+      </TabView>
     </div>
   );
 };
