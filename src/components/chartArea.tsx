@@ -1,4 +1,4 @@
-//create a new chart area component that will be used to display the charts
+//create a new chart area component that will be used to display multiple charts
 import React, { useRef, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import { ChartOptions } from "./chartOptions";
@@ -11,138 +11,164 @@ import {
 } from "./chartOptionSettings";
 
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ComputerVideoIcon, Image01Icon } from "@hugeicons/core-free-icons";
+import { Delete02Icon } from "@hugeicons/core-free-icons";
 import { recordCanvas } from "./record";
 import { TabView } from "./TabView";
 
-export const ChartArea: React.FC<{ type: string }> = ({ type }) => {
-  const [recordKey, setRecordKey] = useState<number>(0);
+interface ChartItemData {
+  id: number;
+  type: string;
+}
+
+export const ChartArea: React.FC<{
+  charts: ChartItemData[];
+  addChart: (type: string) => void;
+  removeChart: (id: number) => void;
+}> = ({ charts, addChart, removeChart }) => {
   const [animationDuration, setAnimationDuration] = useState<number>(1000);
   const [mediaType, setMediaType] = useState<string>("webm");
   const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
-  let options: any = {};
 
-  switch (type) {
-    case "line":
-      options = lineOptions;
-      break;
-    case "bar":
-      options = barOptions;
-      break;
-    case "pie":
-      options = pieOptions;
-      break;
-    case "scatter":
-      options = scatterOptions;
-      break;
-    case "radar":
-      options = radarOptions;
-      break;
-    default:
-      options = {};
-  }
-
-  const chartRef = useRef<any>(null); // echarts-for-react does not export a proper ref type
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const [isRecording, setIsRecording] = useState(false);
-
-  // when the container is resized, tell echarts to adjust
-  React.useEffect(() => {
-    if (!containerRef.current) return;
-    const observer = new ResizeObserver(() => {
-      const ech = chartRef.current?.getEchartsInstance();
-      ech?.resize();
-    });
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, [chartRef]);
-
-  // also listen for window resize to force chart resize in case
-  React.useEffect(() => {
-    const handler = () => {
-      chartRef.current?.getEchartsInstance()?.resize();
-    };
-    window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
-  }, []);
-
-  const startRecording = async () => {
-    // force React to remount the chart so any built-in animation runs again
-    setRecordKey(Date.now());
-
-    // wait two frames for the new chart to finish initial render
-    await new Promise((r) =>
-      requestAnimationFrame(() => requestAnimationFrame(r)),
-    );
-
-    const echartsInstance: any =
-      chartRef.current && chartRef.current.getEchartsInstance();
-    const canvas = echartsInstance?.getDom()?.querySelector("canvas");
-
-    if (canvas) {
-      setIsRecording(true);
-      try {
-        // include a small buffer beyond the animation so the chart settles
-        const buffer = 500;
-        const durationMs = animationDuration + buffer;
-        await recordCanvas(canvas, durationMs, mediaType);
-      } catch (err) {
-        console.error("Recording failed", err);
-      } finally {
-        setIsRecording(false);
-      }
+  const getOptions = (type: string) => {
+    switch (type) {
+      case "line":
+        return lineOptions;
+      case "bar":
+        return barOptions;
+      case "pie":
+        return pieOptions;
+      case "scatter":
+        return scatterOptions;
+      case "radar":
+        return radarOptions;
+      default:
+        return {};
     }
   };
 
+  // component for a single chart inside the container
+  const ChartItem: React.FC<{ data: ChartItemData }> = ({ data }) => {
+    const { id, type } = data;
+    const chartRef = useRef<any>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [isRecording, setIsRecording] = useState(false);
+    const [recordKey, setRecordKey] = useState<number>(0);
+
+    React.useEffect(() => {
+      if (!containerRef.current) return;
+      const observer = new ResizeObserver(() => {
+        chartRef.current?.getEchartsInstance()?.resize();
+      });
+      observer.observe(containerRef.current);
+      return () => observer.disconnect();
+    }, []);
+
+    const startRecording = async () => {
+      setRecordKey(Date.now());
+      await new Promise((r) =>
+        requestAnimationFrame(() => requestAnimationFrame(r)),
+      );
+
+      const echartsInstance: any =
+        chartRef.current && chartRef.current.getEchartsInstance();
+      const canvas = echartsInstance?.getDom()?.querySelector("canvas");
+
+      if (canvas) {
+        setIsRecording(true);
+        try {
+          const buffer = 500;
+          const durationMs = animationDuration + buffer;
+          await recordCanvas(canvas, durationMs, mediaType);
+        } catch (err) {
+          console.error("Recording failed", err);
+        } finally {
+          setIsRecording(false);
+        }
+      }
+    };
+
+    const opts = getOptions(type);
+
+    return (
+      <div
+        ref={containerRef}
+        className="m-2 group relative"
+        style={{
+          resize: "both",
+          overflow: "auto",
+          border: "1px solid #ccc",
+          padding: "8px",
+          width: "400px",
+          height: "300px",
+        }}
+      >
+        <ReactECharts
+          ref={chartRef}
+          key={`${type}-${recordKey}-${id}`}
+          option={{ ...opts, animationDuration, backgroundColor }}
+          // @ts-ignore: preserveDrawingBuffer is valid for the underlying canvas
+          opts={{ renderer: "canvas", preserveDrawingBuffer: true }}
+          style={{
+            width: "100%",
+            height: "100%",
+            background: backgroundColor,
+          }}
+        />
+        <HugeiconsIcon
+          icon={Delete02Icon}
+          size={16}
+          className="absolute top-2 left-2 text-gray-500 opacity-0 group-hover:opacity-100 cursor-pointer"
+          onClick={() => removeChart(id)}
+        />
+        <button
+          onClick={startRecording}
+          disabled={isRecording}
+          className={`${
+            isRecording ? "bg-red-500 animate-pulse" : "bg-blue-600"
+          } text-white px-2 py-1 rounded absolute top-2 right-2`}
+        >
+          {isRecording ? "Rec..." : "Rec"}
+        </button>
+      </div>
+    );
+  };
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // handle drag/drop from sidebar
+  const onDragOver = (e: React.DragEvent) => e.preventDefault();
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const type = e.dataTransfer.getData("chartType");
+    if (type) addChart(type);
+  };
+
   return (
-    <div className="chart-area grid grid-cols-1 md:grid-cols-[80%_1fr] gap-4">
+    <div
+      className="chart-area grid grid-cols-1 md:grid-cols-[80%_1fr] gap-4"
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+    >
       <div className="relative">
-        {/* resizable wrapper with visible borders */}
+        {/* multi-chart container */}
         <div
           ref={containerRef}
-          className="resizable-container"
+          className="multi-chart-container"
           style={{
             resize: "both",
             overflow: "auto",
             border: "1px solid #ccc",
             padding: "8px",
-            width: "600px",
-            maxWidth: "100%", // never wider than viewport
-            height: "400px",
+            width: "800px",
+            maxWidth: "100%",
+            height: "600px",
+            display: "flex",
+            flexWrap: "wrap",
           }}
         >
-          <ReactECharts
-            ref={chartRef}
-            key={`${type}-${recordKey}`}
-            option={{ ...options, animationDuration, backgroundColor }}
-            // @ts-ignore: preserveDrawingBuffer is valid for the underlying canvas
-            opts={{ renderer: "canvas", preserveDrawingBuffer: true }}
-            style={{
-              width: "100%",
-              height: "100%",
-              background: backgroundColor,
-            }}
-          />
-        </div>
-        <button
-          onClick={startRecording}
-          disabled={isRecording}
-          className={`${isRecording ? "bg-red-500 animate-pulse" : "bg-blue-600"} text-white px-4 py-2 rounded`}
-        >
-          {isRecording ? "Recording Frame by Frame..." : "Download Video"}
-        </button>
-        <div className="chart-context absolute flex gap-1 right-4 top-4">
-          <div className="chart-context-menu  bg-white rounded shadow p-2">
-            <HugeiconsIcon icon={Image01Icon} size={14} onClick={() => {}} />
-          </div>
-          <div className="chart-context-menu  bg-white rounded shadow p-2">
-            <HugeiconsIcon
-              icon={ComputerVideoIcon}
-              size={14}
-              onClick={() => {}}
-            />
-          </div>
+          {charts.map((c) => (
+            <ChartItem key={c.id} data={c} />
+          ))}
         </div>
       </div>
       <ChartOptions

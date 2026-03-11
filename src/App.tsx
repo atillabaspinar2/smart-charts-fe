@@ -8,12 +8,14 @@ import { UserMenu } from "./components/userMenu";
 import { Sidebar } from "./components/sidebar";
 
 function App() {
-  const [chart, setChart] = useState<string>("");
+  const [charts, setCharts] = useState<Array<{ id: number; type: string }>>([]);
 
-  const setChartType = (chartType: string) => {
-    setChart(chartType);
+  const addChart = (chartType: string) => {
+    setCharts((prev) => [...prev, { id: Date.now(), type: chartType }]);
   };
-
+  const removeChart = (id: number) => {
+    setCharts((prev) => prev.filter((c) => c.id !== id));
+  };
   const [signUpModal, setSignUpModal] = useState(false);
 
   return (
@@ -36,13 +38,17 @@ function App() {
       {/* Sidebar */}
       <aside className="bg-slate-800 text-slate-100 shadow-md overflow-y-auto">
         <nav className="p-4">
-          <Sidebar setChartType={setChartType} />
+          <Sidebar addChart={addChart} />
         </nav>
       </aside>
 
       {/* Main Content Area */}
       <main className="overflow-y-auto p-6">
-        {chart && <ChartArea type={chart} />}
+        <ChartArea
+          charts={charts}
+          addChart={addChart}
+          removeChart={removeChart}
+        />
       </main>
     </div>
   );
