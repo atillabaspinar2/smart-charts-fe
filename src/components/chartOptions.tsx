@@ -5,6 +5,8 @@ interface ChartOptionsProps {
   setAnimationDuration: (v: number) => void;
   mediaType: string;
   setMediaType: (v: string) => void;
+  backgroundColor: string;
+  setBackgroundColor: (v: string) => void;
 }
 
 export const ChartOptions: React.FC<ChartOptionsProps> = ({
@@ -12,6 +14,8 @@ export const ChartOptions: React.FC<ChartOptionsProps> = ({
   setAnimationDuration,
   mediaType,
   setMediaType,
+  backgroundColor,
+  setBackgroundColor,
 }) => {
   return (
     <div className="chart-options p-4">
@@ -36,12 +40,21 @@ export const ChartOptions: React.FC<ChartOptionsProps> = ({
           <option value="mp4">MP4</option>
         </select>
       </div>
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-1">Background</label>
+        <input
+          type="color"
+          className="w-full h-8 p-1 border border-gray-300 rounded"
+          value={backgroundColor}
+          onChange={(e) => setBackgroundColor(e.target.value)}
+        />
+      </div>
       {/* existing controls could remain below */}
       <div className="mb-4">
         <label className="block text-sm font-medium mb-1">Title</label>
         <input
           type="text"
-          className="w-full p-2 border border-gray-300 rounded"
+          className="w-full p-2 border border-indigo-900 rounded"
           placeholder="Enter chart title"
         />
       </div>

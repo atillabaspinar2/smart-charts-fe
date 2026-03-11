@@ -18,6 +18,7 @@ export const ChartArea: React.FC<{ type: string }> = ({ type }) => {
   const [recordKey, setRecordKey] = useState<number>(0);
   const [animationDuration, setAnimationDuration] = useState<number>(1000);
   const [mediaType, setMediaType] = useState<string>("webm");
+  const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
   let options: any = {};
 
   switch (type) {
@@ -41,8 +42,29 @@ export const ChartArea: React.FC<{ type: string }> = ({ type }) => {
   }
 
   const chartRef = useRef<any>(null); // echarts-for-react does not export a proper ref type
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const [isRecording, setIsRecording] = useState(false);
+
+  // when the container is resized, tell echarts to adjust
+  React.useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver(() => {
+      const ech = chartRef.current?.getEchartsInstance();
+      ech?.resize();
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [chartRef]);
+
+  // also listen for window resize to force chart resize in case
+  React.useEffect(() => {
+    const handler = () => {
+      chartRef.current?.getEchartsInstance()?.resize();
+    };
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
 
   const startRecording = async () => {
     // force React to remount the chart so any built-in animation runs again
@@ -75,14 +97,33 @@ export const ChartArea: React.FC<{ type: string }> = ({ type }) => {
   return (
     <div className="chart-area grid grid-cols-1 md:grid-cols-[80%_1fr] gap-4">
       <div className="relative">
-        <ReactECharts
-          ref={chartRef}
-          key={`${type}-${recordKey}`}
-          option={{ ...options, animationDuration }}
-          // @ts-ignore: preserveDrawingBuffer is valid for the underlying canvas
-          opts={{ renderer: "canvas", preserveDrawingBuffer: true }}
-          style={{ width: "100%", height: "400px" }}
-        />
+        {/* resizable wrapper with visible borders */}
+        <div
+          ref={containerRef}
+          className="resizable-container"
+          style={{
+            resize: "both",
+            overflow: "auto",
+            border: "1px solid #ccc",
+            padding: "8px",
+            width: "600px",
+            maxWidth: "100%", // never wider than viewport
+            height: "400px",
+          }}
+        >
+          <ReactECharts
+            ref={chartRef}
+            key={`${type}-${recordKey}`}
+            option={{ ...options, animationDuration, backgroundColor }}
+            // @ts-ignore: preserveDrawingBuffer is valid for the underlying canvas
+            opts={{ renderer: "canvas", preserveDrawingBuffer: true }}
+            style={{
+              width: "100%",
+              height: "100%",
+              background: backgroundColor,
+            }}
+          />
+        </div>
         <button
           onClick={startRecording}
           disabled={isRecording}
@@ -108,6 +149,8 @@ export const ChartArea: React.FC<{ type: string }> = ({ type }) => {
         setAnimationDuration={setAnimationDuration}
         mediaType={mediaType}
         setMediaType={setMediaType}
+        backgroundColor={backgroundColor}
+        setBackgroundColor={setBackgroundColor}
       />
     </div>
   );
