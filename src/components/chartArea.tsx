@@ -11,7 +11,7 @@ import {
 } from "./chartOptionSettings";
 
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Delete02Icon } from "@hugeicons/core-free-icons";
+import { Delete02Icon, FileVideoCameraIcon } from "@hugeicons/core-free-icons";
 import { recordCanvas } from "./record";
 import { TabView } from "./TabView";
 
@@ -97,7 +97,6 @@ export const ChartArea: React.FC<{
           resize: "both",
           overflow: "auto",
           border: "1px solid #ccc",
-          padding: "8px",
           width: "400px",
           height: "300px",
         }}
@@ -117,18 +116,17 @@ export const ChartArea: React.FC<{
         <HugeiconsIcon
           icon={Delete02Icon}
           size={16}
-          className="absolute top-2 left-2 text-gray-500 opacity-0 group-hover:opacity-100 cursor-pointer"
+          className="absolute top-2 left-2 text-gray-500 opacity-0 group-hover:opacity-100  hover:rounded-md hover:text-red-800 cursor-pointer"
           onClick={() => removeChart(id)}
         />
-        <button
+        <HugeiconsIcon
+          icon={FileVideoCameraIcon}
+          size={16}
+          className={`absolute top-2 left-6 opacity-0 group-hover:opacity-100 hover:text-red-600 cursor-pointer ${
+            isRecording ? "text-red-500 animate-pulse" : "text-gray-500"
+          }`}
           onClick={startRecording}
-          disabled={isRecording}
-          className={`${
-            isRecording ? "bg-red-500 animate-pulse" : "bg-blue-600"
-          } text-white px-2 py-1 rounded absolute top-2 right-2`}
-        >
-          {isRecording ? "Rec..." : "Rec"}
-        </button>
+        />
       </div>
     );
   };
