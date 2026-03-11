@@ -11,7 +11,11 @@ import {
 } from "./chartOptionSettings";
 
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Delete02Icon, FileVideoCameraIcon } from "@hugeicons/core-free-icons";
+import {
+  Delete02Icon,
+  FileVideoCameraIcon,
+  ImageDownload02Icon,
+} from "@hugeicons/core-free-icons";
 import { recordCanvas } from "./record";
 import { TabView } from "./TabView";
 
@@ -87,6 +91,21 @@ export const ChartArea: React.FC<{
       }
     };
 
+    const captureImage = () => {
+      const echartsInstance: any =
+        chartRef.current && chartRef.current.getEchartsInstance();
+      const canvas: HTMLCanvasElement | null = echartsInstance
+        ?.getDom()
+        ?.querySelector("canvas");
+      if (canvas) {
+        const url = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `chart-${id}.png`;
+        link.click();
+      }
+    };
+
     const opts = getOptions(type);
 
     return (
@@ -113,20 +132,34 @@ export const ChartArea: React.FC<{
             background: backgroundColor,
           }}
         />
-        <HugeiconsIcon
-          icon={Delete02Icon}
-          size={16}
-          className="absolute top-2 left-2 text-gray-500 opacity-0 group-hover:opacity-100  hover:rounded-md hover:text-red-800 cursor-pointer"
-          onClick={() => removeChart(id)}
-        />
-        <HugeiconsIcon
-          icon={FileVideoCameraIcon}
-          size={16}
-          className={`absolute top-2 left-6 opacity-0 group-hover:opacity-100 hover:text-red-600 cursor-pointer ${
-            isRecording ? "text-red-500 animate-pulse" : "text-gray-500"
-          }`}
-          onClick={startRecording}
-        />
+        <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 drop-shadow-lg bg-white/90 rounded p-1 flex space-x-2">
+          <span data-tooltip="Remove chart" className="tooltip">
+            <HugeiconsIcon
+              icon={Delete02Icon}
+              size={16}
+              className="text-gray-500 hover:text-red-800 cursor-pointer"
+              onClick={() => removeChart(id)}
+            />
+          </span>
+          <span data-tooltip="Record video" className="tooltip">
+            <HugeiconsIcon
+              icon={FileVideoCameraIcon}
+              size={16}
+              className={`cursor-pointer hover:text-red-600 ${
+                isRecording ? "text-red-500 animate-pulse" : "text-gray-500"
+              }`}
+              onClick={startRecording}
+            />
+          </span>
+          <span data-tooltip="Download image" className="tooltip">
+            <HugeiconsIcon
+              icon={ImageDownload02Icon}
+              size={16}
+              className="text-gray-500 hover:text-blue-600 cursor-pointer"
+              onClick={captureImage}
+            />
+          </span>
+        </div>
       </div>
     );
   };
