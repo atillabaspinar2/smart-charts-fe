@@ -1,0 +1,25 @@
+/* 1. Define the anchor */
+.popover-btn {
+  anchor-name: --brush-anchor;
+  color: blanchedalmond;
+}
+
+/* 2. Position the popover */
+.popover-content {
+  /* This tells the browser which anchor to look at */
+  position-anchor: --brush-anchor;
+
+  /* Place it at the bottom-center of the button */
+  position-area: block-end;
+
+  /* Add some breathing room between button and menu */
+  margin-top: 10px;
+
+  /* Use @position-try to auto-flip if it hits the screen edge */
+  position-try-fallbacks: flip-block;
+}
+
+/* Style the backdrop for a clean UI */
+[popover]::backdrop {
+  background-color: rgba(0, 0, 0, 0.05);
+}
