@@ -1,88 +1,151 @@
-import type React from "react";
+export const lineOptions = {
+  animationDuration: 1000,
+  xAxis: {
+    type: "category",
+    data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  },
+  yAxis: {
+    type: "value",
+  },
+  series: [
+    {
+      data: [150, 230, 224, 218, 135, 147, 260],
+      type: "line",
+    },
+  ],
+};
 
-interface ChartOptionsProps {
-  animationDuration: number;
-  setAnimationDuration: (v: number) => void;
-  mediaType: string;
-  setMediaType: (v: string) => void;
-  backgroundColor: string;
-  setBackgroundColor: (v: string) => void;
-}
+export const barOptions = {
+  animationDuration: 1000,
+  title: {
+    text: "ECharts Example",
+  },
+  tooltip: {},
+  xAxis: {
+    data: ["A", "B", "C", "D", "E"],
+  },
+  yAxis: {},
+  series: [
+    {
+      name: "Example Series",
+      type: "bar",
+      data: [5, 20, 36, 10, 10],
+    },
+  ],
+};
 
-export const ChartOptions: React.FC<ChartOptionsProps> = ({
-  animationDuration,
-  setAnimationDuration,
-  mediaType,
-  setMediaType,
-  backgroundColor,
-  setBackgroundColor,
-}) => {
-  return (
-    <div className="chart-options p-4">
-      <h3 className="text-lg font-bold mb-2">Chart Options</h3>
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Animation (ms)</label>
-        <input
-          type="number"
-          className="w-full p-2 border border-gray-300 rounded"
-          value={animationDuration}
-          onChange={(e) => setAnimationDuration(Number(e.target.value))}
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Media Format</label>
-        <select
-          className="w-full p-2 border border-gray-300 rounded"
-          value={mediaType}
-          onChange={(e) => setMediaType(e.target.value)}
-        >
-          <option value="webm">WebM</option>
-          <option value="mp4">MP4</option>
-        </select>
-      </div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Background</label>
-        <input
-          type="color"
-          className="w-full h-8 p-1 border border-gray-300 rounded"
-          value={backgroundColor}
-          onChange={(e) => setBackgroundColor(e.target.value)}
-        />
-      </div>
-      {/* existing controls could remain below */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Title</label>
-        <input
-          type="text"
-          className="w-full p-2 border border-indigo-900 rounded"
-          placeholder="Enter chart title"
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">X-Axis Label</label>
-        <input
-          type="text"
-          className="w-full p-2 border border-gray-300 rounded"
-          placeholder="Enter x-axis label"
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Y-Axis Label</label>
-        <input
-          type="text"
-          className="w-full p-2 border border-gray-300 rounded"
-          placeholder="Enter y-axis label"
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Color Scheme</label>
-        <select className="w-full p-2 border border-gray-300 rounded">
-          <option>Default</option>
-          <option>Dark</option>
-          <option>Pastel</option>
-          <option>Bright</option>
-        </select>
-      </div>
-    </div>
-  );
+export const pieOptions = {
+  animationDuration: 1200,
+  title: {
+    text: "Referer of a Website",
+    subtext: "Fake Data",
+    left: "center",
+  },
+  tooltip: {
+    trigger: "item",
+  },
+  legend: {
+    orient: "vertical",
+    left: "left",
+  },
+  series: [
+    {
+      name: "Access From",
+      type: "pie",
+      radius: "50%",
+      data: [
+        { value: 1048, name: "Search Engine" },
+        { value: 735, name: "Direct" },
+        { value: 580, name: "Email" },
+        { value: 484, name: "Union Ads" },
+        { value: 300, name: "Video Ads" },
+      ],
+      emphasis: {
+        itemStyle: {
+          shadowBlur: 10,
+          shadowOffsetX: 0,
+          shadowColor: "rgba(0, 0, 0, 0.5)",
+        },
+      },
+    },
+  ],
+};
+
+export const scatterOptions = {
+  animationDuration: 1000,
+  title: {
+    text: "Scatter Plot",
+  },
+  tooltip: {},
+  xAxis: {
+    data: ["A", "B", "C", "D", "E"],
+  },
+  yAxis: {},
+  series: [
+    {
+      symbolSize: 20,
+      data: [
+        [10.0, 8.04],
+        [8.07, 6.95],
+        [13.0, 7.58],
+        [9.05, 8.81],
+        [11.0, 8.33],
+        [14.0, 7.66],
+        [13.4, 6.81],
+        [10.0, 6.33],
+        [14.0, 8.96],
+        [12.5, 6.82],
+        [9.15, 7.2],
+        [11.5, 7.2],
+        [3.03, 4.23],
+        [12.2, 7.83],
+        [2.02, 4.47],
+        [1.05, 3.33],
+        [4.05, 4.96],
+        [6.03, 7.24],
+        [12.0, 6.26],
+        [12.0, 8.84],
+        [7.08, 5.82],
+        [5.02, 5.68],
+      ],
+      type: "scatter",
+    },
+  ],
+};
+
+export const radarOptions = {
+  animationDuration: 1000,
+  title: {
+    text: "Basic Radar Chart",
+  },
+  legend: {
+    data: ["Allocated Budget", "Actual Spending"],
+  },
+  radar: {
+    // shape: 'circle',
+    indicator: [
+      { name: "Sales", max: 6500 },
+      { name: "Administration", max: 16000 },
+      { name: "Information Technology", max: 30000 },
+      { name: "Customer Support", max: 38000 },
+      { name: "Development", max: 52000 },
+      { name: "Marketing", max: 25000 },
+    ],
+  },
+  series: [
+    {
+      name: "Budget vs spending",
+      type: "radar",
+      data: [
+        {
+          value: [4200, 3000, 20000, 35000, 50000, 18000],
+          name: "Allocated Budget",
+        },
+        {
+          value: [5000, 14000, 28000, 26000, 42000, 21000],
+          name: "Actual Spending",
+        },
+      ],
+    },
+  ],
 };

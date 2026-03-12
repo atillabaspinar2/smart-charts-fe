@@ -1,20 +1,21 @@
 //create a new chart area component that will be used to display multiple charts
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ReactECharts from "echarts-for-react";
-import { ChartOptions } from "./chartOptions";
+import { ChartOptions } from "./chartSettings";
 import {
   barOptions,
   lineOptions,
   pieOptions,
   radarOptions,
   scatterOptions,
-} from "./chartOptionSettings";
+} from "./chartOptions";
 
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Delete02Icon,
   FileVideoCameraIcon,
   ImageDownload02Icon,
+  Refresh01Icon,
 } from "@hugeicons/core-free-icons";
 import { recordCanvas } from "./record";
 import { TabView } from "./TabView";
@@ -32,6 +33,12 @@ export const ChartArea: React.FC<{
   const [animationDuration, setAnimationDuration] = useState<number>(1000);
   const [mediaType, setMediaType] = useState<string>("webm");
   const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
+  const [reanimateAllKey, setReanimateAllKey] = useState<number>(0);
+
+  const applyAnimationDuration = (value: number) => {
+    setAnimationDuration(value);
+    setReanimateAllKey((prev) => prev + 1);
+  };
 
   const getOptions = (type: string) => {
     switch (type) {
@@ -51,12 +58,16 @@ export const ChartArea: React.FC<{
   };
 
   // component for a single chart inside the container
-  const ChartItem: React.FC<{ data: ChartItemData }> = ({ data }) => {
+  const ChartItem: React.FC<{
+    data: ChartItemData;
+    reanimateAllKey: number;
+  }> = ({ data, reanimateAllKey }) => {
     const { id, type } = data;
     const chartRef = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [isRecording, setIsRecording] = useState(false);
     const [recordKey, setRecordKey] = useState<number>(0);
+    const lastAppliedReanimateKeyRef = useRef<number>(0);
 
     React.useEffect(() => {
       if (!containerRef.current) return;
@@ -67,8 +78,20 @@ export const ChartArea: React.FC<{
       return () => observer.disconnect();
     }, []);
 
-    const startRecording = async () => {
+    const reanimateChart = () => {
       setRecordKey(Date.now());
+    };
+
+    useEffect(() => {
+      if (reanimateAllKey === 0) return;
+      if (lastAppliedReanimateKeyRef.current === reanimateAllKey) return;
+
+      lastAppliedReanimateKeyRef.current = reanimateAllKey;
+      reanimateChart();
+    }, [reanimateAllKey]);
+
+    const startRecording = async () => {
+      reanimateChart();
       await new Promise((r) =>
         requestAnimationFrame(() => requestAnimationFrame(r)),
       );
@@ -106,7 +129,12 @@ export const ChartArea: React.FC<{
       }
     };
 
-    const opts = getOptions(type);
+    const opts: any = getOptions(type);
+    const chartOption = {
+      ...opts,
+      backgroundColor,
+      animationDuration: animationDuration ?? opts.animationDuration,
+    };
 
     return (
       <div
@@ -123,7 +151,7 @@ export const ChartArea: React.FC<{
         <ReactECharts
           ref={chartRef}
           key={`${type}-${recordKey}-${id}`}
-          option={{ ...opts, animationDuration, backgroundColor }}
+          option={chartOption}
           // @ts-ignore: preserveDrawingBuffer is valid for the underlying canvas
           opts={{ renderer: "canvas", preserveDrawingBuffer: true }}
           style={{
@@ -149,6 +177,14 @@ export const ChartArea: React.FC<{
                 isRecording ? "text-red-500 animate-pulse" : "text-gray-500"
               }`}
               onClick={startRecording}
+            />
+          </span>
+          <span data-tooltip="Reanimate chart" className="tooltip">
+            <HugeiconsIcon
+              icon={Refresh01Icon}
+              size={16}
+              className="text-gray-500 hover:text-emerald-600 cursor-pointer"
+              onClick={reanimateChart}
             />
           </span>
           <span data-tooltip="Download image" className="tooltip">
@@ -198,13 +234,13 @@ export const ChartArea: React.FC<{
           }}
         >
           {charts.map((c) => (
-            <ChartItem key={c.id} data={c} />
+            <ChartItem key={c.id} data={c} reanimateAllKey={reanimateAllKey} />
           ))}
         </div>
       </div>
       <ChartOptions
         animationDuration={animationDuration}
-        setAnimationDuration={setAnimationDuration}
+        setAnimationDuration={applyAnimationDuration}
         mediaType={mediaType}
         setMediaType={setMediaType}
         backgroundColor={backgroundColor}
