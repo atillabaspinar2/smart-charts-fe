@@ -1,7 +1,7 @@
 /* 1. Define the anchor */
 .popover-btn {
   anchor-name: --brush-anchor;
-  color: blanchedalmond;
+  color: var(--color-theme-text);
 }
 
 /* 2. Position the popover */

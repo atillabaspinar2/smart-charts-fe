@@ -4,6 +4,12 @@
 import { useState } from "react";
 import "./popover.css";
 import { UserPopover } from "./userPopover";
+import {
+  ThemeSwitcher,
+  firstColorByTheme,
+  type ThemeName,
+} from "./themeSwitcher";
+import { ThemedActionButton } from "./themedActionButton";
 
 type User = {
   name: string;
@@ -11,8 +17,11 @@ type User = {
 
 export const UserMenu: React.FC<{
   setSingUpModal: (value: boolean) => void;
-}> = ({ setSingUpModal }) => {
+  selectedTheme: ThemeName;
+  setSelectedTheme: (theme: ThemeName) => void;
+}> = ({ setSingUpModal, selectedTheme, setSelectedTheme }) => {
   const [user, setUser] = useState<User | null>(null); // replace with actual user state management
+  const actionColor = firstColorByTheme[selectedTheme];
 
   const login = () => {
     // replace with actual login logic
@@ -24,21 +33,22 @@ export const UserMenu: React.FC<{
   };
 
   return (
-    <div className="user-menu">
+    <div className="user-menu flex items-center space-x-2">
+      <ThemeSwitcher
+        selectedTheme={selectedTheme}
+        setSelectedTheme={setSelectedTheme}
+      />
       {!user ? (
-        <div>
-          <button
-            className="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded mr-2"
-            onClick={login}
-          >
+        <div className="flex items-center gap-2">
+          <ThemedActionButton color={actionColor} onClick={login}>
             Login
-          </button>
-          <button
-            className="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded"
+          </ThemedActionButton>
+          <ThemedActionButton
+            color={actionColor}
             onClick={() => setSingUpModal(true)}
           >
             Sign Up
-          </button>
+          </ThemedActionButton>
         </div>
       ) : (
         <UserPopover user={user} logout={logout} />

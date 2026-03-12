@@ -1,5 +1,111 @@
 @import "tailwindcss";
 
+@theme {
+  /* Palette 1: Blue Slate */
+  --color-blue-slate-100: #c7dbef;
+  --color-blue-slate-200: #8cb7df;
+  --color-blue-slate-300: #5992c6;
+  --color-blue-slate-400: #43719a;
+  --color-blue-slate-500: #2d4e6c;
+  --color-blue-slate-600: #172b3e;
+  --color-blue-slate-700: #040c15;
+
+  /* Palette 2: Earth Clay */
+  --color-earth-clay-100: #e1d2cc;
+  --color-earth-clay-200: #c7a79b;
+  --color-earth-clay-300: #a68172;
+  --color-earth-clay-400: #806257;
+  --color-earth-clay-500: #58433b;
+  --color-earth-clay-600: #31241f;
+  --color-earth-clay-700: #0e0807;
+
+  /* Palette 3: Rose Wine */
+  --color-rose-wine-100: #f8ebef;
+  --color-rose-wine-200: #e9b8c9;
+  --color-rose-wine-300: #dc81a4;
+  --color-rose-wine-400: #c05884;
+  --color-rose-wine-500: #8e3f60;
+  --color-rose-wine-600: #5b263c;
+  --color-rose-wine-700: #2d0f1c;
+
+  /* Palette 4: Royal Cobalt */
+  --color-royal-cobalt-100: #e8eefa;
+  --color-royal-cobalt-200: #b3c7f0;
+  --color-royal-cobalt-300: #7fa0e5;
+  --color-royal-cobalt-400: #507adc;
+  --color-royal-cobalt-500: #1e4cd2;
+  --color-royal-cobalt-600: #0a2a92;
+  --color-royal-cobalt-700: #02114b;
+
+  /* Palette 5: Neutral Graphite */
+  --color-neutral-graphite-100: #edeff0;
+  --color-neutral-graphite-200: #c2c9cc;
+  --color-neutral-graphite-300: #9ba3a8;
+  --color-neutral-graphite-400: #7b8285;
+  --color-neutral-graphite-500: #595f61;
+  --color-neutral-graphite-600: #383b3d;
+  --color-neutral-graphite-700: #191b1c;
+
+  /* Semantic tokens currently mapped to Palette 1 */
+  --color-theme-bg: var(--color-blue-slate-100);
+  --color-theme-surface: var(--color-blue-slate-200);
+  --color-theme-primary: var(--color-blue-slate-300);
+  --color-theme-secondary: var(--color-blue-slate-400);
+  --color-theme-accent: var(--color-blue-slate-500);
+  --color-theme-text: var(--color-blue-slate-600);
+  --color-theme-strong: var(--color-blue-slate-700);
+}
+
+:root[data-theme="blue-slate"] {
+  --color-theme-bg: var(--color-blue-slate-100);
+  --color-theme-surface: var(--color-blue-slate-200);
+  --color-theme-primary: var(--color-blue-slate-300);
+  --color-theme-secondary: var(--color-blue-slate-400);
+  --color-theme-accent: var(--color-blue-slate-500);
+  --color-theme-text: var(--color-blue-slate-600);
+  --color-theme-strong: var(--color-blue-slate-700);
+}
+
+:root[data-theme="earth-clay"] {
+  --color-theme-bg: var(--color-earth-clay-100);
+  --color-theme-surface: var(--color-earth-clay-200);
+  --color-theme-primary: var(--color-earth-clay-300);
+  --color-theme-secondary: var(--color-earth-clay-400);
+  --color-theme-accent: var(--color-earth-clay-500);
+  --color-theme-text: var(--color-earth-clay-600);
+  --color-theme-strong: var(--color-earth-clay-700);
+}
+
+:root[data-theme="rose-wine"] {
+  --color-theme-bg: var(--color-rose-wine-100);
+  --color-theme-surface: var(--color-rose-wine-200);
+  --color-theme-primary: var(--color-rose-wine-300);
+  --color-theme-secondary: var(--color-rose-wine-400);
+  --color-theme-accent: var(--color-rose-wine-500);
+  --color-theme-text: var(--color-rose-wine-600);
+  --color-theme-strong: var(--color-rose-wine-700);
+}
+
+:root[data-theme="royal-cobalt"] {
+  --color-theme-bg: var(--color-royal-cobalt-100);
+  --color-theme-surface: var(--color-royal-cobalt-200);
+  --color-theme-primary: var(--color-royal-cobalt-300);
+  --color-theme-secondary: var(--color-royal-cobalt-400);
+  --color-theme-accent: var(--color-royal-cobalt-500);
+  --color-theme-text: var(--color-royal-cobalt-600);
+  --color-theme-strong: var(--color-royal-cobalt-700);
+}
+
+:root[data-theme="neutral-graphite"] {
+  --color-theme-bg: var(--color-neutral-graphite-100);
+  --color-theme-surface: var(--color-neutral-graphite-200);
+  --color-theme-primary: var(--color-neutral-graphite-300);
+  --color-theme-secondary: var(--color-neutral-graphite-400);
+  --color-theme-accent: var(--color-neutral-graphite-500);
+  --color-theme-text: var(--color-neutral-graphite-600);
+  --color-theme-strong: var(--color-neutral-graphite-700);
+}
+
 /* custom tooltip styling */
 .tooltip {
   position: relative;

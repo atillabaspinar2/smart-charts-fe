@@ -1,15 +1,5 @@
-//create a new chart area component that will be used to display multiple charts
 import React, { useEffect, useRef, useState } from "react";
 import ReactECharts from "echarts-for-react";
-import { ChartOptions } from "./chartSettings";
-import {
-  barOptions,
-  lineOptions,
-  pieOptions,
-  radarOptions,
-  scatterOptions,
-} from "./chartOptions";
-
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Delete02Icon,
@@ -18,50 +8,33 @@ import {
   Refresh01Icon,
 } from "@hugeicons/core-free-icons";
 import { recordCanvas } from "./record";
-import { TabView } from "./TabView";
+import {
+  type ChartItemData,
+  type ChartSettingsData,
+  type ReanimateSignal,
+} from "./chartTypes";
+import { getOptionsByType } from "./chartOptionTemplates";
 
-interface ChartItemData {
-  id: number;
-  type: string;
+interface ChartItemProps {
+  data: ChartItemData;
+  reanimateSignal: ReanimateSignal | null;
+  settings: ChartSettingsData;
+  onSelectChart: (instanceId: string) => void;
+  isSelected: boolean;
+  removeChart: (id: number) => void;
+  mediaType: string;
 }
 
-export const ChartArea: React.FC<{
-  charts: ChartItemData[];
-  addChart: (type: string) => void;
-  removeChart: (id: number) => void;
-}> = ({ charts, addChart, removeChart }) => {
-  const [animationDuration, setAnimationDuration] = useState<number>(1000);
-  const [mediaType, setMediaType] = useState<string>("webm");
-  const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
-  const [reanimateAllKey, setReanimateAllKey] = useState<number>(0);
-
-  const applyAnimationDuration = (value: number) => {
-    setAnimationDuration(value);
-    setReanimateAllKey((prev) => prev + 1);
-  };
-
-  const getOptions = (type: string) => {
-    switch (type) {
-      case "line":
-        return lineOptions;
-      case "bar":
-        return barOptions;
-      case "pie":
-        return pieOptions;
-      case "scatter":
-        return scatterOptions;
-      case "radar":
-        return radarOptions;
-      default:
-        return {};
-    }
-  };
-
-  // component for a single chart inside the container
-  const ChartItem: React.FC<{
-    data: ChartItemData;
-    reanimateAllKey: number;
-  }> = ({ data, reanimateAllKey }) => {
+export const ChartItem: React.FC<ChartItemProps> = React.memo(
+  ({
+    data,
+    reanimateSignal,
+    settings,
+    onSelectChart,
+    isSelected,
+    removeChart,
+    mediaType,
+  }) => {
     const { id, type } = data;
     const chartRef = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -69,7 +42,7 @@ export const ChartArea: React.FC<{
     const [recordKey, setRecordKey] = useState<number>(0);
     const lastAppliedReanimateKeyRef = useRef<number>(0);
 
-    React.useEffect(() => {
+    useEffect(() => {
       if (!containerRef.current) return;
       const observer = new ResizeObserver(() => {
         chartRef.current?.getEchartsInstance()?.resize();
@@ -83,12 +56,13 @@ export const ChartArea: React.FC<{
     };
 
     useEffect(() => {
-      if (reanimateAllKey === 0) return;
-      if (lastAppliedReanimateKeyRef.current === reanimateAllKey) return;
+      if (!reanimateSignal) return;
+      if (reanimateSignal.instanceId !== data.instanceId) return;
+      if (lastAppliedReanimateKeyRef.current === reanimateSignal.key) return;
 
-      lastAppliedReanimateKeyRef.current = reanimateAllKey;
+      lastAppliedReanimateKeyRef.current = reanimateSignal.key;
       reanimateChart();
-    }, [reanimateAllKey]);
+    }, [reanimateSignal, data.instanceId]);
 
     const startRecording = async () => {
       reanimateChart();
@@ -104,7 +78,7 @@ export const ChartArea: React.FC<{
         setIsRecording(true);
         try {
           const buffer = 500;
-          const durationMs = animationDuration + buffer;
+          const durationMs = settings.animationDuration + buffer;
           await recordCanvas(canvas, durationMs, mediaType);
         } catch (err) {
           console.error("Recording failed", err);
@@ -129,21 +103,26 @@ export const ChartArea: React.FC<{
       }
     };
 
-    const opts: any = getOptions(type);
+    const opts: any = getOptionsByType(type);
     const chartOption = {
       ...opts,
-      backgroundColor,
-      animationDuration: animationDuration ?? opts.animationDuration,
+      backgroundColor: settings.backgroundColor,
+      animationDuration: settings.animationDuration ?? opts.animationDuration,
     };
 
     return (
       <div
         ref={containerRef}
-        className="m-2 group relative"
+        onClick={() => onSelectChart(data.instanceId)}
+        className={`m-2 group relative cursor-pointer transition-shadow duration-200 ${
+          isSelected ? "shadow-lg rounded-lg" : ""
+        }`}
         style={{
           resize: "both",
           overflow: "auto",
-          border: "1px solid #ccc",
+          border: isSelected ? "1px solid #d1d5db" : "1px solid #e5e7eb",
+          borderRadius: isSelected ? "0.5rem" : "0.25rem",
+          backgroundColor: "white",
           width: "400px",
           height: "300px",
         }}
@@ -157,7 +136,7 @@ export const ChartArea: React.FC<{
           style={{
             width: "100%",
             height: "100%",
-            background: backgroundColor,
+            background: settings.backgroundColor,
           }}
         />
         <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 drop-shadow-lg bg-white/90 rounded p-1 flex space-x-2">
@@ -198,61 +177,5 @@ export const ChartArea: React.FC<{
         </div>
       </div>
     );
-  };
-
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // handle drag/drop from sidebar
-  const onDragOver = (e: React.DragEvent) => e.preventDefault();
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const type = e.dataTransfer.getData("chartType");
-    if (type) addChart(type);
-  };
-
-  return (
-    <div
-      className="chart-area grid grid-cols-1 md:grid-cols-[80%_1fr] gap-4"
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-    >
-      <div className="relative">
-        {/* multi-chart container */}
-        <div
-          ref={containerRef}
-          className="multi-chart-container"
-          style={{
-            resize: "both",
-            overflow: "auto",
-            border: "1px solid #ccc",
-            padding: "8px",
-            width: "800px",
-            maxWidth: "100%",
-            height: "600px",
-            display: "flex",
-            flexWrap: "wrap",
-          }}
-        >
-          {charts.map((c) => (
-            <ChartItem key={c.id} data={c} reanimateAllKey={reanimateAllKey} />
-          ))}
-        </div>
-      </div>
-      <ChartOptions
-        animationDuration={animationDuration}
-        setAnimationDuration={applyAnimationDuration}
-        mediaType={mediaType}
-        setMediaType={setMediaType}
-        backgroundColor={backgroundColor}
-        setBackgroundColor={setBackgroundColor}
-      />
-      {/* collapsible tab area for additional chart data or controls */}
-      <TabView title="Chart Data">
-        <p className="text-sm text-gray-600">
-          Placeholder for data / editors. Multiple tabs or charts will be added
-          here later.
-        </p>
-      </TabView>
-    </div>
-  );
-};
+  },
+);

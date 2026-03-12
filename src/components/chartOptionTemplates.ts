@@ -122,7 +122,6 @@ export const radarOptions = {
     data: ["Allocated Budget", "Actual Spending"],
   },
   radar: {
-    // shape: 'circle',
     indicator: [
       { name: "Sales", max: 6500 },
       { name: "Administration", max: 16000 },
@@ -148,4 +147,21 @@ export const radarOptions = {
       ],
     },
   ],
+};
+
+export const getOptionsByType = (type: string) => {
+  switch (type) {
+    case "line":
+      return lineOptions;
+    case "bar":
+      return barOptions;
+    case "pie":
+      return pieOptions;
+    case "scatter":
+      return scatterOptions;
+    case "radar":
+      return radarOptions;
+    default:
+      return {};
+  }
 };
