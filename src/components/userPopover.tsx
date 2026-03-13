@@ -7,14 +7,15 @@ export const UserPopover: React.FC<{
       <button
         id="popover-btn"
         popoverTarget="popover-content"
-        className="popover-btn px-4 py-2 bg-blue-600 text-white rounded"
+        className="popover-btn px-4 py-2   text-theme-bg rounded text-xs hover:text-theme-primary"
       >
-        {user.name}
+        <span className="block">Welcome</span>
+        <span className="block">{user.name}</span>
       </button>
       <div
         id="popover-content"
         popover="auto"
-        className="popover-content p-6 rounded-lg shadow-xl border border-gray-200 backdrop:bg-black/20"
+        className="popover-content p-6 rounded-lg shadow-xl border border-theme-primary backdrop:bg-black/20"
       >
         <div className="mb-4">
           <h3 className="font-bold">User Menu</h3>

@@ -15,27 +15,16 @@ const themes: Array<{ id: ThemeName; label: string }> = [
   { id: "neutral-graphite", label: "Neutral Graphite" },
 ];
 
-const firstColorByTheme: Record<ThemeName, string> = {
-  "blue-slate": "#C7DBEF",
-  "earth-clay": "#E1D2CC",
-  "rose-wine": "#F8EBEF",
-  "royal-cobalt": "#E8EEFA",
-  "neutral-graphite": "#EDEFF0",
-};
-
 export const ThemeSwitcher: React.FC<{
   selectedTheme: ThemeName;
   setSelectedTheme: (theme: ThemeName) => void;
 }> = ({ selectedTheme, setSelectedTheme }) => {
-  const themeColor = firstColorByTheme[selectedTheme];
-
   return (
     <div className="inline-block mr-2">
       <ThemedActionButton
         id="theme-popover-btn"
         popoverTarget="theme-popover-content"
         className="popover-btn"
-        color={themeColor}
         aria-label="Open theme switcher"
         title="Switch theme"
       >
@@ -71,4 +60,3 @@ export const ThemeSwitcher: React.FC<{
 };
 
 export type { ThemeName };
-export { firstColorByTheme };

@@ -14,7 +14,7 @@ export const PanelView: React.FC<{
           {title}
         </h3>
       </header>
-      <div className="p-3">{children}</div>
+      <div className="p-2">{children}</div>
     </section>
   );
 };

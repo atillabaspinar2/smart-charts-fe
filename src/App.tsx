@@ -62,7 +62,7 @@ function App() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="overflow-y-auto p-6 bg-theme-surface">
+      <main className="overflow-y-auto p-2 bg-theme-surface">
         <ChartWorkspace
           charts={charts}
           addChart={addChart}

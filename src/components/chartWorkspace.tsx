@@ -100,23 +100,19 @@ export const ChartWorkspace: React.FC<{
 
   return (
     <div
-      className="chart-workspace grid grid-cols-1 md:grid-cols-[80%_1fr] gap-4"
+      className="chart-workspace grid grid-cols-1 md:grid-cols-[80%_1fr] gap-2"
       onDragOver={onDragOver}
       onDrop={onDrop}
     >
       <PanelView title="Chart Items" className="relative">
         <div
+          id="chart-container"
           ref={containerRef}
-          className="multi-chart-container"
+          className="resize overflow-auto p-1 flex flex-wrap border border-theme-bg rounded-md bg-white/50 shadow-lg"
           style={{
-            resize: "both",
-            overflow: "auto",
-            padding: "8px",
             width: "800px",
             maxWidth: "100%",
             height: "600px",
-            display: "flex",
-            flexWrap: "wrap",
           }}
         >
           {charts.map((c) => (
