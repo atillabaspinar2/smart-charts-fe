@@ -1,4 +1,4 @@
-import { ThemedActionButton } from "./themedActionButton";
+import { ThemedActionButton } from "./UILibrary/themedActionButton";
 
 type ThemeName =
   | "blue-slate"

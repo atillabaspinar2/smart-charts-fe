@@ -1,6 +1,7 @@
 import { useEffect, useState, type FC } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { CustomInput } from "./UILibrary/customInput";
 
 interface ChartSettingsPanelProps {
   animationDuration: number;
@@ -72,38 +73,28 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
           </button>
         )}
       </div>
-      {selectedChartType && (
-        <div className="mb-4 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
-          Editing settings for selected{" "}
-          <span className="font-semibold">{selectedChartType}</span> chart
-        </div>
-      )}
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">
-          {selectedChartType ? "Chart Title" : "Title"}
-        </label>
-        <input
-          type="text"
-          className="w-full p-2 border border-gray-300 rounded"
-          placeholder={
-            selectedChartType ? "Enter chart title" : "Enter workspace title"
-          }
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Animation (ms)</label>
-        <input
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          className="w-full p-2 border border-gray-300 rounded"
-          value={animationInput}
-          placeholder="1000"
-          onChange={(e) => handleAnimationChange(e.target.value)}
-        />
-      </div>
+
+      <CustomInput
+        id="settings-title"
+        label={selectedChartType ? "Chart Title" : "Title"}
+        type="text"
+        placeholder={
+          selectedChartType ? "Enter chart title" : "Enter workspace title"
+        }
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
+
+      <CustomInput
+        id="settings-animation"
+        label="Animation (ms)"
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={animationInput}
+        placeholder="1000"
+        onChange={(e) => handleAnimationChange(e.target.value)}
+      />
       {!selectedChartType && (
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Media Format</label>

@@ -2,7 +2,7 @@ import "./App.css";
 
 import { ChartWorkspace } from "./components/chartWorkspace";
 import { useEffect, useState } from "react";
-import { Modal } from "./components/Modal";
+import { Modal } from "./components/UILibrary/Modal";
 import { SignupForm } from "./components/signupForm";
 import { UserMenu } from "./components/userMenu";
 import { Sidebar } from "./components/sidebar";

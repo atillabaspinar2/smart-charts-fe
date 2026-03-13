@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ChartSettingsPanel } from "./ChartSettingsPanel";
 import { ChartItem } from "./chartItem";
 import { CanvasContextMenu } from "./canvasContextMenu";
-import { PanelView } from "./PanelView";
+import { PanelView } from "./UILibrary/PanelView";
 import { getOptionsByType } from "./chartOptionTemplates";
 import {
   type ChartItemData,

@@ -5,7 +5,7 @@ import { useState } from "react";
 import "./popover.css";
 import { UserPopover } from "./userPopover";
 import { ThemeSwitcher, type ThemeName } from "./themeSwitcher";
-import { ThemedActionButton } from "./themedActionButton";
+import { ThemedActionButton } from "./UILibrary/themedActionButton";
 
 type User = {
   name: string;
