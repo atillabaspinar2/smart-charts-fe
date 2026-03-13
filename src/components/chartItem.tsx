@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import { recordCanvas } from "./record";
 import {
+  type ChartData,
   type ChartItemData,
   type ChartSettingsData,
   type ReanimateSignal,
@@ -14,6 +15,7 @@ interface ChartItemProps {
   reanimateSignal: ReanimateSignal | null;
   reanimateAllKey: number;
   settings: ChartSettingsData;
+  chartData?: ChartData;
   onSelectChart: (instanceId: string) => void;
   position: { x: number; y: number };
   onMove: (instanceId: string, x: number, y: number) => void;
@@ -33,6 +35,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     reanimateSignal,
     reanimateAllKey,
     settings,
+    chartData,
     onSelectChart,
     position,
     onMove,
@@ -143,6 +146,81 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       backgroundColor: settings.backgroundColor,
       animationDuration: settings.animationDuration ?? opts.animationDuration,
     };
+
+    if (type === "line" && chartData?.type === "line") {
+      const categories = chartData.categories;
+      chartOption.tooltip = opts.tooltip || { trigger: "axis" };
+      chartOption.legend = {
+        ...(opts.legend || {}),
+        data: chartData.series.map((series) => series.name || "Series"),
+      };
+      chartOption.xAxis = {
+        ...(opts.xAxis || {}),
+        type: "category",
+        data: categories,
+      };
+      chartOption.yAxis = opts.yAxis || { type: "value" };
+      chartOption.series = chartData.series.map((series, index) => {
+        const templateSeries = Array.isArray(opts.series)
+          ? opts.series[index] || opts.series[0] || {}
+          : {};
+        return {
+          ...templateSeries,
+          type: "line",
+          name: series.name || `Series ${index + 1}`,
+          data: categories.map(
+            (_, valueIndex) => series.values[valueIndex] ?? null,
+          ),
+          lineStyle: {
+            ...(templateSeries.lineStyle || {}),
+            color: series.color,
+          },
+          itemStyle: {
+            ...(templateSeries.itemStyle || {}),
+            color: series.color,
+          },
+          areaStyle: series.areaStyle
+            ? {
+                ...(templateSeries.areaStyle || {}),
+                color: series.color,
+                opacity: 0.2,
+              }
+            : undefined,
+        };
+      });
+    }
+
+    if (type === "bar" && chartData?.type === "bar") {
+      const categories = chartData.categories;
+      chartOption.tooltip = opts.tooltip || { trigger: "axis" };
+      chartOption.legend = {
+        ...(opts.legend || {}),
+        data: chartData.series.map((series) => series.name || "Series"),
+      };
+      chartOption.xAxis = {
+        ...(opts.xAxis || {}),
+        type: "category",
+        data: categories,
+      };
+      chartOption.yAxis = opts.yAxis || { type: "value" };
+      chartOption.series = chartData.series.map((series, index) => {
+        const templateSeries = Array.isArray(opts.series)
+          ? opts.series[index] || opts.series[0] || {}
+          : {};
+        return {
+          ...templateSeries,
+          type: "bar",
+          name: series.name || `Series ${index + 1}`,
+          data: categories.map(
+            (_, valueIndex) => series.values[valueIndex] ?? null,
+          ),
+          itemStyle: {
+            ...(templateSeries.itemStyle || {}),
+            color: series.color,
+          },
+        };
+      });
+    }
 
     const chartHighlighted = isSelected
       ? "border-slate-300 rounded-lg shadow-[0_3px_10px_rgba(15,23,42,0.35)]"

@@ -4,11 +4,24 @@ import { ChartItem } from "./chartItem";
 import { CanvasContextMenu } from "./canvasContextMenu";
 import { PanelView } from "./UILibrary/PanelView";
 import { getOptionsByType } from "./chartOptionTemplates";
+import { LineChartDataPanel } from "./lineChartDataPanel";
+import { BarChartDataPanel } from "./barChartDataPanel";
 import {
+  type BarChartData,
+  type ChartData,
   type ChartItemData,
   type ChartSettingsData,
+  type LineChartData,
   type ReanimateSignal,
 } from "./chartTypes";
+
+const defaultLineSeriesColors = [
+  "#2563eb",
+  "#dc2626",
+  "#059669",
+  "#d97706",
+  "#7c3aed",
+];
 
 export const ChartWorkspace: React.FC<{
   charts: ChartItemData[];
@@ -19,6 +32,9 @@ export const ChartWorkspace: React.FC<{
     Record<string, { x: number; y: number }>
   >({});
   const [chartStackOrder, setChartStackOrder] = useState<string[]>([]);
+  const [chartDataMap, setChartDataMap] = useState<Record<string, ChartData>>(
+    {},
+  );
   const [chartSettingsMap, setChartSettingsMap] = useState<
     Record<string, ChartSettingsData>
   >({});
@@ -45,6 +61,84 @@ export const ChartWorkspace: React.FC<{
         backgroundColor: "#ffffff",
         title: templateOptions?.title?.text || "",
       },
+    }));
+  };
+
+  const initializeChartData = (instanceId: string, type: string) => {
+    if (type !== "line" && type !== "bar") return;
+
+    if (type === "bar") {
+      const templateOptions: any = getOptionsByType(type);
+      const categories = Array.isArray(templateOptions?.xAxis?.data)
+        ? templateOptions.xAxis.data.map(String)
+        : ["A", "B", "C", "D", "E"];
+      const templateSeries = Array.isArray(templateOptions?.series)
+        ? templateOptions.series
+        : [];
+
+      const nextData: BarChartData = {
+        type: "bar",
+        categories,
+        series: templateSeries.length
+          ? templateSeries.map((series: any, index: number) => ({
+              id: `${instanceId}-series-${index + 1}`,
+              name: series.name || `Series ${index + 1}`,
+              color:
+                defaultLineSeriesColors[index % defaultLineSeriesColors.length],
+              values: Array.isArray(series.data)
+                ? series.data.map((value: unknown) => Number(value) || 0)
+                : [],
+            }))
+          : [
+              {
+                id: `${instanceId}-series-1`,
+                name: "Series 1",
+                color: defaultLineSeriesColors[0],
+                values: [5, 20, 36, 10, 10],
+              },
+            ],
+      };
+
+      setChartDataMap((prev) => ({ ...prev, [instanceId]: nextData }));
+      return;
+    }
+
+    const templateOptions: any = getOptionsByType(type);
+    const categories = Array.isArray(templateOptions?.xAxis?.data)
+      ? templateOptions.xAxis.data.map(String)
+      : [];
+    const templateSeries = Array.isArray(templateOptions?.series)
+      ? templateOptions.series
+      : [];
+
+    const nextData: LineChartData = {
+      type: "line",
+      categories,
+      series: templateSeries.length
+        ? templateSeries.map((series: any, index: number) => ({
+            id: `${instanceId}-series-${index + 1}`,
+            name: series.name || `Series ${index + 1}`,
+            color:
+              defaultLineSeriesColors[index % defaultLineSeriesColors.length],
+            values: Array.isArray(series.data)
+              ? series.data.map((value: unknown) => Number(value) || 0)
+              : [],
+            areaStyle: Boolean(series.areaStyle),
+          }))
+        : [
+            {
+              id: `${instanceId}-series-1`,
+              name: "Series 1",
+              color: defaultLineSeriesColors[0],
+              values: [150, 230, 224, 218, 135, 147, 260],
+              areaStyle: true,
+            },
+          ],
+    };
+
+    setChartDataMap((prev) => ({
+      ...prev,
+      [instanceId]: nextData,
     }));
   };
 
@@ -94,13 +188,27 @@ export const ChartWorkspace: React.FC<{
     );
   };
 
+  const updateChartData = (instanceId: string, nextData: ChartData) => {
+    setChartDataMap((prev) => ({
+      ...prev,
+      [instanceId]: nextData,
+    }));
+    setReanimateSignal({ instanceId, key: Date.now() });
+  };
+
   useEffect(() => {
     charts.forEach((chart) => {
       if (!chartSettingsMap[chart.instanceId]) {
         initializeChartSettings(chart.instanceId, chart.type);
       }
+      if (
+        (chart.type === "line" || chart.type === "bar") &&
+        !chartDataMap[chart.instanceId]
+      ) {
+        initializeChartData(chart.instanceId, chart.type);
+      }
     });
-  }, [charts, chartSettingsMap]);
+  }, [charts, chartSettingsMap, chartDataMap]);
 
   useEffect(() => {
     setChartPositionMap((prev) => {
@@ -418,6 +526,11 @@ export const ChartWorkspace: React.FC<{
     setChartPositionMap((prev) => ({ ...prev, ...nextPositions }));
   };
 
+  const selectedChart = selectedChartInstanceId
+    ? charts.find((chart) => chart.instanceId === selectedChartInstanceId) ||
+      null
+    : null;
+
   return (
     <div
       className="chart-workspace grid grid-cols-1 md:grid-cols-[80%_1fr] gap-2"
@@ -461,6 +574,7 @@ export const ChartWorkspace: React.FC<{
               reanimateSignal={reanimateSignal}
               reanimateAllKey={reanimateAllKey}
               settings={getChartSettings(c.instanceId)}
+              chartData={chartDataMap[c.instanceId]}
               onSelectChart={onSelectChart}
               position={chartPositionMap[c.instanceId] || { x: 20, y: 20 }}
               onMove={onMoveChart}
@@ -538,10 +652,38 @@ export const ChartWorkspace: React.FC<{
       </PanelView>
 
       <PanelView title="Chart Data" className="md:col-span-2">
-        <p className="text-sm text-gray-600">
-          Placeholder for data / editors. Multiple tabs or charts will be added
-          here later.
-        </p>
+        {!selectedChart && (
+          <p className="text-sm text-gray-600">
+            Select a chart to edit its data.
+          </p>
+        )}
+
+        {selectedChart?.type === "line" && selectedChartInstanceId && (
+          <LineChartDataPanel
+            data={chartDataMap[selectedChartInstanceId] as LineChartData}
+            onChange={(nextData) =>
+              updateChartData(selectedChartInstanceId, nextData)
+            }
+          />
+        )}
+
+        {selectedChart?.type === "bar" && selectedChartInstanceId && (
+          <BarChartDataPanel
+            data={chartDataMap[selectedChartInstanceId] as BarChartData}
+            onChange={(nextData) =>
+              updateChartData(selectedChartInstanceId, nextData)
+            }
+          />
+        )}
+
+        {selectedChart &&
+          selectedChart.type !== "line" &&
+          selectedChart.type !== "bar" && (
+            <p className="text-sm text-gray-600">
+              Data editing for {selectedChart.type} charts is not implemented
+              yet.
+            </p>
+          )}
       </PanelView>
     </div>
   );
