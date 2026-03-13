@@ -17,6 +17,11 @@ interface ChartItemProps {
   onSelectChart: (instanceId: string) => void;
   position: { x: number; y: number };
   onMove: (instanceId: string, x: number, y: number) => void;
+  zIndex: number;
+  onMoveToTop: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onMoveToBottom: () => void;
   isSelected: boolean;
   removeChart: (id: number) => void;
   mediaType: string;
@@ -31,6 +36,11 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     onSelectChart,
     position,
     onMove,
+    zIndex,
+    onMoveToTop,
+    onMoveUp,
+    onMoveDown,
+    onMoveToBottom,
     isSelected,
     removeChart,
     mediaType,
@@ -144,6 +154,15 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       const target = e.target as HTMLElement;
       if (target.closest("[data-no-drag='true']")) return;
 
+      const rect = e.currentTarget.getBoundingClientRect();
+      const resizeHandleSize = 18;
+      const pointerX = e.clientX - rect.left;
+      const pointerY = e.clientY - rect.top;
+      const onResizeHandle =
+        pointerX >= rect.width - resizeHandleSize &&
+        pointerY >= rect.height - resizeHandleSize;
+      if (onResizeHandle) return;
+
       const startX = e.clientX;
       const startY = e.clientY;
       const originX = position.x;
@@ -207,6 +226,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     return (
       <div
         ref={containerRef}
+        data-instance-id={data.instanceId}
         onMouseDown={onMouseDown}
         onClick={(e) => {
           e.stopPropagation();
@@ -220,7 +240,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,
-          zIndex: isSelected ? 20 : 10,
+          zIndex,
         }}
       >
         <ReactECharts
@@ -237,16 +257,23 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         />
         <div
           data-no-drag="true"
+          className={`absolute top-2 left-2 z-40 transition-opacity ${
+            isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          }`}
           onMouseDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
         >
           <ChartContextMenu
             id="cart-context-menu"
-            className="absolute top-2 left-2 opacity-0 group-hover:opacity-100"
+            className="transition-opacity"
             onRemove={() => removeChart(id)}
             onRecord={startRecording}
             onReanimate={reanimateChart}
             onDownload={captureImage}
+            onMoveToTop={onMoveToTop}
+            onMoveUp={onMoveUp}
+            onMoveDown={onMoveDown}
+            onMoveToBottom={onMoveToBottom}
             isRecording={isRecording}
           />
         </div>

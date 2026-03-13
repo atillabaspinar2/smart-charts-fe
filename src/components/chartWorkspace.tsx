@@ -18,6 +18,7 @@ export const ChartWorkspace: React.FC<{
   const [chartPositionMap, setChartPositionMap] = useState<
     Record<string, { x: number; y: number }>
   >({});
+  const [chartStackOrder, setChartStackOrder] = useState<string[]>([]);
   const [chartSettingsMap, setChartSettingsMap] = useState<
     Record<string, ChartSettingsData>
   >({});
@@ -124,6 +125,20 @@ export const ChartWorkspace: React.FC<{
     });
   }, [charts]);
 
+  useEffect(() => {
+    setChartStackOrder((prev) => {
+      const activeIds = charts.map((chart) => chart.instanceId);
+      const filtered = prev.filter((id) => activeIds.includes(id));
+      const existing = new Set(filtered);
+      const missing = activeIds.filter((id) => !existing.has(id));
+      const next = [...filtered, ...missing];
+      const unchanged =
+        prev.length === next.length &&
+        prev.every((value, index) => value === next[index]);
+      return unchanged ? prev : next;
+    });
+  }, [charts]);
+
   const onSelectChart = useCallback((instanceId: string) => {
     setSelectedChartInstanceId((prev) =>
       prev === instanceId ? null : instanceId,
@@ -140,6 +155,46 @@ export const ChartWorkspace: React.FC<{
     },
     [],
   );
+
+  const moveChartToTop = useCallback((instanceId: string) => {
+    setChartStackOrder((prev) => {
+      const index = prev.indexOf(instanceId);
+      if (index < 0 || index === prev.length - 1) return prev;
+      const next = prev.filter((id) => id !== instanceId);
+      next.push(instanceId);
+      return next;
+    });
+  }, []);
+
+  const moveChartToBottom = useCallback((instanceId: string) => {
+    setChartStackOrder((prev) => {
+      const index = prev.indexOf(instanceId);
+      if (index <= 0) return prev;
+      const next = prev.filter((id) => id !== instanceId);
+      next.unshift(instanceId);
+      return next;
+    });
+  }, []);
+
+  const moveChartForward = useCallback((instanceId: string) => {
+    setChartStackOrder((prev) => {
+      const index = prev.indexOf(instanceId);
+      if (index < 0 || index === prev.length - 1) return prev;
+      const next = [...prev];
+      [next[index], next[index + 1]] = [next[index + 1], next[index]];
+      return next;
+    });
+  }, []);
+
+  const moveChartBackward = useCallback((instanceId: string) => {
+    setChartStackOrder((prev) => {
+      const index = prev.indexOf(instanceId);
+      if (index <= 0) return prev;
+      const next = [...prev];
+      [next[index], next[index - 1]] = [next[index - 1], next[index]];
+      return next;
+    });
+  }, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -189,7 +244,7 @@ export const ChartWorkspace: React.FC<{
     const ctx = output.getContext("2d");
     if (!ctx) return null;
 
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = canvasSettings.backgroundColor;
     ctx.fillRect(0, 0, width, height);
 
     chartItems.forEach((item) => {
@@ -223,6 +278,7 @@ export const ChartWorkspace: React.FC<{
     charts.forEach((chart) => removeChart(chart.id));
     setSelectedChartInstanceId(null);
     setChartPositionMap({});
+    setChartStackOrder([]);
   };
 
   const handleRefreshAll = () => {
@@ -312,6 +368,56 @@ export const ChartWorkspace: React.FC<{
     link.click();
   };
 
+  const handleAutoArrange = () => {
+    const container = containerRef.current;
+    if (!container || charts.length === 0) return;
+
+    const orderedIds = chartStackOrder.length
+      ? chartStackOrder.filter((id) => charts.some((c) => c.instanceId === id))
+      : charts.map((c) => c.instanceId);
+
+    const defaultSize = { width: 400, height: 300 };
+    const chartRects = new Map<string, { width: number; height: number }>();
+
+    Array.from(container.children).forEach((child) => {
+      const el = child as HTMLDivElement;
+      const instanceId = el.dataset.instanceId;
+      if (!instanceId) return;
+      chartRects.set(instanceId, {
+        width: el.offsetWidth || defaultSize.width,
+        height: el.offsetHeight || defaultSize.height,
+      });
+    });
+
+    const padding = 16;
+    const gap = 16;
+    const availableWidth = Math.max(320, container.clientWidth - padding * 2);
+
+    let cursorX = padding;
+    let cursorY = padding;
+    let rowHeight = 0;
+    const nextPositions: Record<string, { x: number; y: number }> = {};
+
+    orderedIds.forEach((id) => {
+      const rect = chartRects.get(id) || defaultSize;
+
+      if (
+        cursorX > padding &&
+        cursorX + rect.width > padding + availableWidth
+      ) {
+        cursorX = padding;
+        cursorY += rowHeight + gap;
+        rowHeight = 0;
+      }
+
+      nextPositions[id] = { x: cursorX, y: cursorY };
+      cursorX += rect.width + gap;
+      rowHeight = Math.max(rowHeight, rect.height);
+    });
+
+    setChartPositionMap((prev) => ({ ...prev, ...nextPositions }));
+  };
+
   return (
     <div
       className="chart-workspace grid grid-cols-1 md:grid-cols-[80%_1fr] gap-2"
@@ -329,6 +435,7 @@ export const ChartWorkspace: React.FC<{
             onCaptureAll={handleCaptureAll}
             onRefreshAll={handleRefreshAll}
             onDownloadAll={handleDownloadAll}
+            onAutoArrange={handleAutoArrange}
             isCapturing={isCapturingAll}
           />
         }
@@ -341,6 +448,7 @@ export const ChartWorkspace: React.FC<{
             width: "800px",
             maxWidth: "100%",
             height: "600px",
+            backgroundColor: canvasSettings.backgroundColor,
           }}
           onClick={(e) => {
             if (e.target === e.currentTarget) setSelectedChartInstanceId(null);
@@ -356,6 +464,15 @@ export const ChartWorkspace: React.FC<{
               onSelectChart={onSelectChart}
               position={chartPositionMap[c.instanceId] || { x: 20, y: 20 }}
               onMove={onMoveChart}
+              zIndex={
+                selectedChartInstanceId === c.instanceId
+                  ? 9999
+                  : (chartStackOrder.indexOf(c.instanceId) + 1) * 10
+              }
+              onMoveToTop={() => moveChartToTop(c.instanceId)}
+              onMoveUp={() => moveChartForward(c.instanceId)}
+              onMoveDown={() => moveChartBackward(c.instanceId)}
+              onMoveToBottom={() => moveChartToBottom(c.instanceId)}
               isSelected={selectedChartInstanceId === c.instanceId}
               removeChart={removeChart}
               mediaType={mediaType}

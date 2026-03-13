@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Delete02Icon,
   FileVideoCameraIcon,
+  GridViewIcon,
   ImageDownload02Icon,
+  Layers01Icon,
   Refresh01Icon,
 } from "@hugeicons/core-free-icons";
 
@@ -12,6 +14,12 @@ type ChartContextMenuProps = {
   onRecord: () => void;
   onReanimate: () => void;
   onDownload: () => void;
+  onAutoArrange?: () => void;
+  onMoveToTop?: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  onMoveToBottom?: () => void;
+  showLayers?: boolean;
   isRecording?: boolean;
   className?: string;
   id?: string;
@@ -22,14 +30,34 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
   onRecord,
   onReanimate,
   onDownload,
+  onAutoArrange,
+  onMoveToTop,
+  onMoveUp,
+  onMoveDown,
+  onMoveToBottom,
+  showLayers = true,
   isRecording = false,
   className = "",
   id,
 }) => {
+  const [layersOpen, setLayersOpen] = useState(false);
+  const layersMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onPointerDown = (event: MouseEvent) => {
+      if (!layersMenuRef.current) return;
+      if (layersMenuRef.current.contains(event.target as Node)) return;
+      setLayersOpen(false);
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, []);
+
   return (
     <div
       id={id}
-      className={`drop-shadow-lg bg-white/90 rounded p-1 flex space-x-2 ${className}`}
+      className={`relative drop-shadow-lg bg-white/90 rounded p-1 flex space-x-2 ${className}`}
     >
       <button
         type="button"
@@ -88,6 +116,88 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
           className="text-gray-500 hover:text-blue-600 cursor-pointer"
         />
       </button>
+
+      {onAutoArrange && (
+        <button
+          type="button"
+          data-tooltip="Auto arrange charts"
+          className="tooltip"
+          onClick={onAutoArrange}
+          aria-label="Auto arrange charts"
+        >
+          <HugeiconsIcon
+            icon={GridViewIcon}
+            size={16}
+            className="text-gray-500 hover:text-fuchsia-600 cursor-pointer"
+          />
+        </button>
+      )}
+
+      {showLayers && (
+        <div ref={layersMenuRef} className="relative">
+        <button
+          type="button"
+          data-tooltip="Layer order"
+          className="tooltip"
+          onClick={(e) => {
+            e.stopPropagation();
+            setLayersOpen((prev) => !prev);
+          }}
+          aria-label="Layer order"
+        >
+          <HugeiconsIcon
+            icon={Layers01Icon}
+            size={16}
+            className="text-gray-500 hover:text-indigo-600 cursor-pointer"
+          />
+        </button>
+
+        {layersOpen && (
+          <div className="absolute top-6 left-0 z-50 min-w-36 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+            <button
+              type="button"
+              className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+              onClick={() => {
+                onMoveToTop?.();
+                setLayersOpen(false);
+              }}
+            >
+              Move to top
+            </button>
+            <button
+              type="button"
+              className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+              onClick={() => {
+                onMoveUp?.();
+                setLayersOpen(false);
+              }}
+            >
+              Move up
+            </button>
+            <button
+              type="button"
+              className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+              onClick={() => {
+                onMoveDown?.();
+                setLayersOpen(false);
+              }}
+            >
+              Move down
+            </button>
+            <button
+              type="button"
+              className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+              onClick={() => {
+                onMoveToBottom?.();
+                setLayersOpen(false);
+              }}
+            >
+              Move to bottom
+            </button>
+          </div>
+        )}
+        </div>
+      )}
     </div>
   );
 };
