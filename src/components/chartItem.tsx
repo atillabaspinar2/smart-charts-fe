@@ -12,6 +12,7 @@ import { ChartContextMenu } from "./chartContextMenu";
 interface ChartItemProps {
   data: ChartItemData;
   reanimateSignal: ReanimateSignal | null;
+  reanimateAllKey: number;
   settings: ChartSettingsData;
   onSelectChart: (instanceId: string) => void;
   isSelected: boolean;
@@ -23,6 +24,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
   ({
     data,
     reanimateSignal,
+    reanimateAllKey,
     settings,
     onSelectChart,
     isSelected,
@@ -35,6 +37,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     const [isRecording, setIsRecording] = useState(false);
     const [recordKey, setRecordKey] = useState<number>(0);
     const lastAppliedReanimateKeyRef = useRef<number>(0);
+    const lastAppliedReanimateAllKeyRef = useRef<number>(0);
 
     useEffect(() => {
       if (!containerRef.current) return;
@@ -57,6 +60,14 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       lastAppliedReanimateKeyRef.current = reanimateSignal.key;
       reanimateChart();
     }, [reanimateSignal, data.instanceId]);
+
+    useEffect(() => {
+      if (!reanimateAllKey) return;
+      if (lastAppliedReanimateAllKeyRef.current === reanimateAllKey) return;
+
+      lastAppliedReanimateAllKeyRef.current = reanimateAllKey;
+      reanimateChart();
+    }, [reanimateAllKey]);
 
     const startRecording = async () => {
       reanimateChart();
