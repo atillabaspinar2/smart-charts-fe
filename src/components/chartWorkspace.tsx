@@ -15,6 +15,9 @@ export const ChartWorkspace: React.FC<{
   addChart: (type: string) => void;
   removeChart: (id: number) => void;
 }> = ({ charts, addChart, removeChart }) => {
+  const [chartPositionMap, setChartPositionMap] = useState<
+    Record<string, { x: number; y: number }>
+  >({});
   const [chartSettingsMap, setChartSettingsMap] = useState<
     Record<string, ChartSettingsData>
   >({});
@@ -98,11 +101,45 @@ export const ChartWorkspace: React.FC<{
     });
   }, [charts, chartSettingsMap]);
 
+  useEffect(() => {
+    setChartPositionMap((prev) => {
+      const next: Record<string, { x: number; y: number }> = {};
+      let changed = false;
+
+      charts.forEach((chart, index) => {
+        const existing = prev[chart.instanceId];
+        if (existing) {
+          next[chart.instanceId] = existing;
+          return;
+        }
+
+        changed = true;
+        const offsetX = 20 + (index % 5) * 36;
+        const offsetY = 20 + Math.floor(index / 5) * 36;
+        next[chart.instanceId] = { x: offsetX, y: offsetY };
+      });
+
+      if (Object.keys(prev).length !== charts.length) changed = true;
+      return changed ? next : prev;
+    });
+  }, [charts]);
+
   const onSelectChart = useCallback((instanceId: string) => {
     setSelectedChartInstanceId((prev) =>
       prev === instanceId ? null : instanceId,
     );
   }, []);
+
+  const onMoveChart = useCallback(
+    (instanceId: string, x: number, y: number) => {
+      setChartPositionMap((prev) => {
+        const current = prev[instanceId];
+        if (current && current.x === x && current.y === y) return prev;
+        return { ...prev, [instanceId]: { x, y } };
+      });
+    },
+    [],
+  );
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -185,6 +222,7 @@ export const ChartWorkspace: React.FC<{
   const handleRemoveAll = () => {
     charts.forEach((chart) => removeChart(chart.id));
     setSelectedChartInstanceId(null);
+    setChartPositionMap({});
   };
 
   const handleRefreshAll = () => {
@@ -281,7 +319,7 @@ export const ChartWorkspace: React.FC<{
       onDrop={onDrop}
     >
       <PanelView
-        title="Chart Items"
+        title="Workspace"
         className="relative"
         headerRight={
           <CanvasContextMenu
@@ -298,7 +336,7 @@ export const ChartWorkspace: React.FC<{
         <div
           id="chart-container"
           ref={containerRef}
-          className="resize overflow-auto p-1 flex flex-wrap border border-theme-bg rounded-md bg-white/50 shadow-lg"
+          className="relative resize overflow-auto p-1 border border-theme-bg rounded-md bg-white/50 shadow-lg"
           style={{
             width: "800px",
             maxWidth: "100%",
@@ -316,6 +354,8 @@ export const ChartWorkspace: React.FC<{
               reanimateAllKey={reanimateAllKey}
               settings={getChartSettings(c.instanceId)}
               onSelectChart={onSelectChart}
+              position={chartPositionMap[c.instanceId] || { x: 20, y: 20 }}
+              onMove={onMoveChart}
               isSelected={selectedChartInstanceId === c.instanceId}
               removeChart={removeChart}
               mediaType={mediaType}
