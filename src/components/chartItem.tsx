@@ -111,26 +111,26 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     const opts: any = getOptionsByType(type);
     const chartOption = {
       ...opts,
+      title: {
+        ...(opts.title || {}),
+        text: settings.title,
+      },
       backgroundColor: settings.backgroundColor,
       animationDuration: settings.animationDuration ?? opts.animationDuration,
     };
 
+    const chartHighlighted = isSelected
+      ? "border-slate-300 rounded-lg shadow-[0_3px_10px_rgba(15,23,42,0.35)]"
+      : "border-slate-200 rounded shadow-[0_2px_6px_rgba(0,0,0,0.08)]";
+
     return (
       <div
         ref={containerRef}
-        onClick={() => onSelectChart(data.instanceId)}
-        className={`m-2 group relative cursor-pointer transition-shadow duration-200 ${
-          isSelected ? "shadow-lg rounded-lg" : ""
-        }`}
-        style={{
-          resize: "both",
-          overflow: "auto",
-          border: isSelected ? "1px solid #d1d5db" : "1px solid #e5e7eb",
-          borderRadius: isSelected ? "0.5rem" : "0.25rem",
-          backgroundColor: "white",
-          width: "400px",
-          height: "300px",
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelectChart(data.instanceId);
         }}
+        className={`m-2 group relative cursor-pointer transition-all duration-200 resize overflow-auto border bg-white w-100 h-75 ${chartHighlighted}`}
       >
         <ReactECharts
           ref={chartRef}

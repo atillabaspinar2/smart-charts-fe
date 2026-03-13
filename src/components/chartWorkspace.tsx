@@ -26,6 +26,11 @@ export const ChartWorkspace: React.FC<{
   const [selectedChartInstanceId, setSelectedChartInstanceId] = useState<
     string | null
   >(null);
+  const [canvasSettings, setCanvasSettings] = useState({
+    animationDuration: 1000,
+    backgroundColor: "#ffffff",
+    title: "Workspace",
+  });
 
   const initializeChartSettings = (instanceId: string, type: string) => {
     const templateOptions: any = getOptionsByType(type);
@@ -34,6 +39,7 @@ export const ChartWorkspace: React.FC<{
       [instanceId]: {
         animationDuration: templateOptions.animationDuration || 1000,
         backgroundColor: "#ffffff",
+        title: templateOptions?.title?.text || "",
       },
     }));
   };
@@ -48,6 +54,7 @@ export const ChartWorkspace: React.FC<{
         ({
           animationDuration: 1000,
           backgroundColor: "#ffffff",
+          title: "",
         } as ChartSettingsData);
       const next = { ...current, ...updates };
 
@@ -57,8 +64,10 @@ export const ChartWorkspace: React.FC<{
       const backgroundChanged =
         typeof updates.backgroundColor === "string" &&
         updates.backgroundColor !== current.backgroundColor;
+      const titleChanged =
+        typeof updates.title === "string" && updates.title !== current.title;
 
-      if (!animationChanged && !backgroundChanged) return prev;
+      if (!animationChanged && !backgroundChanged && !titleChanged) return prev;
 
       if (animationChanged) {
         setReanimateSignal({ instanceId, key: Date.now() });
@@ -76,6 +85,7 @@ export const ChartWorkspace: React.FC<{
       chartSettingsMap[instanceId] || {
         animationDuration: 1000,
         backgroundColor: "#ffffff",
+        title: "",
       }
     );
   };
@@ -89,7 +99,9 @@ export const ChartWorkspace: React.FC<{
   }, [charts, chartSettingsMap]);
 
   const onSelectChart = useCallback((instanceId: string) => {
-    setSelectedChartInstanceId(instanceId);
+    setSelectedChartInstanceId((prev) =>
+      prev === instanceId ? null : instanceId,
+    );
   }, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -292,6 +304,9 @@ export const ChartWorkspace: React.FC<{
             maxWidth: "100%",
             height: "600px",
           }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedChartInstanceId(null);
+          }}
         >
           {charts.map((c) => (
             <ChartItem
@@ -330,6 +345,12 @@ export const ChartWorkspace: React.FC<{
                 backgroundColor: color,
               })
             }
+            title={getChartSettings(selectedChartInstanceId).title}
+            setTitle={(value) =>
+              updateChartSettings(selectedChartInstanceId, {
+                title: value,
+              })
+            }
             selectedChartType={
               charts.find((c) => c.instanceId === selectedChartInstanceId)
                 ?.type || ""
@@ -337,9 +358,25 @@ export const ChartWorkspace: React.FC<{
             onClose={() => setSelectedChartInstanceId(null)}
           />
         ) : (
-          <p className="text-sm text-gray-500">
-            Select a chart to edit settings.
-          </p>
+          <ChartSettingsPanel
+            animationDuration={canvasSettings.animationDuration}
+            setAnimationDuration={(value) =>
+              setCanvasSettings((prev) => ({
+                ...prev,
+                animationDuration: value,
+              }))
+            }
+            mediaType={mediaType}
+            setMediaType={setMediaType}
+            backgroundColor={canvasSettings.backgroundColor}
+            setBackgroundColor={(color) =>
+              setCanvasSettings((prev) => ({ ...prev, backgroundColor: color }))
+            }
+            title={canvasSettings.title}
+            setTitle={(value) =>
+              setCanvasSettings((prev) => ({ ...prev, title: value }))
+            }
+          />
         )}
       </PanelView>
 

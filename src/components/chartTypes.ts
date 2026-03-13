@@ -7,6 +7,7 @@ export interface ChartItemData {
 export interface ChartSettingsData {
   animationDuration: number;
   backgroundColor: string;
+  title: string;
 }
 
 export interface ReanimateSignal {

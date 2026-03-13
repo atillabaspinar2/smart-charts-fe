@@ -9,6 +9,8 @@ interface ChartSettingsPanelProps {
   setMediaType: (v: string) => void;
   backgroundColor: string;
   setBackgroundColor: (v: string) => void;
+  title: string;
+  setTitle: (v: string) => void;
   selectedChartType?: string;
   onClose?: () => void;
 }
@@ -20,6 +22,8 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
   setMediaType,
   backgroundColor,
   setBackgroundColor,
+  title,
+  setTitle,
   selectedChartType,
   onClose,
 }) => {
@@ -75,6 +79,20 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
         </div>
       )}
       <div className="mb-4">
+        <label className="block text-sm font-medium mb-1">
+          {selectedChartType ? "Chart Title" : "Title"}
+        </label>
+        <input
+          type="text"
+          className="w-full p-2 border border-gray-300 rounded"
+          placeholder={
+            selectedChartType ? "Enter chart title" : "Enter workspace title"
+          }
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </div>
+      <div className="mb-4">
         <label className="block text-sm font-medium mb-1">Animation (ms)</label>
         <input
           type="text"
@@ -100,44 +118,25 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
         </div>
       )}
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Background</label>
-        <input
-          type="color"
-          className="w-full h-8 p-1 border border-gray-300 rounded"
-          value={backgroundColor}
-          onChange={(e) => setBackgroundColor(e.target.value)}
-        />
+        <label className="block text-sm font-medium mb-1">
+          Background Color
+        </label>
+        <div className="flex items-center gap-3">
+          <input
+            type="color"
+            aria-label="Background color"
+            title="Pick background color"
+            className="h-10 w-10 p-1 border border-gray-300 rounded-md cursor-pointer bg-white"
+            value={backgroundColor}
+            onChange={(e) => setBackgroundColor(e.target.value)}
+          />
+          <span className="text-sm text-gray-600 uppercase">
+            {backgroundColor}
+          </span>
+        </div>
       </div>
       {!selectedChartType && (
         <>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Title</label>
-            <input
-              type="text"
-              className="w-full p-2 border border-indigo-900 rounded"
-              placeholder="Enter chart title"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">
-              X-Axis Label
-            </label>
-            <input
-              type="text"
-              className="w-full p-2 border border-gray-300 rounded"
-              placeholder="Enter x-axis label"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">
-              Y-Axis Label
-            </label>
-            <input
-              type="text"
-              className="w-full p-2 border border-gray-300 rounded"
-              placeholder="Enter y-axis label"
-            />
-          </div>
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">
               Color Scheme
