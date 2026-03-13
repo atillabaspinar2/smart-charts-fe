@@ -53,7 +53,7 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
 
   const panelTitle = selectedChartType
     ? `${selectedChartType.charAt(0).toUpperCase() + selectedChartType.slice(1)} Settings`
-    : "Chart Options";
+    : "Canvas Options";
 
   return (
     <div className="chart-options p-1">
