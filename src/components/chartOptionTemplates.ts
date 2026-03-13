@@ -11,6 +11,7 @@ export const lineOptions = {
     {
       data: [150, 230, 224, 218, 135, 147, 260],
       type: "line",
+      areaStyle: {},
     },
   ],
 };

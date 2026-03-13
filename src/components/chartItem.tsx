@@ -1,12 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import ReactECharts from "echarts-for-react";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Delete02Icon,
-  FileVideoCameraIcon,
-  ImageDownload02Icon,
-  Refresh01Icon,
-} from "@hugeicons/core-free-icons";
 import { recordCanvas } from "./record";
 import {
   type ChartItemData,
@@ -14,6 +7,7 @@ import {
   type ReanimateSignal,
 } from "./chartTypes";
 import { getOptionsByType } from "./chartOptionTemplates";
+import { ChartContextMenu } from "./chartContextMenu";
 
 interface ChartItemProps {
   data: ChartItemData;
@@ -139,42 +133,15 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             background: settings.backgroundColor,
           }}
         />
-        <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 drop-shadow-lg bg-white/90 rounded p-1 flex space-x-2">
-          <span data-tooltip="Remove chart" className="tooltip">
-            <HugeiconsIcon
-              icon={Delete02Icon}
-              size={16}
-              className="text-gray-500 hover:text-red-800 cursor-pointer"
-              onClick={() => removeChart(id)}
-            />
-          </span>
-          <span data-tooltip="Record video" className="tooltip">
-            <HugeiconsIcon
-              icon={FileVideoCameraIcon}
-              size={16}
-              className={`cursor-pointer hover:text-red-600 ${
-                isRecording ? "text-red-500 animate-pulse" : "text-gray-500"
-              }`}
-              onClick={startRecording}
-            />
-          </span>
-          <span data-tooltip="Reanimate chart" className="tooltip">
-            <HugeiconsIcon
-              icon={Refresh01Icon}
-              size={16}
-              className="text-gray-500 hover:text-emerald-600 cursor-pointer"
-              onClick={reanimateChart}
-            />
-          </span>
-          <span data-tooltip="Download image" className="tooltip">
-            <HugeiconsIcon
-              icon={ImageDownload02Icon}
-              size={16}
-              className="text-gray-500 hover:text-blue-600 cursor-pointer"
-              onClick={captureImage}
-            />
-          </span>
-        </div>
+        <ChartContextMenu
+          id="cart-context-menu"
+          className="absolute top-2 left-2 opacity-0 group-hover:opacity-100"
+          onRemove={() => removeChart(id)}
+          onRecord={startRecording}
+          onReanimate={reanimateChart}
+          onDownload={captureImage}
+          isRecording={isRecording}
+        />
       </div>
     );
   },
