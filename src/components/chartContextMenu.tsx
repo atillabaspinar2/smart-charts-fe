@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
+  ArrowAllDirectionIcon,
   Delete02Icon,
   FileVideoCameraIcon,
   GridViewIcon,
@@ -15,6 +16,9 @@ type ChartContextMenuProps = {
   onReanimate: () => void;
   onDownload: () => void;
   onAutoArrange?: () => void;
+  onExpandToFullWidth?: () => void;
+  onExpandContainerToPanel?: () => void;
+  onAutofitContainer?: () => void;
   onMoveToTop?: () => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
@@ -31,6 +35,9 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
   onReanimate,
   onDownload,
   onAutoArrange,
+  onExpandToFullWidth,
+  onExpandContainerToPanel,
+  onAutofitContainer,
   onMoveToTop,
   onMoveUp,
   onMoveDown,
@@ -133,69 +140,115 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
         </button>
       )}
 
-      {showLayers && (
-        <div ref={layersMenuRef} className="relative">
+      {onExpandToFullWidth && (
         <button
           type="button"
-          data-tooltip="Layer order"
+          data-tooltip="Expand chart to full width"
           className="tooltip"
-          onClick={(e) => {
-            e.stopPropagation();
-            setLayersOpen((prev) => !prev);
-          }}
-          aria-label="Layer order"
+          onClick={onExpandToFullWidth}
+          aria-label="Expand chart to full width"
         >
           <HugeiconsIcon
-            icon={Layers01Icon}
+            icon={ArrowAllDirectionIcon}
             size={16}
-            className="text-gray-500 hover:text-indigo-600 cursor-pointer"
+            className="text-gray-500 hover:text-teal-600 cursor-pointer"
           />
         </button>
+      )}
 
-        {layersOpen && (
-          <div className="absolute top-6 left-0 z-50 min-w-36 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-            <button
-              type="button"
-              className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
-              onClick={() => {
-                onMoveToTop?.();
-                setLayersOpen(false);
-              }}
-            >
-              Move to top
-            </button>
-            <button
-              type="button"
-              className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
-              onClick={() => {
-                onMoveUp?.();
-                setLayersOpen(false);
-              }}
-            >
-              Move up
-            </button>
-            <button
-              type="button"
-              className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
-              onClick={() => {
-                onMoveDown?.();
-                setLayersOpen(false);
-              }}
-            >
-              Move down
-            </button>
-            <button
-              type="button"
-              className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
-              onClick={() => {
-                onMoveToBottom?.();
-                setLayersOpen(false);
-              }}
-            >
-              Move to bottom
-            </button>
-          </div>
-        )}
+      {onExpandContainerToPanel && (
+        <button
+          type="button"
+          data-tooltip="Expand canvas"
+          className="tooltip"
+          onClick={onExpandContainerToPanel}
+          aria-label="Expand canvas"
+        >
+          <HugeiconsIcon
+            icon={ArrowAllDirectionIcon}
+            size={16}
+            className="text-gray-500 hover:text-cyan-600 cursor-pointer"
+          />
+        </button>
+      )}
+      {onAutofitContainer && (
+        <button
+          type="button"
+          data-tooltip="Autofit container to charts"
+          className="tooltip"
+          onClick={onAutofitContainer}
+          aria-label="Autofit container to charts"
+        >
+          <HugeiconsIcon
+            icon={ArrowAllDirectionIcon}
+            size={16}
+            className="text-gray-500 hover:text-orange-500 cursor-pointer rotate-45"
+          />
+        </button>
+      )}
+      {showLayers && (
+        <div ref={layersMenuRef} className="relative">
+          <button
+            type="button"
+            data-tooltip="Layer order"
+            className="tooltip"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLayersOpen((prev) => !prev);
+            }}
+            aria-label="Layer order"
+          >
+            <HugeiconsIcon
+              icon={Layers01Icon}
+              size={16}
+              className="text-gray-500 hover:text-indigo-600 cursor-pointer"
+            />
+          </button>
+
+          {layersOpen && (
+            <div className="absolute top-6 left-0 z-50 min-w-36 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+              <button
+                type="button"
+                className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => {
+                  onMoveToTop?.();
+                  setLayersOpen(false);
+                }}
+              >
+                Move to top
+              </button>
+              <button
+                type="button"
+                className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => {
+                  onMoveUp?.();
+                  setLayersOpen(false);
+                }}
+              >
+                Move up
+              </button>
+              <button
+                type="button"
+                className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => {
+                  onMoveDown?.();
+                  setLayersOpen(false);
+                }}
+              >
+                Move down
+              </button>
+              <button
+                type="button"
+                className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => {
+                  onMoveToBottom?.();
+                  setLayersOpen(false);
+                }}
+              >
+                Move to bottom
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

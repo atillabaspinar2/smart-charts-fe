@@ -7,6 +7,8 @@ type CanvasContextMenuProps = {
   onRefreshAll: () => void;
   onDownloadAll: () => void;
   onAutoArrange: () => void;
+  onExpandContainerToPanel: () => void;
+  onAutofitContainer: () => void;
   isCapturing?: boolean;
   className?: string;
   id?: string;
@@ -18,6 +20,8 @@ export const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
   onRefreshAll,
   onDownloadAll,
   onAutoArrange,
+  onExpandContainerToPanel,
+  onAutofitContainer,
   isCapturing = false,
   className = "",
   id,
@@ -31,6 +35,8 @@ export const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
       onReanimate={onRefreshAll}
       onDownload={onDownloadAll}
       onAutoArrange={onAutoArrange}
+      onExpandContainerToPanel={onExpandContainerToPanel}
+      onAutofitContainer={onAutofitContainer}
       showLayers={false}
       isRecording={isCapturing}
     />

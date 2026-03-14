@@ -23,6 +23,16 @@ const defaultLineSeriesColors = [
   "#7c3aed",
 ];
 
+const defaultChartSize = {
+  width: 400,
+  height: 300,
+};
+
+const defaultContainerSize = {
+  width: 800,
+  height: 600,
+};
+
 export const ChartWorkspace: React.FC<{
   charts: ChartItemData[];
   addChart: (type: string) => void;
@@ -30,6 +40,9 @@ export const ChartWorkspace: React.FC<{
 }> = ({ charts, addChart, removeChart }) => {
   const [chartPositionMap, setChartPositionMap] = useState<
     Record<string, { x: number; y: number }>
+  >({});
+  const [chartSizeMap, setChartSizeMap] = useState<
+    Record<string, { width: number; height: number }>
   >({});
   const [chartStackOrder, setChartStackOrder] = useState<string[]>([]);
   const [chartDataMap, setChartDataMap] = useState<Record<string, ChartData>>(
@@ -43,6 +56,7 @@ export const ChartWorkspace: React.FC<{
     useState<ReanimateSignal | null>(null);
   const [reanimateAllKey, setReanimateAllKey] = useState<number>(0);
   const [isCapturingAll, setIsCapturingAll] = useState(false);
+  const [containerSize, setContainerSize] = useState(defaultContainerSize);
   const [selectedChartInstanceId, setSelectedChartInstanceId] = useState<
     string | null
   >(null);
@@ -234,6 +248,27 @@ export const ChartWorkspace: React.FC<{
   }, [charts]);
 
   useEffect(() => {
+    setChartSizeMap((prev) => {
+      const next: Record<string, { width: number; height: number }> = {};
+      let changed = false;
+
+      charts.forEach((chart) => {
+        const existing = prev[chart.instanceId];
+        if (existing) {
+          next[chart.instanceId] = existing;
+          return;
+        }
+
+        changed = true;
+        next[chart.instanceId] = defaultChartSize;
+      });
+
+      if (Object.keys(prev).length !== charts.length) changed = true;
+      return changed ? next : prev;
+    });
+  }, [charts]);
+
+  useEffect(() => {
     setChartStackOrder((prev) => {
       const activeIds = charts.map((chart) => chart.instanceId);
       const filtered = prev.filter((id) => activeIds.includes(id));
@@ -259,6 +294,19 @@ export const ChartWorkspace: React.FC<{
         const current = prev[instanceId];
         if (current && current.x === x && current.y === y) return prev;
         return { ...prev, [instanceId]: { x, y } };
+      });
+    },
+    [],
+  );
+
+  const onResizeChart = useCallback(
+    (instanceId: string, width: number, height: number) => {
+      setChartSizeMap((prev) => {
+        const current = prev[instanceId];
+        if (current && current.width === width && current.height === height) {
+          return prev;
+        }
+        return { ...prev, [instanceId]: { width, height } };
       });
     },
     [],
@@ -305,6 +353,25 @@ export const ChartWorkspace: React.FC<{
   }, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updateContainerSize = () => {
+      const width = container.offsetWidth;
+      const height = container.offsetHeight;
+      setContainerSize((prev) => {
+        if (prev.width === width && prev.height === height) return prev;
+        return { width, height };
+      });
+    };
+
+    updateContainerSize();
+    const observer = new ResizeObserver(updateContainerSize);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   const onDragOver = (e: React.DragEvent) => e.preventDefault();
   const onDrop = (e: React.DragEvent) => {
@@ -476,6 +543,41 @@ export const ChartWorkspace: React.FC<{
     link.click();
   };
 
+  const handleExpandContainerToPanel = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const parent = container.parentElement;
+    const parentWidth = parent?.clientWidth;
+    if (!parentWidth) return;
+
+    setContainerSize((prev) => ({
+      width: parentWidth,
+      height: prev.height,
+    }));
+  }, []);
+
+  const handleAutofitContainer = useCallback(() => {
+    if (charts.length === 0) return;
+
+    const padding = 16;
+    let maxRight = 0;
+    let maxBottom = 0;
+
+    charts.forEach((chart) => {
+      const pos = chartPositionMap[chart.instanceId];
+      const size = chartSizeMap[chart.instanceId] || defaultChartSize;
+      if (!pos) return;
+      maxRight = Math.max(maxRight, pos.x + size.width);
+      maxBottom = Math.max(maxBottom, pos.y + size.height);
+    });
+
+    setContainerSize({
+      width: maxRight + padding,
+      height: maxBottom + padding,
+    });
+  }, [charts, chartPositionMap, chartSizeMap]);
+
   const handleAutoArrange = () => {
     const container = containerRef.current;
     if (!container || charts.length === 0) return;
@@ -484,7 +586,6 @@ export const ChartWorkspace: React.FC<{
       ? chartStackOrder.filter((id) => charts.some((c) => c.instanceId === id))
       : charts.map((c) => c.instanceId);
 
-    const defaultSize = { width: 400, height: 300 };
     const chartRects = new Map<string, { width: number; height: number }>();
 
     Array.from(container.children).forEach((child) => {
@@ -492,8 +593,8 @@ export const ChartWorkspace: React.FC<{
       const instanceId = el.dataset.instanceId;
       if (!instanceId) return;
       chartRects.set(instanceId, {
-        width: el.offsetWidth || defaultSize.width,
-        height: el.offsetHeight || defaultSize.height,
+        width: el.offsetWidth || defaultChartSize.width,
+        height: el.offsetHeight || defaultChartSize.height,
       });
     });
 
@@ -507,7 +608,7 @@ export const ChartWorkspace: React.FC<{
     const nextPositions: Record<string, { x: number; y: number }> = {};
 
     orderedIds.forEach((id) => {
-      const rect = chartRects.get(id) || defaultSize;
+      const rect = chartRects.get(id) || chartSizeMap[id] || defaultChartSize;
 
       if (
         cursorX > padding &&
@@ -525,6 +626,83 @@ export const ChartWorkspace: React.FC<{
 
     setChartPositionMap((prev) => ({ ...prev, ...nextPositions }));
   };
+
+  const handleExpandChartToFullWidth = useCallback(
+    (instanceId: string) => {
+      const container = containerRef.current;
+      if (!container || charts.length === 0) return;
+
+      const orderedIds = chartStackOrder.length
+        ? chartStackOrder.filter((id) =>
+            charts.some((chart) => chart.instanceId === id),
+          )
+        : charts.map((chart) => chart.instanceId);
+
+      const padding = 16;
+      const gap = 16;
+      const availableWidth = Math.max(320, container.clientWidth - padding * 2);
+      const chartRects = new Map<string, { width: number; height: number }>();
+
+      Array.from(container.children).forEach((child) => {
+        const el = child as HTMLDivElement;
+        const childInstanceId = el.dataset.instanceId;
+        if (!childInstanceId) return;
+        chartRects.set(childInstanceId, {
+          width: el.offsetWidth || defaultChartSize.width,
+          height: el.offsetHeight || defaultChartSize.height,
+        });
+      });
+
+      const expandedRect =
+        chartRects.get(instanceId) ||
+        chartSizeMap[instanceId] ||
+        defaultChartSize;
+      let cursorX = padding;
+      let cursorY = padding;
+      let rowHeight = 0;
+      const nextPositions: Record<string, { x: number; y: number }> = {};
+
+      orderedIds.forEach((id) => {
+        const rect =
+          id === instanceId
+            ? {
+                width: availableWidth,
+                height: expandedRect.height,
+              }
+            : chartRects.get(id) || chartSizeMap[id] || defaultChartSize;
+
+        if (id === instanceId && cursorX > padding) {
+          cursorX = padding;
+          cursorY += rowHeight + gap;
+          rowHeight = 0;
+        }
+
+        if (
+          cursorX > padding &&
+          cursorX + rect.width > padding + availableWidth
+        ) {
+          cursorX = padding;
+          cursorY += rowHeight + gap;
+          rowHeight = 0;
+        }
+
+        nextPositions[id] = { x: cursorX, y: cursorY };
+        cursorX += rect.width + gap;
+        rowHeight = Math.max(rowHeight, rect.height);
+      });
+
+      setChartSizeMap((prev) => ({
+        ...prev,
+        [instanceId]: {
+          width: availableWidth,
+          height: expandedRect.height,
+        },
+      }));
+      setChartPositionMap((prev) => ({ ...prev, ...nextPositions }));
+      setSelectedChartInstanceId(instanceId);
+    },
+    [chartSizeMap, chartStackOrder, charts],
+  );
 
   const selectedChart = selectedChartInstanceId
     ? charts.find((chart) => chart.instanceId === selectedChartInstanceId) ||
@@ -549,6 +727,8 @@ export const ChartWorkspace: React.FC<{
             onRefreshAll={handleRefreshAll}
             onDownloadAll={handleDownloadAll}
             onAutoArrange={handleAutoArrange}
+            onExpandContainerToPanel={handleExpandContainerToPanel}
+            onAutofitContainer={handleAutofitContainer}
             isCapturing={isCapturingAll}
           />
         }
@@ -558,9 +738,9 @@ export const ChartWorkspace: React.FC<{
           ref={containerRef}
           className="relative resize overflow-auto p-1 border border-theme-bg rounded-md bg-white/50 shadow-lg"
           style={{
-            width: "800px",
+            width: `${containerSize.width}px`,
             maxWidth: "100%",
-            height: "600px",
+            height: `${containerSize.height}px`,
             backgroundColor: canvasSettings.backgroundColor,
           }}
           onClick={(e) => {
@@ -577,11 +757,16 @@ export const ChartWorkspace: React.FC<{
               chartData={chartDataMap[c.instanceId]}
               onSelectChart={onSelectChart}
               position={chartPositionMap[c.instanceId] || { x: 20, y: 20 }}
+              size={chartSizeMap[c.instanceId] || defaultChartSize}
               onMove={onMoveChart}
+              onResize={onResizeChart}
               zIndex={
                 selectedChartInstanceId === c.instanceId
                   ? 9999
                   : (chartStackOrder.indexOf(c.instanceId) + 1) * 10
+              }
+              onExpandToFullWidth={() =>
+                handleExpandChartToFullWidth(c.instanceId)
               }
               onMoveToTop={() => moveChartToTop(c.instanceId)}
               onMoveUp={() => moveChartForward(c.instanceId)}

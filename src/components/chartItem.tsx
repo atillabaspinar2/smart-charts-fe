@@ -18,8 +18,11 @@ interface ChartItemProps {
   chartData?: ChartData;
   onSelectChart: (instanceId: string) => void;
   position: { x: number; y: number };
+  size: { width: number; height: number };
   onMove: (instanceId: string, x: number, y: number) => void;
+  onResize: (instanceId: string, width: number, height: number) => void;
   zIndex: number;
+  onExpandToFullWidth: () => void;
   onMoveToTop: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
@@ -38,8 +41,11 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     chartData,
     onSelectChart,
     position,
+    size,
     onMove,
+    onResize,
     zIndex,
+    onExpandToFullWidth,
     onMoveToTop,
     onMoveUp,
     onMoveDown,
@@ -62,11 +68,15 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     useEffect(() => {
       if (!containerRef.current) return;
       const observer = new ResizeObserver(() => {
+        const node = containerRef.current;
+        if (node) {
+          onResize(data.instanceId, node.offsetWidth, node.offsetHeight);
+        }
         chartRef.current?.getEchartsInstance()?.resize();
       });
       observer.observe(containerRef.current);
       return () => observer.disconnect();
-    }, []);
+    }, [data.instanceId, onResize]);
 
     const reanimateChart = () => {
       setRecordKey(Date.now());
@@ -318,6 +328,8 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,
+          width: `${size.width}px`,
+          height: `${size.height}px`,
           zIndex,
         }}
       >
@@ -348,6 +360,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             onRecord={startRecording}
             onReanimate={reanimateChart}
             onDownload={captureImage}
+            onExpandToFullWidth={onExpandToFullWidth}
             onMoveToTop={onMoveToTop}
             onMoveUp={onMoveUp}
             onMoveDown={onMoveDown}
