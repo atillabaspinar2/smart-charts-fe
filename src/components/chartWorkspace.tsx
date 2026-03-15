@@ -37,6 +37,7 @@ const defaultContainerSize = {
 };
 
 const DATA_PANEL_FIXED_TOP = 120;
+const DATA_PANEL_HEADER_HEIGHT = 40;
 
 export const ChartWorkspace: React.FC<{
   charts: ChartItemData[];
@@ -72,6 +73,7 @@ export const ChartWorkspace: React.FC<{
     left: 0,
     width: 0,
   });
+  const [dataPanelTop, setDataPanelTop] = useState<number>(DATA_PANEL_FIXED_TOP);
   const [canvasSettings, setCanvasSettings] = useState({
     animationDuration: 1000,
     backgroundColor: "#ffffff",
@@ -370,6 +372,50 @@ export const ChartWorkspace: React.FC<{
 
   const containerRef = useRef<HTMLDivElement>(null);
   const workspaceRef = useRef<HTMLDivElement>(null);
+  const gridDataPanelRef = useRef<HTMLDivElement>(null);
+
+  const clampDataPanelTop = useCallback((value: number) => {
+    const maxTop = Math.max(
+      0,
+      window.innerHeight - DATA_PANEL_HEADER_HEIGHT - 8,
+    );
+    return Math.max(0, Math.min(maxTop, value));
+  }, []);
+
+  const handleDataPanelHeaderMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLElement>) => {
+      const target = e.target as HTMLElement;
+      if (target.closest("[data-no-panel-drag='true']")) return;
+
+      e.preventDefault();
+
+      const startY = e.clientY;
+      const currentTop =
+        dataPanelMode === "fixed-up"
+          ? dataPanelTop
+          : gridDataPanelRef.current?.getBoundingClientRect().top ??
+            DATA_PANEL_FIXED_TOP;
+
+      if (dataPanelMode !== "fixed-up") {
+        setDataPanelMode("fixed-up");
+      }
+      setDataPanelTop(clampDataPanelTop(currentTop));
+
+      const onMouseMove = (moveEvent: MouseEvent) => {
+        const deltaY = moveEvent.clientY - startY;
+        setDataPanelTop(clampDataPanelTop(currentTop + deltaY));
+      };
+
+      const onMouseUp = () => {
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+      };
+
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    },
+    [clampDataPanelTop, dataPanelMode, dataPanelTop],
+  );
 
   useEffect(() => {
     const updateFixedPanelBounds = () => {
@@ -753,10 +799,13 @@ export const ChartWorkspace: React.FC<{
         <button
           type="button"
           onClick={() =>
-            setDataPanelMode((prev) =>
-              prev === "fixed-up" ? "grid" : "fixed-up",
-            )
+            setDataPanelMode((prev) => {
+              if (prev === "fixed-up") return "grid";
+              setDataPanelTop(clampDataPanelTop(DATA_PANEL_FIXED_TOP));
+              return "fixed-up";
+            })
           }
+          data-no-panel-drag="true"
           aria-label={
             dataPanelMode === "fixed-up"
               ? "Move data panel down"
@@ -942,13 +991,15 @@ export const ChartWorkspace: React.FC<{
       </PanelView>
 
       {dataPanelMode === "grid" && (
-        <PanelView
-          title="Chart Data"
-          className="md:col-span-2"
-          headerRight={dataPanelHeaderRight}
-        >
-          {dataPanelBody}
-        </PanelView>
+        <div ref={gridDataPanelRef} className="md:col-span-2">
+          <PanelView
+            title="Chart Data"
+            headerRight={dataPanelHeaderRight}
+            onHeaderMouseDown={handleDataPanelHeaderMouseDown}
+          >
+            {dataPanelBody}
+          </PanelView>
+        </div>
       )}
 
       {dataPanelMode === "fixed-up" && (
@@ -957,11 +1008,12 @@ export const ChartWorkspace: React.FC<{
           className="fixed bottom-0 z-12000"
           bodyClassName="h-[calc(100%-2.5rem)] overflow-y-auto"
           style={{
-            top: `${DATA_PANEL_FIXED_TOP}px`,
+            top: `${dataPanelTop}px`,
             left: `${fixedPanelBounds.left}px`,
             width: `${fixedPanelBounds.width}px`,
           }}
           headerRight={dataPanelHeaderRight}
+          onHeaderMouseDown={handleDataPanelHeaderMouseDown}
         >
           {dataPanelBody}
         </PanelView>
