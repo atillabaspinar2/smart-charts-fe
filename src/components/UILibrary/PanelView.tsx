@@ -5,6 +5,7 @@ export const PanelView: React.FC<{
   children?: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
+  onClick?: () => void;
   headerRight?: React.ReactNode;
   onHeaderMouseDown?: (e: React.MouseEvent<HTMLElement>) => void;
   hideBody?: boolean;
@@ -14,6 +15,7 @@ export const PanelView: React.FC<{
   children,
   className = "",
   style,
+  onClick,
   headerRight,
   onHeaderMouseDown,
   hideBody = false,
@@ -22,6 +24,7 @@ export const PanelView: React.FC<{
   return (
     <section
       style={style}
+      onClick={onClick}
       className={`rounded-md overflow-visible bg-theme-bg border border-theme-primary shadow-[0_3px_8px_rgba(34,34,59,0.12)] ${className}`}
     >
       <header

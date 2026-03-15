@@ -73,7 +73,8 @@ export const ChartWorkspace: React.FC<{
     left: 0,
     width: 0,
   });
-  const [dataPanelTop, setDataPanelTop] = useState<number>(DATA_PANEL_FIXED_TOP);
+  const [dataPanelTop, setDataPanelTop] =
+    useState<number>(DATA_PANEL_FIXED_TOP);
   const [canvasSettings, setCanvasSettings] = useState({
     animationDuration: 1000,
     backgroundColor: "#ffffff",
@@ -301,9 +302,7 @@ export const ChartWorkspace: React.FC<{
   }, [charts]);
 
   const onSelectChart = useCallback((instanceId: string) => {
-    setSelectedChartInstanceId((prev) =>
-      prev === instanceId ? null : instanceId,
-    );
+    setSelectedChartInstanceId(instanceId);
   }, []);
 
   const onMoveChart = useCallback(
@@ -393,8 +392,8 @@ export const ChartWorkspace: React.FC<{
       const currentTop =
         dataPanelMode === "fixed-up"
           ? dataPanelTop
-          : gridDataPanelRef.current?.getBoundingClientRect().top ??
-            DATA_PANEL_FIXED_TOP;
+          : (gridDataPanelRef.current?.getBoundingClientRect().top ??
+            DATA_PANEL_FIXED_TOP);
 
       if (dataPanelMode !== "fixed-up") {
         setDataPanelMode("fixed-up");
@@ -872,6 +871,7 @@ export const ChartWorkspace: React.FC<{
       <PanelView
         title="Workspace"
         className="relative"
+        onClick={() => setSelectedChartInstanceId(null)}
         headerRight={
           <CanvasContextMenu
             id="canvas-context-menu"
