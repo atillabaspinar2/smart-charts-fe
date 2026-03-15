@@ -181,6 +181,8 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           data: categories.map(
             (_, valueIndex) => series.values[valueIndex] ?? null,
           ),
+          smooth: series.smooth,
+          step: series.step,
           lineStyle: {
             ...(templateSeries.lineStyle || {}),
             color: series.color,
@@ -192,6 +194,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           areaStyle: series.areaStyle
             ? {
                 ...(templateSeries.areaStyle || {}),
+                ...series.areaStyle,
                 color: series.color,
                 opacity: 0.2,
               }

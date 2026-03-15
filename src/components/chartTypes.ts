@@ -10,19 +10,35 @@ export interface ChartSettingsData {
   title: string;
 }
 
+export type LineChartVariation =
+  | "basic"
+  | "smooth"
+  | "area"
+  | "stacked-area"
+  | "step";
+
 export interface LineSeriesData {
   id: string;
   name: string;
   color: string;
   values: number[];
-  areaStyle: boolean;
+  smooth: boolean;
+  step: boolean;
+  areaStyle: Record<string, never> | null;
 }
 
 export interface LineChartData {
   type: "line";
+  variation?: LineChartVariation;
   categories: string[];
   series: LineSeriesData[];
 }
+
+export type BarChartVariation =
+  | "grouped"
+  | "stacked"
+  | "stacked-100"
+  | "horizontal";
 
 export interface BarSeriesData {
   id: string;
@@ -33,6 +49,7 @@ export interface BarSeriesData {
 
 export interface BarChartData {
   type: "bar";
+  variation?: BarChartVariation;
   categories: string[];
   series: BarSeriesData[];
 }

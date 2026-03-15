@@ -4,8 +4,8 @@ import { ChartItem } from "./chartItem";
 import { CanvasContextMenu } from "./canvasContextMenu";
 import { PanelView } from "./UILibrary/PanelView";
 import { getOptionsByType } from "./chartOptionTemplates";
-import { LineChartDataPanel } from "./lineChartDataPanel";
-import { BarChartDataPanel } from "./barChartDataPanel";
+import { LineChartDataPanel } from "./dataUI/lineChartDataPanel";
+import { BarChartDataPanel } from "./dataUI/barChartDataPanel";
 import {
   type BarChartData,
   type ChartData,
@@ -137,7 +137,9 @@ export const ChartWorkspace: React.FC<{
             values: Array.isArray(series.data)
               ? series.data.map((value: unknown) => Number(value) || 0)
               : [],
-            areaStyle: Boolean(series.areaStyle),
+            smooth: Boolean(series.smooth),
+            step: Boolean(series.step),
+            areaStyle: series.areaStyle ? {} : null,
           }))
         : [
             {
@@ -145,7 +147,9 @@ export const ChartWorkspace: React.FC<{
               name: "Series 1",
               color: defaultLineSeriesColors[0],
               values: [150, 230, 224, 218, 135, 147, 260],
-              areaStyle: true,
+              smooth: false,
+              step: false,
+              areaStyle: {},
             },
           ],
     };
