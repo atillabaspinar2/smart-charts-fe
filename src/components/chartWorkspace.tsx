@@ -4,6 +4,7 @@ import { ArrowUp01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { ChartSettingsPanel } from "./ChartSettingsPanel";
 import { ChartItem } from "./chartItem";
 import { CanvasContextMenu } from "./canvasContextMenu";
+import { Tooltip } from "./UILibrary/Tooltip";
 import { PanelView } from "./UILibrary/PanelView";
 import { getOptionsByType } from "./chartOptionTemplates";
 import { LineChartDataPanel } from "./dataUI/lineChartDataPanel";
@@ -748,28 +749,31 @@ export const ChartWorkspace: React.FC<{
 
   const dataPanelHeaderRight = (
     <div className="flex items-center gap-1">
-      <button
-        type="button"
-        onClick={() =>
-          setDataPanelMode((prev) =>
-            prev === "fixed-up" ? "grid" : "fixed-up",
-          )
-        }
-        aria-label={
-          dataPanelMode === "fixed-up"
-            ? "Move data panel down"
-            : "Move data panel up"
-        }
-        title={dataPanelMode === "fixed-up" ? "move down" : "move up"}
-        data-tooltip={dataPanelMode === "fixed-up" ? "move down" : "move up"}
-        className="tooltip rounded p-1 hover:bg-white/20"
-      >
-        <HugeiconsIcon
-          icon={dataPanelMode === "fixed-up" ? ArrowDown01Icon : ArrowUp01Icon}
-          size={16}
-          className="text-theme-bg"
-        />
-      </button>
+      <Tooltip content={dataPanelMode === "fixed-up" ? "move down" : "move up"}>
+        <button
+          type="button"
+          onClick={() =>
+            setDataPanelMode((prev) =>
+              prev === "fixed-up" ? "grid" : "fixed-up",
+            )
+          }
+          aria-label={
+            dataPanelMode === "fixed-up"
+              ? "Move data panel down"
+              : "Move data panel up"
+          }
+          title={dataPanelMode === "fixed-up" ? "move down" : "move up"}
+          className="rounded p-1 hover:bg-white/20"
+        >
+          <HugeiconsIcon
+            icon={
+              dataPanelMode === "fixed-up" ? ArrowDown01Icon : ArrowUp01Icon
+            }
+            size={16}
+            className="text-theme-bg"
+          />
+        </button>
+      </Tooltip>
     </div>
   );
 

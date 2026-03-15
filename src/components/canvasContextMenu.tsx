@@ -30,6 +30,7 @@ export const CanvasContextMenu: React.FC<CanvasContextMenuProps> = ({
     <ChartContextMenu
       id={id}
       className={className}
+      contextType="canvas"
       onRemove={onRemoveAll}
       onRecord={onCaptureAll}
       onReanimate={onRefreshAll}
