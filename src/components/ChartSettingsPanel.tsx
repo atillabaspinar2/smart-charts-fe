@@ -2,6 +2,7 @@ import { useEffect, useState, type FC } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { CustomInput } from "./UILibrary/customInput";
+import { ECHARTS_THEMES } from "../assets/themes/registerThemes";
 
 interface ChartSettingsPanelProps {
   animationDuration: number;
@@ -14,6 +15,8 @@ interface ChartSettingsPanelProps {
   setTitle: (v: string) => void;
   selectedChartType?: string;
   onClose?: () => void;
+  workspaceTheme?: string;
+  setWorkspaceTheme?: (theme: string) => void;
 }
 
 export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
@@ -27,6 +30,8 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
   setTitle,
   selectedChartType,
   onClose,
+  workspaceTheme,
+  setWorkspaceTheme,
 }) => {
   const [animationInput, setAnimationInput] = useState(
     String(animationDuration),
@@ -130,13 +135,18 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
         <>
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">
-              Color Scheme
+              Chart Theme
             </label>
-            <select className="w-full p-2 border border-gray-300 rounded">
-              <option>Default</option>
-              <option>Dark</option>
-              <option>Pastel</option>
-              <option>Bright</option>
+            <select
+              className="w-full p-2 border border-gray-300 rounded"
+              value={workspaceTheme ?? ""}
+              onChange={(e) => setWorkspaceTheme?.(e.target.value)}
+            >
+              {ECHARTS_THEMES.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
             </select>
           </div>
         </>

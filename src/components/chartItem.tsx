@@ -30,7 +30,16 @@ interface ChartItemProps {
   isSelected: boolean;
   removeChart: (id: number) => void;
   mediaType: string;
+  theme?: string;
 }
+
+const DEFAULT_SERIES_COLORS = [
+  "#2563eb",
+  "#dc2626",
+  "#059669",
+  "#d97706",
+  "#7c3aed",
+];
 
 export const ChartItem: React.FC<ChartItemProps> = React.memo(
   ({
@@ -53,6 +62,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     isSelected,
     removeChart,
     mediaType,
+    theme,
   }) => {
     const { id, type } = data;
     const chartRef = useRef<any>(null);
@@ -147,13 +157,24 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     };
 
     const opts: any = getOptionsByType(type);
+    const hasTheme = Boolean(theme);
+    const shouldUseSeriesColor = (color: string, index: number) => {
+      if (!hasTheme) return true;
+      return (
+        color !== DEFAULT_SERIES_COLORS[index % DEFAULT_SERIES_COLORS.length]
+      );
+    };
+    const effectiveBackgroundColor =
+      hasTheme && settings.backgroundColor === "#ffffff"
+        ? undefined
+        : settings.backgroundColor;
     const chartOption = {
       ...opts,
       title: {
         ...(opts.title || {}),
         text: settings.title,
       },
-      backgroundColor: settings.backgroundColor,
+      backgroundColor: effectiveBackgroundColor,
       animationDuration: settings.animationDuration ?? opts.animationDuration,
     };
 
@@ -183,19 +204,25 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           ),
           smooth: series.smooth,
           step: series.step,
-          lineStyle: {
-            ...(templateSeries.lineStyle || {}),
-            color: series.color,
-          },
-          itemStyle: {
-            ...(templateSeries.itemStyle || {}),
-            color: series.color,
-          },
+          lineStyle: shouldUseSeriesColor(series.color, index)
+            ? {
+                ...(templateSeries.lineStyle || {}),
+                color: series.color,
+              }
+            : templateSeries.lineStyle,
+          itemStyle: shouldUseSeriesColor(series.color, index)
+            ? {
+                ...(templateSeries.itemStyle || {}),
+                color: series.color,
+              }
+            : templateSeries.itemStyle,
           areaStyle: series.areaStyle
             ? {
                 ...(templateSeries.areaStyle || {}),
                 ...series.areaStyle,
-                color: series.color,
+                ...(shouldUseSeriesColor(series.color, index)
+                  ? { color: series.color }
+                  : {}),
                 opacity: 0.2,
               }
             : undefined,
@@ -227,10 +254,12 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           data: categories.map(
             (_, valueIndex) => series.values[valueIndex] ?? null,
           ),
-          itemStyle: {
-            ...(templateSeries.itemStyle || {}),
-            color: series.color,
-          },
+          itemStyle: shouldUseSeriesColor(series.color, index)
+            ? {
+                ...(templateSeries.itemStyle || {}),
+                color: series.color,
+              }
+            : templateSeries.itemStyle,
         };
       });
     }
@@ -338,14 +367,15 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       >
         <ReactECharts
           ref={chartRef}
-          key={`${type}-${recordKey}-${id}`}
+          key={`${type}-${recordKey}-${id}-${theme || "default"}`}
           option={chartOption}
           // @ts-ignore: preserveDrawingBuffer is valid for the underlying canvas
           opts={{ renderer: "canvas", preserveDrawingBuffer: true }}
+          theme={theme || undefined}
           style={{
             width: "100%",
             height: "100%",
-            background: settings.backgroundColor,
+            background: effectiveBackgroundColor || "transparent",
           }}
         />
         <div

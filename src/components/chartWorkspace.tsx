@@ -80,6 +80,7 @@ export const ChartWorkspace: React.FC<{
     backgroundColor: "#ffffff",
     title: "Workspace",
   });
+  const [workspaceTheme, setWorkspaceTheme] = useState<string>("");
 
   const initializeChartSettings = (instanceId: string, type: string) => {
     const templateOptions: any = getOptionsByType(type);
@@ -929,6 +930,7 @@ export const ChartWorkspace: React.FC<{
               isSelected={selectedChartInstanceId === c.instanceId}
               removeChart={removeChart}
               mediaType={mediaType}
+              theme={workspaceTheme || undefined}
             />
           ))}
         </div>
@@ -986,6 +988,8 @@ export const ChartWorkspace: React.FC<{
             setTitle={(value) =>
               setCanvasSettings((prev) => ({ ...prev, title: value }))
             }
+            workspaceTheme={workspaceTheme}
+            setWorkspaceTheme={setWorkspaceTheme}
           />
         )}
       </PanelView>
