@@ -12,11 +12,13 @@ const BAR_VARIATIONS: { value: BarChartVariation; label: string }[] = [
 interface BarChartDataPanelProps {
   data: BarChartData;
   onChange: (next: BarChartData) => void;
+  themeColors: string[];
 }
 
 export const BarChartDataPanel: FC<BarChartDataPanelProps> = ({
   data,
   onChange,
+  themeColors,
 }) => {
   const variation = data.variation ?? "grouped";
 
@@ -49,9 +51,21 @@ export const BarChartDataPanel: FC<BarChartDataPanelProps> = ({
         categories={data.categories}
         series={data.series}
         onCategoriesChange={(cats) => onChange({ ...data, categories: cats })}
-        onSeriesChange={(series) =>
-          onChange({ ...data, series: series as BarChartData["series"] })
-        }
+        onSeriesChange={(series) => {
+          onChange({
+            ...data,
+            series: series.map((row, index) => ({
+              ...row,
+              colorSource:
+                row.colorSource ?? data.series[index]?.colorSource ?? "custom",
+              themeColorIndex:
+                row.themeColorIndex ??
+                data.series[index]?.themeColorIndex ??
+                null,
+            })) as BarChartData["series"],
+          });
+        }}
+        themeColors={themeColors}
       />
     </div>
   );

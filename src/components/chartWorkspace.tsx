@@ -6,6 +6,10 @@ import { ChartItem } from "./chartItem";
 import { CanvasContextMenu } from "./canvasContextMenu";
 import { Tooltip } from "./UILibrary/Tooltip";
 import { PanelView } from "./UILibrary/PanelView";
+import {
+  getThemeBackground,
+  getThemePalette,
+} from "../assets/themes/registerThemes";
 import { getOptionsByType } from "./chartOptionTemplates";
 import { LineChartDataPanel } from "./dataUI/lineChartDataPanel";
 import { BarChartDataPanel } from "./dataUI/barChartDataPanel";
@@ -17,14 +21,6 @@ import {
   type LineChartData,
   type ReanimateSignal,
 } from "./chartTypes";
-
-const defaultLineSeriesColors = [
-  "#2563eb",
-  "#dc2626",
-  "#059669",
-  "#d97706",
-  "#7c3aed",
-];
 
 const defaultChartSize = {
   width: 400,
@@ -81,6 +77,12 @@ export const ChartWorkspace: React.FC<{
     title: "Workspace",
   });
   const [workspaceTheme, setWorkspaceTheme] = useState<string>("");
+  const activeThemeColors = getThemePalette(workspaceTheme);
+
+  const getThemeColor = useCallback(
+    (index: number) => activeThemeColors[index % activeThemeColors.length],
+    [activeThemeColors],
+  );
 
   const initializeChartSettings = (instanceId: string, type: string) => {
     const templateOptions: any = getOptionsByType(type);
@@ -113,8 +115,9 @@ export const ChartWorkspace: React.FC<{
           ? templateSeries.map((series: any, index: number) => ({
               id: `${instanceId}-series-${index + 1}`,
               name: series.name || `Series ${index + 1}`,
-              color:
-                defaultLineSeriesColors[index % defaultLineSeriesColors.length],
+              color: getThemeColor(index),
+              colorSource: "theme",
+              themeColorIndex: index,
               values: Array.isArray(series.data)
                 ? series.data.map((value: unknown) => Number(value) || 0)
                 : [],
@@ -123,7 +126,9 @@ export const ChartWorkspace: React.FC<{
               {
                 id: `${instanceId}-series-1`,
                 name: "Series 1",
-                color: defaultLineSeriesColors[0],
+                color: getThemeColor(0),
+                colorSource: "theme",
+                themeColorIndex: 0,
                 values: [5, 20, 36, 10, 10],
               },
             ],
@@ -148,8 +153,9 @@ export const ChartWorkspace: React.FC<{
         ? templateSeries.map((series: any, index: number) => ({
             id: `${instanceId}-series-${index + 1}`,
             name: series.name || `Series ${index + 1}`,
-            color:
-              defaultLineSeriesColors[index % defaultLineSeriesColors.length],
+            color: getThemeColor(index),
+            colorSource: "theme",
+            themeColorIndex: index,
             values: Array.isArray(series.data)
               ? series.data.map((value: unknown) => Number(value) || 0)
               : [],
@@ -161,7 +167,9 @@ export const ChartWorkspace: React.FC<{
             {
               id: `${instanceId}-series-1`,
               name: "Series 1",
-              color: defaultLineSeriesColors[0],
+              color: getThemeColor(0),
+              colorSource: "theme",
+              themeColorIndex: 0,
               values: [150, 230, 224, 218, 135, 147, 260],
               smooth: false,
               step: false,
@@ -229,6 +237,37 @@ export const ChartWorkspace: React.FC<{
     }));
     setReanimateSignal({ instanceId, key: Date.now() });
   };
+
+  const applyThemeColorsToChartSeries = useCallback(
+    (instanceId: string) => {
+      const data = chartDataMap[instanceId];
+      if (!data || (data.type !== "line" && data.type !== "bar")) return;
+
+      const nextSeries = data.series.map((series, index) => ({
+        ...series,
+        color: activeThemeColors[index % activeThemeColors.length],
+        colorSource: "theme" as const,
+        themeColorIndex: index,
+      }));
+
+      updateChartData(instanceId, {
+        ...data,
+        series: nextSeries,
+      } as ChartData);
+
+      const themeBg = getThemeBackground(workspaceTheme);
+      if (themeBg) {
+        updateChartSettings(instanceId, { backgroundColor: themeBg });
+      }
+    },
+    [activeThemeColors, chartDataMap, workspaceTheme],
+  );
+
+  const applyThemeColorsToAllCharts = useCallback(() => {
+    charts.forEach((chart) => {
+      applyThemeColorsToChartSeries(chart.instanceId);
+    });
+  }, [charts, applyThemeColorsToChartSeries]);
 
   useEffect(() => {
     charts.forEach((chart) => {
@@ -840,6 +879,7 @@ export const ChartWorkspace: React.FC<{
           onChange={(nextData) =>
             updateChartData(selectedChartInstanceId, nextData)
           }
+          themeColors={activeThemeColors}
         />
       )}
 
@@ -849,6 +889,7 @@ export const ChartWorkspace: React.FC<{
           onChange={(nextData) =>
             updateChartData(selectedChartInstanceId, nextData)
           }
+          themeColors={activeThemeColors}
         />
       )}
 
@@ -967,6 +1008,9 @@ export const ChartWorkspace: React.FC<{
               charts.find((c) => c.instanceId === selectedChartInstanceId)
                 ?.type || ""
             }
+            onApplyThemeColors={() =>
+              applyThemeColorsToChartSeries(selectedChartInstanceId)
+            }
             onClose={() => setSelectedChartInstanceId(null)}
           />
         ) : (
@@ -990,6 +1034,7 @@ export const ChartWorkspace: React.FC<{
             }
             workspaceTheme={workspaceTheme}
             setWorkspaceTheme={setWorkspaceTheme}
+            onApplyThemeColorsToAll={applyThemeColorsToAllCharts}
           />
         )}
       </PanelView>

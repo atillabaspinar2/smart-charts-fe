@@ -33,14 +33,6 @@ interface ChartItemProps {
   theme?: string;
 }
 
-const DEFAULT_SERIES_COLORS = [
-  "#2563eb",
-  "#dc2626",
-  "#059669",
-  "#d97706",
-  "#7c3aed",
-];
-
 export const ChartItem: React.FC<ChartItemProps> = React.memo(
   ({
     data,
@@ -158,11 +150,14 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
 
     const opts: any = getOptionsByType(type);
     const hasTheme = Boolean(theme);
-    const shouldUseSeriesColor = (color: string, index: number) => {
+    const shouldUseSeriesColor = (
+      colorSource: "theme" | "custom" | undefined,
+      color: string,
+    ) => {
       if (!hasTheme) return true;
-      return (
-        color !== DEFAULT_SERIES_COLORS[index % DEFAULT_SERIES_COLORS.length]
-      );
+      if (colorSource === "custom") return true;
+      if (colorSource === "theme") return false;
+      return color.length > 0;
     };
     const effectiveBackgroundColor =
       hasTheme && settings.backgroundColor === "#ffffff"
@@ -204,13 +199,13 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           ),
           smooth: series.smooth,
           step: series.step,
-          lineStyle: shouldUseSeriesColor(series.color, index)
+          lineStyle: shouldUseSeriesColor(series.colorSource, series.color)
             ? {
                 ...(templateSeries.lineStyle || {}),
                 color: series.color,
               }
             : templateSeries.lineStyle,
-          itemStyle: shouldUseSeriesColor(series.color, index)
+          itemStyle: shouldUseSeriesColor(series.colorSource, series.color)
             ? {
                 ...(templateSeries.itemStyle || {}),
                 color: series.color,
@@ -220,7 +215,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             ? {
                 ...(templateSeries.areaStyle || {}),
                 ...series.areaStyle,
-                ...(shouldUseSeriesColor(series.color, index)
+                ...(shouldUseSeriesColor(series.colorSource, series.color)
                   ? { color: series.color }
                   : {}),
                 opacity: 0.2,
@@ -254,7 +249,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           data: categories.map(
             (_, valueIndex) => series.values[valueIndex] ?? null,
           ),
-          itemStyle: shouldUseSeriesColor(series.color, index)
+          itemStyle: shouldUseSeriesColor(series.colorSource, series.color)
             ? {
                 ...(templateSeries.itemStyle || {}),
                 color: series.color,

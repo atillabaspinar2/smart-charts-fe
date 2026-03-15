@@ -38,15 +38,6 @@ select {
   --color-rose-wine-600: #5b263c;
   --color-rose-wine-700: #2d0f1c;
 
-  /* Palette 4: Royal Cobalt */
-  --color-royal-cobalt-100: #e8eefa;
-  --color-royal-cobalt-200: #b3c7f0;
-  --color-royal-cobalt-300: #7fa0e5;
-  --color-royal-cobalt-400: #507adc;
-  --color-royal-cobalt-500: #1e4cd2;
-  --color-royal-cobalt-600: #0a2a92;
-  --color-royal-cobalt-700: #02114b;
-
   /* Palette 5: Neutral Graphite */
   --color-neutral-graphite-100: #edeff0;
   --color-neutral-graphite-200: #c2c9cc;
@@ -56,17 +47,16 @@ select {
   --color-neutral-graphite-600: #383b3d;
   --color-neutral-graphite-700: #191b1c;
 
-  /* Semantic tokens currently mapped to Palette 1 */
-  --color-theme-bg: var(--color-blue-slate-100);
-  --color-theme-surface: var(--color-blue-slate-200);
-  --color-theme-primary: var(--color-blue-slate-300);
-  --color-theme-secondary: var(--color-blue-slate-400);
-  --color-theme-accent: var(--color-blue-slate-500);
-  --color-theme-text: var(--color-blue-slate-600);
-  --color-theme-strong: var(--color-blue-slate-700);
-}
+  /* Palette 8: Ember Forest (light to dark) */
+  --color-ember-forest-100: #f2e5d7;
+  --color-ember-forest-200: #b98563;
+  --color-ember-forest-300: #e94f37;
+  --color-ember-forest-400: #50341f;
+  --color-ember-forest-500: #002a19;
+  --color-ember-forest-600: #002a19;
+  --color-ember-forest-700: #002a19;
 
-:root[data-theme="blue-slate"] {
+  /* Semantic tokens currently mapped to Palette 1 */
   --color-theme-bg: var(--color-blue-slate-100);
   --color-theme-surface: var(--color-blue-slate-200);
   --color-theme-primary: var(--color-blue-slate-300);
@@ -96,16 +86,6 @@ select {
   --color-theme-strong: var(--color-rose-wine-700);
 }
 
-:root[data-theme="royal-cobalt"] {
-  --color-theme-bg: var(--color-royal-cobalt-100);
-  --color-theme-surface: var(--color-royal-cobalt-200);
-  --color-theme-primary: var(--color-royal-cobalt-300);
-  --color-theme-secondary: var(--color-royal-cobalt-400);
-  --color-theme-accent: var(--color-royal-cobalt-500);
-  --color-theme-text: var(--color-royal-cobalt-600);
-  --color-theme-strong: var(--color-royal-cobalt-700);
-}
-
 :root[data-theme="neutral-graphite"] {
   --color-theme-bg: var(--color-neutral-graphite-100);
   --color-theme-surface: var(--color-neutral-graphite-200);
@@ -114,4 +94,14 @@ select {
   --color-theme-accent: var(--color-neutral-graphite-500);
   --color-theme-text: var(--color-neutral-graphite-600);
   --color-theme-strong: var(--color-neutral-graphite-700);
+}
+
+:root[data-theme="ember-forest"] {
+  --color-theme-bg: var(--color-ember-forest-100);
+  --color-theme-surface: var(--color-ember-forest-200);
+  --color-theme-primary: var(--color-ember-forest-300);
+  --color-theme-secondary: var(--color-ember-forest-400);
+  --color-theme-accent: var(--color-ember-forest-500);
+  --color-theme-text: var(--color-ember-forest-400);
+  --color-theme-strong: var(--color-ember-forest-700);
 }

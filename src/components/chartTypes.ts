@@ -10,6 +10,8 @@ export interface ChartSettingsData {
   title: string;
 }
 
+export type SeriesColorSource = "theme" | "custom";
+
 export type LineChartVariation =
   | "basic"
   | "smooth"
@@ -21,6 +23,8 @@ export interface LineSeriesData {
   id: string;
   name: string;
   color: string;
+  colorSource?: SeriesColorSource;
+  themeColorIndex?: number | null;
   values: number[];
   smooth: boolean;
   step: boolean;
@@ -44,6 +48,8 @@ export interface BarSeriesData {
   id: string;
   name: string;
   color: string;
+  colorSource?: SeriesColorSource;
+  themeColorIndex?: number | null;
   values: number[];
 }
 

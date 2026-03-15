@@ -27,7 +27,7 @@ function App() {
     setCharts((prev) => prev.filter((c) => c.id !== id));
   };
   const [signUpModal, setSignUpModal] = useState(false);
-  const [selectedTheme, setSelectedTheme] = useState<ThemeName>("blue-slate");
+  const [selectedTheme, setSelectedTheme] = useState<ThemeName>("rose-wine");
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", selectedTheme);

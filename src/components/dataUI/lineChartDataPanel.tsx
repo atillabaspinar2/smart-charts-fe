@@ -5,11 +5,13 @@ import { type LineChartData } from "../chartTypes";
 interface LineChartDataPanelProps {
   data: LineChartData;
   onChange: (next: LineChartData) => void;
+  themeColors: string[];
 }
 
 export const LineChartDataPanel: FC<LineChartDataPanelProps> = ({
   data,
   onChange,
+  themeColors,
 }) => {
   const handleSeriesChange = (rows: GridSeriesRow[]) => {
     onChange({
@@ -21,6 +23,9 @@ export const LineChartDataPanel: FC<LineChartDataPanelProps> = ({
           smooth: existing?.smooth ?? false,
           step: existing?.step ?? false,
           areaStyle: existing?.areaStyle ?? null,
+          colorSource: row.colorSource ?? existing?.colorSource ?? "custom",
+          themeColorIndex:
+            row.themeColorIndex ?? existing?.themeColorIndex ?? null,
         };
       }),
     });
@@ -45,6 +50,7 @@ export const LineChartDataPanel: FC<LineChartDataPanelProps> = ({
         series={data.series}
         onCategoriesChange={(cats) => onChange({ ...data, categories: cats })}
         onSeriesChange={handleSeriesChange}
+        themeColors={themeColors}
       />
 
       <div className="rounded-md border border-gray-200 bg-white p-3 shadow-sm">

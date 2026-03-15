@@ -9,6 +9,14 @@ type ThemeProject = {
   theme: Record<string, unknown>;
 };
 
+export const DEFAULT_THEME_COLORS = [
+  "#2563eb",
+  "#dc2626",
+  "#059669",
+  "#d97706",
+  "#7c3aed",
+];
+
 const THEME_PROJECTS_RAW = [
   chalkProjectRaw,
   darkProjectRaw,
@@ -61,6 +69,28 @@ const sanitizeTheme = (theme: Record<string, unknown>) => {
 
 function registerThemeProject(project: ThemeProject) {
   echarts.registerTheme(project.themeName, sanitizeTheme(project.theme));
+}
+
+export function getThemePalette(themeName: string): string[] {
+  if (!themeName) return DEFAULT_THEME_COLORS;
+  const project = THEME_PROJECTS.find((item) => item.themeName === themeName);
+  if (!project) return DEFAULT_THEME_COLORS;
+
+  const rawColors = (project.theme as { color?: unknown }).color;
+  if (!Array.isArray(rawColors)) return DEFAULT_THEME_COLORS;
+
+  const colors = rawColors.filter(
+    (value): value is string => typeof value === "string" && value.length > 0,
+  );
+  return colors.length ? colors : DEFAULT_THEME_COLORS;
+}
+
+export function getThemeBackground(themeName: string): string | null {
+  if (!themeName) return null;
+  const project = THEME_PROJECTS.find((item) => item.themeName === themeName);
+  if (!project) return null;
+  const bg = (project.theme as { backgroundColor?: unknown }).backgroundColor;
+  return typeof bg === "string" && bg.length > 0 ? bg : null;
 }
 
 export function registerThemes() {

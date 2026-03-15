@@ -2,6 +2,8 @@ import { useEffect, useState, type FC } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { CustomInput } from "./UILibrary/customInput";
+import { CustomButton } from "./UILibrary/CustomButton";
+import { CustomSelect } from "./UILibrary/CustomSelect";
 import { ECHARTS_THEMES } from "../assets/themes/registerThemes";
 
 interface ChartSettingsPanelProps {
@@ -17,6 +19,8 @@ interface ChartSettingsPanelProps {
   onClose?: () => void;
   workspaceTheme?: string;
   setWorkspaceTheme?: (theme: string) => void;
+  onApplyThemeColors?: () => void;
+  onApplyThemeColorsToAll?: () => void;
 }
 
 export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
@@ -32,6 +36,8 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
   onClose,
   workspaceTheme,
   setWorkspaceTheme,
+  onApplyThemeColors,
+  onApplyThemeColorsToAll,
 }) => {
   const [animationInput, setAnimationInput] = useState(
     String(animationDuration),
@@ -102,15 +108,16 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
       />
       {!selectedChartType && (
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Media Format</label>
-          <select
-            className="w-full p-2 border border-gray-300 rounded"
+          <CustomSelect
+            id="settings-media-format"
+            label="Media Format"
             value={mediaType}
+            options={[
+              { value: "webm", label: "WebM" },
+              { value: "mp4", label: "MP4" },
+            ]}
             onChange={(e) => setMediaType(e.target.value)}
-          >
-            <option value="webm">WebM</option>
-            <option value="mp4">MP4</option>
-          </select>
+          />
         </div>
       )}
       <div className="mb-4">
@@ -131,24 +138,46 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
           </span>
         </div>
       </div>
+
+      {(selectedChartType === "line" || selectedChartType === "bar") &&
+        onApplyThemeColors && (
+          <div className="mb-4 rounded-md border border-theme-primary bg-theme-bg p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-sm font-medium">Series Colors</p>
+              <CustomButton onClick={onApplyThemeColors}>
+                Apply Theme Colors
+              </CustomButton>
+            </div>
+            <p className="text-xs text-theme-text/80">
+              Applies current theme palette to all series in order. You can
+              still override individual series colors from the Chart Data panel.
+            </p>
+          </div>
+        )}
+
       {!selectedChartType && (
         <>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">
-              Chart Theme
-            </label>
-            <select
-              className="w-full p-2 border border-gray-300 rounded"
-              value={workspaceTheme ?? ""}
-              onChange={(e) => setWorkspaceTheme?.(e.target.value)}
-            >
-              {ECHARTS_THEMES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <CustomSelect
+            id="settings-chart-theme"
+            label="Chart Theme"
+            value={workspaceTheme ?? ""}
+            options={ECHARTS_THEMES}
+            onChange={(e) => setWorkspaceTheme?.(e.target.value)}
+          />
+          {onApplyThemeColorsToAll && (
+            <div className="mb-4 rounded-md border border-theme-primary bg-theme-bg p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-sm font-medium">Series Colors</p>
+                <CustomButton onClick={onApplyThemeColorsToAll}>
+                  Apply to All Charts
+                </CustomButton>
+              </div>
+              <p className="text-xs text-theme-text/80">
+                Applies the current theme palette and background to all charts
+                on the canvas.
+              </p>
+            </div>
+          )}
         </>
       )}
     </div>

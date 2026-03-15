@@ -1,17 +1,13 @@
 import type { FC } from "react";
-
-const DEFAULT_SERIES_COLORS = [
-  "#2563eb",
-  "#dc2626",
-  "#059669",
-  "#d97706",
-  "#7c3aed",
-];
+import { DEFAULT_THEME_COLORS } from "../../assets/themes/registerThemes";
+import type { SeriesColorSource } from "../chartTypes";
 
 export interface GridSeriesRow {
   id: string;
   name: string;
   color: string;
+  colorSource?: SeriesColorSource;
+  themeColorIndex?: number | null;
   values: number[];
 }
 
@@ -20,6 +16,7 @@ interface DataGridProps {
   series: GridSeriesRow[];
   onCategoriesChange: (categories: string[]) => void;
   onSeriesChange: (series: GridSeriesRow[]) => void;
+  themeColors?: string[];
   minSeries?: number;
 }
 
@@ -28,6 +25,7 @@ export const DataGrid: FC<DataGridProps> = ({
   series,
   onCategoriesChange,
   onSeriesChange,
+  themeColors = DEFAULT_THEME_COLORS,
   minSeries = 1,
 }) => {
   const updateCategory = (index: number, value: string) => {
@@ -62,8 +60,36 @@ export const DataGrid: FC<DataGridProps> = ({
 
   const updateSeriesColor = (id: string, color: string) => {
     onSeriesChange(
-      series.map((row) => (row.id === id ? { ...row, color } : row)),
+      series.map((row) =>
+        row.id === id
+          ? {
+              ...row,
+              color,
+              colorSource: "custom",
+              themeColorIndex: null,
+            }
+          : row,
+      ),
     );
+  };
+
+  const getNextThemeColorIndex = () => {
+    if (!themeColors.length) return 0;
+    const used = new Set(
+      series
+        .filter(
+          (row) =>
+            row.colorSource === "theme" &&
+            typeof row.themeColorIndex === "number" &&
+            row.themeColorIndex >= 0,
+        )
+        .map((row) => row.themeColorIndex as number),
+    );
+
+    for (let i = 0; i < themeColors.length; i += 1) {
+      if (!used.has(i)) return i;
+    }
+    return series.length;
   };
 
   const updateValue = (seriesId: string, colIndex: number, raw: string) => {
@@ -80,12 +106,16 @@ export const DataGrid: FC<DataGridProps> = ({
 
   const addSeries = () => {
     const nextIndex = series.length;
+    const themeColorIndex = getNextThemeColorIndex();
+    const color = themeColors[themeColorIndex % themeColors.length];
     onSeriesChange([
       ...series,
       {
         id: `series-${Date.now()}-${nextIndex}`,
         name: `Series ${nextIndex + 1}`,
-        color: DEFAULT_SERIES_COLORS[nextIndex % DEFAULT_SERIES_COLORS.length],
+        color,
+        colorSource: "theme",
+        themeColorIndex,
         values: Array.from({ length: categories.length }, () => 0),
       },
     ]);
