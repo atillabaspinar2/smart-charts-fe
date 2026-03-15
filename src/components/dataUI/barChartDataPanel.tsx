@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { DataGrid, type GridSeriesRow } from "./DataGrid";
+import { DataGrid } from "./DataGrid";
 import { type BarChartData, type BarChartVariation } from "../chartTypes";
 
 const BAR_VARIATIONS: { value: BarChartVariation; label: string }[] = [

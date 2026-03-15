@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowUp01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { ChartSettingsPanel } from "./ChartSettingsPanel";
 import { ChartItem } from "./chartItem";
 import { CanvasContextMenu } from "./canvasContextMenu";
@@ -33,6 +35,8 @@ const defaultContainerSize = {
   height: 600,
 };
 
+const DATA_PANEL_FIXED_TOP = 120;
+
 export const ChartWorkspace: React.FC<{
   charts: ChartItemData[];
   addChart: (type: string) => void;
@@ -60,6 +64,13 @@ export const ChartWorkspace: React.FC<{
   const [selectedChartInstanceId, setSelectedChartInstanceId] = useState<
     string | null
   >(null);
+  const [dataPanelMode, setDataPanelMode] = useState<"grid" | "fixed-up">(
+    "grid",
+  );
+  const [fixedPanelBounds, setFixedPanelBounds] = useState({
+    left: 0,
+    width: 0,
+  });
   const [canvasSettings, setCanvasSettings] = useState({
     animationDuration: 1000,
     backgroundColor: "#ffffff",
@@ -357,6 +368,28 @@ export const ChartWorkspace: React.FC<{
   }, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const workspaceRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const updateFixedPanelBounds = () => {
+      const host = workspaceRef.current;
+      if (!host) return;
+      const rect = host.getBoundingClientRect();
+      setFixedPanelBounds({
+        left: Math.round(rect.left),
+        width: Math.round(rect.width),
+      });
+    };
+
+    updateFixedPanelBounds();
+    window.addEventListener("resize", updateFixedPanelBounds);
+    window.addEventListener("scroll", updateFixedPanelBounds, true);
+
+    return () => {
+      window.removeEventListener("resize", updateFixedPanelBounds);
+      window.removeEventListener("scroll", updateFixedPanelBounds, true);
+    };
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -713,8 +746,72 @@ export const ChartWorkspace: React.FC<{
       null
     : null;
 
+  const dataPanelHeaderRight = (
+    <div className="flex items-center gap-1">
+      <button
+        type="button"
+        onClick={() =>
+          setDataPanelMode((prev) =>
+            prev === "fixed-up" ? "grid" : "fixed-up",
+          )
+        }
+        aria-label={
+          dataPanelMode === "fixed-up"
+            ? "Move data panel down"
+            : "Move data panel up"
+        }
+        title={dataPanelMode === "fixed-up" ? "move down" : "move up"}
+        data-tooltip={dataPanelMode === "fixed-up" ? "move down" : "move up"}
+        className="tooltip rounded p-1 hover:bg-white/20"
+      >
+        <HugeiconsIcon
+          icon={dataPanelMode === "fixed-up" ? ArrowDown01Icon : ArrowUp01Icon}
+          size={16}
+          className="text-theme-bg"
+        />
+      </button>
+    </div>
+  );
+
+  const dataPanelBody = (
+    <>
+      {!selectedChart && (
+        <p className="text-sm text-gray-600">
+          Select a chart to edit its data.
+        </p>
+      )}
+
+      {selectedChart?.type === "line" && selectedChartInstanceId && (
+        <LineChartDataPanel
+          data={chartDataMap[selectedChartInstanceId] as LineChartData}
+          onChange={(nextData) =>
+            updateChartData(selectedChartInstanceId, nextData)
+          }
+        />
+      )}
+
+      {selectedChart?.type === "bar" && selectedChartInstanceId && (
+        <BarChartDataPanel
+          data={chartDataMap[selectedChartInstanceId] as BarChartData}
+          onChange={(nextData) =>
+            updateChartData(selectedChartInstanceId, nextData)
+          }
+        />
+      )}
+
+      {selectedChart &&
+        selectedChart.type !== "line" &&
+        selectedChart.type !== "bar" && (
+          <p className="text-sm text-gray-600">
+            Data editing for {selectedChart.type} charts is not implemented yet.
+          </p>
+        )}
+    </>
+  );
+
   return (
     <div
+      ref={workspaceRef}
       className="chart-workspace grid grid-cols-1 md:grid-cols-[80%_1fr] gap-2"
       onDragOver={onDragOver}
       onDrop={onDrop}
@@ -840,40 +937,31 @@ export const ChartWorkspace: React.FC<{
         )}
       </PanelView>
 
-      <PanelView title="Chart Data" className="md:col-span-2">
-        {!selectedChart && (
-          <p className="text-sm text-gray-600">
-            Select a chart to edit its data.
-          </p>
-        )}
+      {dataPanelMode === "grid" && (
+        <PanelView
+          title="Chart Data"
+          className="md:col-span-2"
+          headerRight={dataPanelHeaderRight}
+        >
+          {dataPanelBody}
+        </PanelView>
+      )}
 
-        {selectedChart?.type === "line" && selectedChartInstanceId && (
-          <LineChartDataPanel
-            data={chartDataMap[selectedChartInstanceId] as LineChartData}
-            onChange={(nextData) =>
-              updateChartData(selectedChartInstanceId, nextData)
-            }
-          />
-        )}
-
-        {selectedChart?.type === "bar" && selectedChartInstanceId && (
-          <BarChartDataPanel
-            data={chartDataMap[selectedChartInstanceId] as BarChartData}
-            onChange={(nextData) =>
-              updateChartData(selectedChartInstanceId, nextData)
-            }
-          />
-        )}
-
-        {selectedChart &&
-          selectedChart.type !== "line" &&
-          selectedChart.type !== "bar" && (
-            <p className="text-sm text-gray-600">
-              Data editing for {selectedChart.type} charts is not implemented
-              yet.
-            </p>
-          )}
-      </PanelView>
+      {dataPanelMode === "fixed-up" && (
+        <PanelView
+          title="Chart Data"
+          className="fixed bottom-0 z-12000"
+          bodyClassName="h-[calc(100%-2.5rem)] overflow-y-auto"
+          style={{
+            top: `${DATA_PANEL_FIXED_TOP}px`,
+            left: `${fixedPanelBounds.left}px`,
+            width: `${fixedPanelBounds.width}px`,
+          }}
+          headerRight={dataPanelHeaderRight}
+        >
+          {dataPanelBody}
+        </PanelView>
+      )}
     </div>
   );
 };
