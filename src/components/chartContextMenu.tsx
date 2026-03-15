@@ -78,7 +78,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
           <HugeiconsIcon
             icon={Delete02Icon}
             size={16}
-            className="text-gray-500 hover:text-red-800 cursor-pointer"
+            className="text-gray-500 hover:text-blue-600 cursor-pointer"
           />
         </button>
       </Tooltip>
@@ -88,7 +88,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
           <HugeiconsIcon
             icon={FileVideoCameraIcon}
             size={16}
-            className={`cursor-pointer hover:text-red-600 ${
+            className={`cursor-pointer hover:text-blue-600 ${
               isRecording ? "text-red-500 animate-pulse" : "text-gray-500"
             }`}
           />
@@ -100,7 +100,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
           <HugeiconsIcon
             icon={Refresh01Icon}
             size={16}
-            className="text-gray-500 hover:text-emerald-600 cursor-pointer"
+            className="text-gray-500 hover:text-blue-600 cursor-pointer"
           />
         </button>
       </Tooltip>
@@ -125,7 +125,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
             <HugeiconsIcon
               icon={GridViewIcon}
               size={16}
-              className="text-gray-500 hover:text-fuchsia-600 cursor-pointer"
+              className="text-gray-500 hover:text-blue-600 cursor-pointer"
             />
           </button>
         </Tooltip>
@@ -141,7 +141,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
             <HugeiconsIcon
               icon={ArrowAllDirectionIcon}
               size={16}
-              className="text-gray-500 hover:text-teal-600 cursor-pointer"
+              className="text-gray-500 hover:text-blue-600 cursor-pointer"
             />
           </button>
         </Tooltip>
@@ -157,7 +157,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
             <HugeiconsIcon
               icon={ArrowAllDirectionIcon}
               size={16}
-              className="text-gray-500 hover:text-cyan-600 cursor-pointer"
+              className="text-gray-500 hover:text-blue-600 cursor-pointer"
             />
           </button>
         </Tooltip>
@@ -172,7 +172,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
             <HugeiconsIcon
               icon={ArrowAllDirectionIcon}
               size={16}
-              className="text-gray-500 hover:text-orange-500 cursor-pointer rotate-45"
+              className="text-gray-500 hover:text-blue-600 cursor-pointer rotate-45"
             />
           </button>
         </Tooltip>
@@ -191,7 +191,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
               <HugeiconsIcon
                 icon={Layers01Icon}
                 size={16}
-                className="text-gray-500 hover:text-indigo-600 cursor-pointer"
+                className="text-gray-500 hover:text-blue-600 cursor-pointer"
               />
             </button>
           </Tooltip>
