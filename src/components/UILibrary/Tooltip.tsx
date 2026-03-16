@@ -55,7 +55,7 @@ export const Tooltip = ({ content, children }: TooltipProps) => {
             ref={refs.setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
-            className="z-13000 rounded bg-gray-700/75 px-2 py-1 text-xs text-white shadow-lg"
+            className="z-15000 rounded bg-gray-700/75 px-2 py-1 text-xs text-white shadow-lg"
           >
             {content}
           </div>,

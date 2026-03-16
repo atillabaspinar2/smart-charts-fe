@@ -1112,7 +1112,7 @@ export const ChartWorkspace: React.FC<{
       {dataPanelMode === "fixed-up" && (
         <PanelView
           title="Chart Data"
-          className="fixed bottom-0 z-12000"
+          className="fixed bottom-0 z-9000"
           bodyClassName="h-[calc(100%-2.5rem)] overflow-y-auto"
           style={{
             top: `${dataPanelTop}px`,

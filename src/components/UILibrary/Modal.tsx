@@ -12,12 +12,12 @@ export const Modal: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
+    <div className="fixed inset-0 z-20000 flex items-center justify-center">
       <div
         className="absolute inset-0 bg-black opacity-50"
         onClick={onClose}
       ></div>
-      <div className="relative bg-white rounded-lg shadow-lg p-6 z-10 w-96">
+      <div className="relative z-10 w-96 rounded-lg bg-white p-6 shadow-lg">
         <button
           type="button"
           aria-label="Close modal"
