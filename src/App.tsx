@@ -8,6 +8,7 @@ import { UserMenu } from "./components/userMenu";
 import { Sidebar } from "./components/sidebar";
 import type { ThemeName } from "./components/themeSwitcher";
 import { AuthProvider } from "./context/AuthContext";
+import logo from "./assets/logo.svg";
 
 function App() {
   const [charts, setCharts] = useState<
@@ -40,7 +41,10 @@ function App() {
         {/* Header */}
         <header className="col-span-2 shadow-lg bg-theme-strong text-theme-bg">
           <div className="px-6 py-4 flex items-center justify-between relative">
-            <h1 className="text-3xl font-bold">Grapfio</h1>
+            <h1 className="text-3xl font-bold flex items-center gap-3">
+              <img src={logo} alt="Grapfio logo" className="h-[54px] w-[54px]" />
+              <span>Grapfio</span>
+            </h1>
             <div className=" right-6 top-4">
               <UserMenu
                 openAuthModal={setAuthModal}
