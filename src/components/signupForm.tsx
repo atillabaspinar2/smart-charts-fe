@@ -16,6 +16,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -24,6 +25,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (mode === "signup" && password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     setLoading(true);
     try {
       if (mode === "signup") {
@@ -51,6 +58,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
       </h2>
 
       <form
+        key={mode}
         onSubmit={handleSubmit}
         className="space-y-4"
         autoComplete="on"
@@ -74,8 +82,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({
           id="email"
           label="Email"
           type="email"
-          name="email"
-          autoComplete={mode === "signup" ? "email" : "username"}
+          name="username"
+          autoComplete="username"
           placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -93,6 +101,20 @@ export const AuthForm: React.FC<AuthFormProps> = ({
           required
           minLength={8}
         />
+        {mode === "signup" && (
+          <CustomInput
+            id="confirmPassword"
+            label="Confirm Password"
+            type="password"
+            name="confirmPassword"
+            autoComplete="new-password"
+            placeholder="••••••••"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            minLength={8}
+          />
+        )}
         {error && <p className="text-sm text-red-500">{error}</p>}
 
         <CustomButton
