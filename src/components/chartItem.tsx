@@ -28,7 +28,7 @@ interface ChartItemProps {
   onMoveDown: () => void;
   onMoveToBottom: () => void;
   isSelected: boolean;
-  removeChart: (id: number) => void;
+  onRequestRemoveChart: (id: number) => void;
   mediaType: string;
   theme?: string;
 }
@@ -52,7 +52,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     onMoveDown,
     onMoveToBottom,
     isSelected,
-    removeChart,
+    onRequestRemoveChart,
     mediaType,
     theme,
   }) => {
@@ -384,7 +384,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           <ChartContextMenu
             id="cart-context-menu"
             className="transition-opacity"
-            onRemove={() => removeChart(id)}
+            onRemove={() => onRequestRemoveChart(id)}
             onRecord={startRecording}
             onReanimate={reanimateChart}
             onDownload={captureImage}

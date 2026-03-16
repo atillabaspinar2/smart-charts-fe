@@ -65,26 +65,15 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
   }, []);
 
   const removeLabel = contextType === "canvas" ? "Remove all" : "Remove";
-  const reanimateLabel =
-    contextType === "canvas" ? "Reanimate all" : "Reanimate";
+  const animateLabel = contextType === "canvas" ? "Animate all" : "Animate";
 
   return (
     <div
       id={id}
       className={`relative drop-shadow-lg bg-white/90 rounded p-1 flex space-x-2 ${className}`}
     >
-      <Tooltip content={removeLabel}>
-        <button type="button" onClick={onRemove} aria-label={removeLabel}>
-          <HugeiconsIcon
-            icon={Delete02Icon}
-            size={16}
-            className="text-gray-500 hover:text-blue-600 cursor-pointer"
-          />
-        </button>
-      </Tooltip>
-
-      <Tooltip content="Record video">
-        <button type="button" onClick={onRecord} aria-label="Record video">
+      <Tooltip content="Download as video">
+        <button type="button" onClick={onRecord} aria-label="Download as video">
           <HugeiconsIcon
             icon={FileVideoCameraIcon}
             size={16}
@@ -95,20 +84,24 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
         </button>
       </Tooltip>
 
-      <Tooltip content={reanimateLabel}>
-        <button type="button" onClick={onReanimate} aria-label={reanimateLabel}>
+      <Tooltip content="Download as image">
+        <button
+          type="button"
+          onClick={onDownload}
+          aria-label="Download as image"
+        >
           <HugeiconsIcon
-            icon={Refresh01Icon}
+            icon={ImageDownload02Icon}
             size={16}
             className="text-gray-500 hover:text-blue-600 cursor-pointer"
           />
         </button>
       </Tooltip>
 
-      <Tooltip content="Download image">
-        <button type="button" onClick={onDownload} aria-label="Download image">
+      <Tooltip content={animateLabel}>
+        <button type="button" onClick={onReanimate} aria-label={animateLabel}>
           <HugeiconsIcon
-            icon={ImageDownload02Icon}
+            icon={Refresh01Icon}
             size={16}
             className="text-gray-500 hover:text-blue-600 cursor-pointer"
           />
@@ -242,6 +235,16 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
           )}
         </div>
       )}
+
+      <Tooltip content={removeLabel}>
+        <button type="button" onClick={onRemove} aria-label={removeLabel}>
+          <HugeiconsIcon
+            icon={Delete02Icon}
+            size={16}
+            className="text-gray-500 hover:text-blue-600 cursor-pointer"
+          />
+        </button>
+      </Tooltip>
     </div>
   );
 };

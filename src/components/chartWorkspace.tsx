@@ -4,8 +4,10 @@ import { ArrowUp01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { ChartSettingsPanel } from "./ChartSettingsPanel";
 import { ChartItem } from "./chartItem";
 import { CanvasContextMenu } from "./canvasContextMenu";
+import { Modal } from "./UILibrary/Modal";
 import { Tooltip } from "./UILibrary/Tooltip";
 import { PanelView } from "./UILibrary/PanelView";
+import { CustomButton } from "./UILibrary/CustomButton";
 import {
   getThemeBackground,
   getThemePalette,
@@ -40,6 +42,9 @@ export const ChartWorkspace: React.FC<{
   addChart: (type: string) => void;
   removeChart: (id: number) => void;
 }> = ({ charts, addChart, removeChart }) => {
+  const [pendingRemoval, setPendingRemoval] = useState<
+    { mode: "single"; chartId: number } | { mode: "all" } | null
+  >(null);
   const [chartPositionMap, setChartPositionMap] = useState<
     Record<string, { x: number; y: number }>
   >({});
@@ -579,6 +584,33 @@ export const ChartWorkspace: React.FC<{
     setChartStackOrder([]);
   };
 
+  const requestRemoveChart = useCallback((chartId: number) => {
+    setPendingRemoval({ mode: "single", chartId });
+  }, []);
+
+  const requestRemoveAll = useCallback(() => {
+    setPendingRemoval({ mode: "all" });
+  }, []);
+
+  const confirmRemoval = useCallback(() => {
+    if (!pendingRemoval) return;
+
+    if (pendingRemoval.mode === "single") {
+      removeChart(pendingRemoval.chartId);
+      setSelectedChartInstanceId((current) => {
+        const chartToRemove = charts.find(
+          (chart) => chart.id === pendingRemoval.chartId,
+        );
+        if (!chartToRemove) return current;
+        return current === chartToRemove.instanceId ? null : current;
+      });
+    } else {
+      handleRemoveAll();
+    }
+
+    setPendingRemoval(null);
+  }, [charts, handleRemoveAll, pendingRemoval, removeChart]);
+
   const handleRefreshAll = () => {
     setReanimateAllKey(Date.now());
   };
@@ -918,7 +950,7 @@ export const ChartWorkspace: React.FC<{
           <CanvasContextMenu
             id="canvas-context-menu"
             className="bg-transparent p-0 drop-shadow-none"
-            onRemoveAll={handleRemoveAll}
+            onRemoveAll={requestRemoveAll}
             onCaptureAll={handleCaptureAll}
             onRefreshAll={handleRefreshAll}
             onDownloadAll={handleDownloadAll}
@@ -969,13 +1001,39 @@ export const ChartWorkspace: React.FC<{
               onMoveDown={() => moveChartBackward(c.instanceId)}
               onMoveToBottom={() => moveChartToBottom(c.instanceId)}
               isSelected={selectedChartInstanceId === c.instanceId}
-              removeChart={removeChart}
+              onRequestRemoveChart={requestRemoveChart}
               mediaType={mediaType}
               theme={workspaceTheme || undefined}
             />
           ))}
         </div>
       </PanelView>
+
+      <Modal
+        isOpen={pendingRemoval !== null}
+        onClose={() => setPendingRemoval(null)}
+      >
+        <div>
+          <h3 className="mb-3 text-lg font-semibold text-theme-text">
+            Confirm removal
+          </h3>
+          <p className="text-sm text-theme-text">
+            Are you sure you want to remove the selected chart(s)?
+          </p>
+          <div className="mt-5 flex justify-end gap-2">
+            <CustomButton
+              variant="secondary"
+              size="md"
+              onClick={() => setPendingRemoval(null)}
+            >
+              Cancel
+            </CustomButton>
+            <CustomButton variant="primary" size="md" onClick={confirmRemoval}>
+              Remove
+            </CustomButton>
+          </div>
+        </div>
+      </Modal>
 
       <PanelView title="Settings">
         {selectedChartInstanceId ? (

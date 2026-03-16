@@ -1,5 +1,7 @@
 // create general purpose modal component that can be used to display any content
 import React from "react";
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 export const Modal: React.FC<{
   isOpen: boolean;
@@ -15,14 +17,16 @@ export const Modal: React.FC<{
         className="absolute inset-0 bg-black opacity-50"
         onClick={onClose}
       ></div>
-      <div className="bg-white rounded-lg shadow-lg p-6 z-10 w-96">
-        {children}
+      <div className="relative bg-white rounded-lg shadow-lg p-6 z-10 w-96">
         <button
+          type="button"
+          aria-label="Close modal"
           onClick={onClose}
-          className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
+          className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded border border-theme-primary bg-theme-surface text-theme-text transition-colors hover:bg-theme-primary"
         >
-          Close
+          <HugeiconsIcon icon={Cancel01Icon} size={16} />
         </button>
+        {children}
       </div>
     </div>
   );
