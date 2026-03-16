@@ -1,48 +1,54 @@
 export const UserPopover: React.FC<{
-  user: { name: string };
-  logout: () => void;
-}> = ({ user, logout }) => {
+  user: { fullName: string; email: string };
+  signOut: () => void;
+}> = ({ user, signOut }) => {
   return (
     <div>
       <button
         id="popover-btn"
         popoverTarget="popover-content"
-        className="popover-btn px-4 py-2   text-theme-bg rounded text-xs hover:text-theme-primary"
+        className="popover-btn px-4   text-theme-bg rounded text-xs hover:text-theme-primary"
       >
-        <span className="block">Welcome</span>
-        <span className="block">{user.name}</span>
+        <span className="block">Signed in as</span>
+        <span className="block">{user.fullName}</span>
       </button>
       <div
         id="popover-content"
         popover="auto"
-        className="popover-content p-6 rounded-lg shadow-xl border border-theme-primary backdrop:bg-black/20"
+        className="popover-content min-w-52 rounded-lg border border-theme-primary bg-theme-bg p-4 text-theme-text shadow-xl backdrop:bg-black/20"
       >
         <div className="mb-4">
           <h3 className="font-bold">User Menu</h3>
         </div>
-        <ul className="mb-4">
-          <li className="mb-2">
-            <a href="#" className="text-blue-500 hover:underline">
+        <ul className="space-y-2">
+          <li>
+            <button
+              type="button"
+              className="w-full rounded border border-theme-primary bg-theme-surface px-3 py-2 text-left text-sm text-theme-text transition-colors hover:bg-theme-primary"
+            >
               My Charts
-            </a>
-          </li>
-          <li className="mb-2">
-            <a href="#" className="text-blue-500 hover:underline">
-              Settings
-            </a>
+            </button>
           </li>
           <li>
-            <a
-              href="#"
-              className="text-red-500 hover:underline"
+            <button
+              type="button"
+              className="w-full rounded border border-theme-primary bg-theme-surface px-3 py-2 text-left text-sm text-theme-text transition-colors hover:bg-theme-primary"
+            >
+              Settings
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              className="w-full rounded border border-theme-primary bg-theme-surface px-3 py-2 text-left text-sm text-theme-text transition-colors hover:bg-theme-primary"
               popoverTarget="popover-content"
               popoverTargetAction="hide"
               onClick={() => {
-                logout();
+                signOut();
               }}
             >
-              Logout
-            </a>
+              Sign out
+            </button>
           </li>
         </ul>
       </div>

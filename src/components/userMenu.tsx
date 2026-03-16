@@ -1,31 +1,15 @@
-// if user is logged in, show user menu with options like "My Charts", "Settings", "Logout"
-// if user is not logged in, show login/signup options
-
-import { useState } from "react";
 import "./popover.css";
+import { useAuth } from "../context/AuthContext";
 import { UserPopover } from "./userPopover";
 import { ThemeSwitcher, type ThemeName } from "./themeSwitcher";
 import { ThemedActionButton } from "./UILibrary/themedActionButton";
 
-type User = {
-  name: string;
-};
-
 export const UserMenu: React.FC<{
-  setSingUpModal: (value: boolean) => void;
+  openAuthModal: (mode: "signup" | "signin") => void;
   selectedTheme: ThemeName;
   setSelectedTheme: (theme: ThemeName) => void;
-}> = ({ setSingUpModal, selectedTheme, setSelectedTheme }) => {
-  const [user, setUser] = useState<User | null>(null); // replace with actual user state management
-
-  const login = () => {
-    // replace with actual login logic
-    setUser({ name: "John Doe" });
-  };
-  const logout = () => {
-    // replace with actual logout logic
-    setUser(null);
-  };
+}> = ({ openAuthModal, selectedTheme, setSelectedTheme }) => {
+  const { user, logout } = useAuth();
 
   return (
     <div className="user-menu flex items-center space-x-2">
@@ -35,13 +19,15 @@ export const UserMenu: React.FC<{
       />
       {!user ? (
         <div className="flex items-center gap-2">
-          <ThemedActionButton onClick={login}>Login</ThemedActionButton>
-          <ThemedActionButton onClick={() => setSingUpModal(true)}>
+          <ThemedActionButton onClick={() => openAuthModal("signin")}>
+            Login
+          </ThemedActionButton>
+          <ThemedActionButton onClick={() => openAuthModal("signup")}>
             Sign Up
           </ThemedActionButton>
         </div>
       ) : (
-        <UserPopover user={user} logout={logout} />
+        <UserPopover user={user} signOut={logout} />
       )}
     </div>
   );
