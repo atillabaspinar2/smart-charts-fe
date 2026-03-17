@@ -85,12 +85,12 @@ function App() {
                   type="button"
                   aria-label={headerMenuOpen ? "Close menu" : "Open menu"}
                   onClick={() => setHeaderMenuOpen((v) => !v)}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg text-2xl text-theme-bg transition-colors hover:bg-white/10"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white/90 text-xl font-medium text-theme-text ring-1 ring-inset ring-theme-primary shadow-sm transition hover:bg-theme-bg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-theme-accent"
                 >
                   {headerMenuOpen ? "✕" : "☰"}
                 </button>
                 {headerMenuOpen && (
-                  <div className="absolute right-0 top-full mt-2 z-10002 min-w-52 rounded-xl border border-white/10 bg-theme-strong/95 px-4 py-3 shadow-xl backdrop-blur-sm">
+                  <div className="absolute right-0 top-full z-[10002] mt-2 min-w-52 rounded-xl bg-white/95 p-1 ring-1 ring-theme-primary shadow-lg backdrop-blur">
                     <UserMenu
                       openAuthModal={(mode) => {
                         setAuthModal(mode);
