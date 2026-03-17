@@ -12,7 +12,7 @@ export const UserMenu: React.FC<{
   const { user, logout } = useAuth();
 
   return (
-    <div className="user-menu flex items-center space-x-2">
+    <div className="user-menu flex items-center space-x-2 fit-content">
       <ThemeSwitcher
         selectedTheme={selectedTheme}
         setSelectedTheme={setSelectedTheme}

@@ -39,10 +39,29 @@ function App() {
   };
   const [authModal, setAuthModal] = useState<"signup" | "signin" | null>(null);
   const [selectedTheme, setSelectedTheme] = useState<ThemeName>("rose-wine");
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
+  const [pendingMobileChartType, setPendingMobileChartType] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", selectedTheme);
   }, [selectedTheme]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(pointer: coarse)");
+    const syncPointerType = () => {
+      const isMobile = mediaQuery.matches;
+      setIsCoarsePointer(isMobile);
+      if (!isMobile) {
+        setPendingMobileChartType(null);
+      }
+    };
+
+    syncPointerType();
+    mediaQuery.addEventListener("change", syncPointerType);
+    return () => mediaQuery.removeEventListener("change", syncPointerType);
+  }, []);
 
   return (
     <AuthProvider>
@@ -56,9 +75,9 @@ function App() {
                 alt="smart-charts logo"
                 className="h-13.5 w-13.5"
               />
-              <span>smart-charts</span>
+              <span>smart charts</span>
             </h1>
-            <div className=" right-6 top-4">
+            <div className="right-6 top-4">
               <UserMenu
                 openAuthModal={setAuthModal}
                 selectedTheme={selectedTheme}
@@ -79,7 +98,11 @@ function App() {
         {/* Sidebar */}
         <aside className="shadow-md overflow-y-auto bg-theme-accent text-theme-bg">
           <nav className="p-4">
-            <Sidebar addChart={addChart} />
+            <Sidebar
+              isMobileMode={isCoarsePointer}
+              pendingMobileChartType={pendingMobileChartType}
+              onSelectMobileChartType={setPendingMobileChartType}
+            />
           </nav>
         </aside>
 
@@ -89,6 +112,13 @@ function App() {
             charts={charts}
             addChart={addChart}
             removeChart={removeChart}
+            isMobileMode={isCoarsePointer}
+            pendingMobileChartType={pendingMobileChartType}
+            onPlaceMobileChartType={(type, position) => {
+              addChart(type, position);
+              setPendingMobileChartType(null);
+            }}
+            onCancelMobileChartPlacement={() => setPendingMobileChartType(null)}
           />
         </main>
       </div>

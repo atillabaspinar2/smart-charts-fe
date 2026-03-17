@@ -41,7 +41,22 @@ export const ChartWorkspace: React.FC<{
   charts: ChartItemData[];
   addChart: (type: string, initialPosition?: { x: number; y: number }) => void;
   removeChart: (id: number) => void;
-}> = ({ charts, addChart, removeChart }) => {
+  isMobileMode: boolean;
+  pendingMobileChartType: string | null;
+  onPlaceMobileChartType: (
+    type: string,
+    position: { x: number; y: number },
+  ) => void;
+  onCancelMobileChartPlacement: () => void;
+}> = ({
+  charts,
+  addChart,
+  removeChart,
+  isMobileMode,
+  pendingMobileChartType,
+  onPlaceMobileChartType,
+  onCancelMobileChartPlacement,
+}) => {
   const [pendingRemoval, setPendingRemoval] = useState<
     { mode: "single"; chartId: number } | { mode: "all" } | null
   >(null);
@@ -529,6 +544,24 @@ export const ChartWorkspace: React.FC<{
     if (type) addChart(type);
   };
 
+  const onCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget) return;
+
+    if (isMobileMode && pendingMobileChartType) {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      const dropX = Math.max(0, e.clientX - rect.left + container.scrollLeft);
+      const dropY = Math.max(0, e.clientY - rect.top + container.scrollTop);
+      onPlaceMobileChartType(pendingMobileChartType, { x: dropX, y: dropY });
+      setSelectedChartInstanceId(null);
+      return;
+    }
+
+    setSelectedChartInstanceId(null);
+  };
+
   const downloadBlob = (blob: Blob, fileName: string) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -963,6 +996,24 @@ export const ChartWorkspace: React.FC<{
       onDragOver={onDragOver}
       onDrop={onDrop}
     >
+      {isMobileMode && pendingMobileChartType && (
+        <div className="fixed top-2 left-1/2 z-[10001] -translate-x-1/2">
+          <div className="flex items-center gap-2 rounded-full border border-theme-primary bg-theme-accent px-3 py-2 text-xs font-semibold text-theme-bg shadow-lg">
+            <span>
+              Tap canvas to place {pendingMobileChartType} chart or cancel
+              with{" "}
+            </span>
+            <button
+              type="button"
+              onClick={onCancelMobileChartPlacement}
+              className="rounded-full bg-theme-bg px-2 py-1 text-theme-strong"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       <PanelView
         title="Workspace"
         className="relative"
@@ -991,10 +1042,10 @@ export const ChartWorkspace: React.FC<{
             maxWidth: "100%",
             height: `${containerSize.height}px`,
             backgroundColor: canvasSettings.backgroundColor,
+            cursor:
+              isMobileMode && pendingMobileChartType ? "crosshair" : "default",
           }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setSelectedChartInstanceId(null);
-          }}
+          onClick={onCanvasClick}
         >
           {charts.map((c) => (
             <ChartItem
