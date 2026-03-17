@@ -12,16 +12,25 @@ import logo from "./assets/logo.svg";
 
 function App() {
   const [charts, setCharts] = useState<
-    Array<{ id: number; instanceId: string; type: string }>
+    Array<{
+      id: number;
+      instanceId: string;
+      type: string;
+      initialPosition?: { x: number; y: number };
+    }>
   >([]);
 
-  const addChart = (chartType: string) => {
+  const addChart = (
+    chartType: string,
+    initialPosition?: { x: number; y: number },
+  ) => {
     setCharts((prev) => [
       ...prev,
       {
         id: Date.now(),
         instanceId: `chart-${Date.now()}-${Math.random()}`,
         type: chartType,
+        initialPosition,
       },
     ]);
   };
@@ -42,7 +51,7 @@ function App() {
         <header className="col-span-2 shadow-lg bg-theme-strong text-theme-bg">
           <div className="px-6 py-4 flex items-center justify-between relative">
             <h1 className="text-3xl font-bold flex items-center gap-3">
-              <img src={logo} alt="Grapfio logo" className="h-[54px] w-[54px]" />
+              <img src={logo} alt="Grapfio logo" className="h-13.5 w-13.5" />
               <span>Grapfio</span>
             </h1>
             <div className=" right-6 top-4">

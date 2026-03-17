@@ -2,6 +2,10 @@ export interface ChartItemData {
   id: number;
   instanceId: string;
   type: string;
+  initialPosition?: {
+    x: number;
+    y: number;
+  };
 }
 
 export interface ChartSettingsData {

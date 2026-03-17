@@ -39,7 +39,7 @@ const DATA_PANEL_HEADER_HEIGHT = 40;
 
 export const ChartWorkspace: React.FC<{
   charts: ChartItemData[];
-  addChart: (type: string) => void;
+  addChart: (type: string, initialPosition?: { x: number; y: number }) => void;
   removeChart: (id: number) => void;
 }> = ({ charts, addChart, removeChart }) => {
   const [pendingRemoval, setPendingRemoval] = useState<
@@ -301,6 +301,10 @@ export const ChartWorkspace: React.FC<{
         }
 
         changed = true;
+        if (chart.initialPosition) {
+          next[chart.instanceId] = chart.initialPosition;
+          return;
+        }
         const offsetX = 20 + (index % 5) * 36;
         const offsetY = 20 + Math.floor(index / 5) * 36;
         next[chart.instanceId] = { x: offsetX, y: offsetY };
@@ -505,6 +509,23 @@ export const ChartWorkspace: React.FC<{
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const type = e.dataTransfer.getData("chartType");
+    const container = containerRef.current;
+
+    if (type && container) {
+      const containerRect = container.getBoundingClientRect();
+      const dropX = Math.max(
+        0,
+        e.clientX - containerRect.left + container.scrollLeft,
+      );
+      const dropY = Math.max(
+        0,
+        e.clientY - containerRect.top + container.scrollTop,
+      );
+
+      addChart(type, { x: dropX, y: dropY });
+      return;
+    }
+
     if (type) addChart(type);
   };
 
