@@ -8,17 +8,24 @@ export const UserMenu: React.FC<{
   openAuthModal: (mode: "signup" | "signin") => void;
   selectedTheme: ThemeName;
   setSelectedTheme: (theme: ThemeName) => void;
-}> = ({ openAuthModal, selectedTheme, setSelectedTheme }) => {
+  stacked?: boolean;
+}> = ({ openAuthModal, selectedTheme, setSelectedTheme, stacked }) => {
   const { user, logout } = useAuth();
 
   return (
-    <div className="user-menu flex items-center space-x-2 fit-content">
+    <div
+      className={`user-menu fit-content ${stacked ? "flex flex-col items-start gap-3" : "flex items-center space-x-2"}`}
+    >
       <ThemeSwitcher
         selectedTheme={selectedTheme}
         setSelectedTheme={setSelectedTheme}
       />
       {!user ? (
-        <div className="flex items-center gap-2">
+        <div
+          className={
+            stacked ? "flex flex-col gap-2 w-full" : "flex items-center gap-2"
+          }
+        >
           <ThemedActionButton onClick={() => openAuthModal("signin")}>
             Login
           </ThemedActionButton>

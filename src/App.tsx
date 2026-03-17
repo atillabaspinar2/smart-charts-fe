@@ -43,6 +43,7 @@ function App() {
   const [pendingMobileChartType, setPendingMobileChartType] = useState<
     string | null
   >(null);
+  const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", selectedTheme);
@@ -55,6 +56,7 @@ function App() {
       setIsCoarsePointer(isMobile);
       if (!isMobile) {
         setPendingMobileChartType(null);
+        setHeaderMenuOpen(false);
       }
     };
 
@@ -77,13 +79,39 @@ function App() {
               />
               <span>smart charts</span>
             </h1>
-            <div className="right-6 top-4">
-              <UserMenu
-                openAuthModal={setAuthModal}
-                selectedTheme={selectedTheme}
-                setSelectedTheme={setSelectedTheme}
-              />
-            </div>
+            {isCoarsePointer ? (
+              <div className="relative">
+                <button
+                  type="button"
+                  aria-label={headerMenuOpen ? "Close menu" : "Open menu"}
+                  onClick={() => setHeaderMenuOpen((v) => !v)}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg text-2xl text-theme-bg transition-colors hover:bg-white/10"
+                >
+                  {headerMenuOpen ? "✕" : "☰"}
+                </button>
+                {headerMenuOpen && (
+                  <div className="absolute right-0 top-full mt-2 z-10002 min-w-52 rounded-xl border border-white/10 bg-theme-strong/95 px-4 py-3 shadow-xl backdrop-blur-sm">
+                    <UserMenu
+                      openAuthModal={(mode) => {
+                        setAuthModal(mode);
+                        setHeaderMenuOpen(false);
+                      }}
+                      selectedTheme={selectedTheme}
+                      setSelectedTheme={setSelectedTheme}
+                      stacked
+                    />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="right-6 top-4">
+                <UserMenu
+                  openAuthModal={setAuthModal}
+                  selectedTheme={selectedTheme}
+                  setSelectedTheme={setSelectedTheme}
+                />
+              </div>
+            )}
           </div>
         </header>
         {authModal && (
