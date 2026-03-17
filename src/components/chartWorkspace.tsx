@@ -16,6 +16,11 @@ import { getOptionsByType } from "./chartOptionTemplates";
 import { LineChartDataPanel } from "./dataUI/lineChartDataPanel";
 import { BarChartDataPanel } from "./dataUI/barChartDataPanel";
 import {
+  buildChartDataFromSheetRows,
+  readSheetRowsFromFile,
+  type DataOrientation,
+} from "../utils/spreadsheetImport";
+import {
   type BarChartData,
   type ChartData,
   type ChartItemData,
@@ -99,6 +104,11 @@ export const ChartWorkspace: React.FC<{
     title: "Workspace",
   });
   const [workspaceTheme, setWorkspaceTheme] = useState<string>("");
+  const [chartDataOrientationMap, setChartDataOrientationMap] = useState<
+    Record<string, DataOrientation>
+  >({});
+  const [pendingImportChartInstanceId, setPendingImportChartInstanceId] =
+    useState<string | null>(null);
   const activeThemeColors = getThemePalette(workspaceTheme);
 
   const getThemeColor = useCallback(
@@ -170,6 +180,7 @@ export const ChartWorkspace: React.FC<{
 
     const nextData: LineChartData = {
       type: "line",
+      showEndValueLabels: false,
       categories,
       series: templateSeries.length
         ? templateSeries.map((series: any, index: number) => ({
@@ -438,6 +449,7 @@ export const ChartWorkspace: React.FC<{
   const containerRef = useRef<HTMLDivElement>(null);
   const workspaceRef = useRef<HTMLDivElement>(null);
   const gridDataPanelRef = useRef<HTMLDivElement>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const clampDataPanelTop = useCallback((value: number) => {
     const maxTop = Math.max(
@@ -915,10 +927,156 @@ export const ChartWorkspace: React.FC<{
     [chartSizeMap, chartStackOrder, charts],
   );
 
+  const handleOpenImportDialog = (instanceId: string) => {
+    setSelectedChartInstanceId(instanceId);
+    setPendingImportChartInstanceId(instanceId);
+    importInputRef.current?.click();
+  };
+
+  const handleImportSpreadsheet = async (
+    file: File,
+    targetChartInstanceId: string | null,
+  ) => {
+    if (!targetChartInstanceId) {
+      window.alert("Select a line or bar chart first.");
+      return;
+    }
+
+    const selected = charts.find(
+      (chart) => chart.instanceId === targetChartInstanceId,
+    );
+    if (!selected || (selected.type !== "line" && selected.type !== "bar")) {
+      window.alert(
+        "Import is currently available only for line and bar charts.",
+      );
+      return;
+    }
+
+    try {
+      const rows = await readSheetRowsFromFile(file);
+
+      const nextData = buildChartDataFromSheetRows(
+        rows,
+        selected.type,
+        selected.instanceId,
+        getThemeColor,
+        chartDataOrientationMap[selected.instanceId] || "columns-as-series",
+      );
+
+      if (!nextData || nextData.series.length === 0) {
+        window.alert(
+          "Could not map this file. Expected header row + at least one data row with one x-axis column and one or more numeric series columns.",
+        );
+        return;
+      }
+
+      if (
+        selected.type === "line" &&
+        nextData.type === "line" &&
+        chartDataMap[selected.instanceId]?.type === "line"
+      ) {
+        nextData.showEndValueLabels =
+          (chartDataMap[selected.instanceId] as LineChartData)
+            .showEndValueLabels ?? false;
+      }
+
+      updateChartData(selected.instanceId, nextData);
+    } catch (error) {
+      console.error("Failed to import spreadsheet", error);
+      window.alert(
+        "Import failed. Please check the file format and try again.",
+      );
+    }
+  };
+
   const selectedChart = selectedChartInstanceId
     ? charts.find((chart) => chart.instanceId === selectedChartInstanceId) ||
       null
     : null;
+
+  const selectedChartDataOrientation = selectedChartInstanceId
+    ? chartDataOrientationMap[selectedChartInstanceId] || "columns-as-series"
+    : "columns-as-series";
+
+  const transposeChartDataOrientation = useCallback(
+    (data: ChartData, instanceId: string): ChartData => {
+      if (data.type !== "line" && data.type !== "bar") return data;
+
+      const oldCategories = data.categories;
+      const oldSeries = data.series;
+      const oldSeriesCount = oldSeries.length;
+      const oldCategoryCount = oldCategories.length;
+
+      if (oldSeriesCount === 0 || oldCategoryCount === 0) return data;
+
+      const newCategories = oldSeries.map((series) => series.name);
+      const newSeries = oldCategories.map((categoryLabel, categoryIndex) => ({
+        id: `${instanceId}-series-${categoryIndex + 1}`,
+        name: String(categoryLabel || `Series ${categoryIndex + 1}`),
+        color: getThemeColor(categoryIndex),
+        colorSource: "theme" as const,
+        themeColorIndex: categoryIndex,
+        values: oldSeries.map((series) => {
+          const raw = series.values[categoryIndex];
+          return Number.isFinite(raw) ? raw : 0;
+        }),
+      }));
+
+      if (data.type === "line") {
+        return {
+          type: "line",
+          showEndValueLabels: data.showEndValueLabels ?? false,
+          categories: newCategories,
+          series: newSeries.map((series) => ({
+            ...series,
+            smooth: false,
+            step: false,
+            areaStyle: {},
+          })),
+        } satisfies LineChartData;
+      }
+
+      return {
+        type: "bar",
+        categories: newCategories,
+        series: newSeries,
+      } satisfies BarChartData;
+    },
+    [getThemeColor],
+  );
+
+  const handleChangeDataOrientation = useCallback(
+    (orientation: DataOrientation) => {
+      if (!selectedChartInstanceId) return;
+
+      const currentOrientation =
+        chartDataOrientationMap[selectedChartInstanceId] || "columns-as-series";
+      if (currentOrientation === orientation) return;
+
+      const currentData = chartDataMap[selectedChartInstanceId];
+      if (
+        currentData &&
+        (currentData.type === "line" || currentData.type === "bar")
+      ) {
+        const nextData = transposeChartDataOrientation(
+          currentData,
+          selectedChartInstanceId,
+        );
+        updateChartData(selectedChartInstanceId, nextData);
+      }
+
+      setChartDataOrientationMap((prev) => ({
+        ...prev,
+        [selectedChartInstanceId]: orientation,
+      }));
+    },
+    [
+      chartDataMap,
+      chartDataOrientationMap,
+      selectedChartInstanceId,
+      transposeChartDataOrientation,
+    ],
+  );
 
   const dataPanelHeaderRight = (
     <div className="flex items-center gap-1">
@@ -998,6 +1156,22 @@ export const ChartWorkspace: React.FC<{
       onDragOver={onDragOver}
       onDrop={onDrop}
     >
+      <input
+        ref={importInputRef}
+        type="file"
+        accept=".csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        className="hidden"
+        onChange={async (e) => {
+          const file = e.currentTarget.files?.[0];
+          e.currentTarget.value = "";
+          if (!file) return;
+          const targetChartInstanceId =
+            pendingImportChartInstanceId || selectedChartInstanceId;
+          setPendingImportChartInstanceId(null);
+          await handleImportSpreadsheet(file, targetChartInstanceId);
+        }}
+      />
+
       {isMobileMode && pendingMobileChartType && (
         <div className="fixed top-2 left-1/2 z-[10001] -translate-x-1/2">
           <div className="flex items-center gap-2 rounded-full border border-theme-primary bg-theme-accent px-3 py-2 text-xs font-semibold text-theme-bg shadow-lg">
@@ -1080,6 +1254,7 @@ export const ChartWorkspace: React.FC<{
               onMoveToBottom={() => moveChartToBottom(c.instanceId)}
               isSelected={selectedChartInstanceId === c.instanceId}
               onRequestRemoveChart={requestRemoveChart}
+              onImportData={handleOpenImportDialog}
               mediaType={mediaType}
               theme={workspaceTheme || undefined}
             />
@@ -1147,6 +1322,8 @@ export const ChartWorkspace: React.FC<{
             onApplyThemeColors={() =>
               applyThemeColorsToChartSeries(selectedChartInstanceId)
             }
+            dataOrientation={selectedChartDataOrientation}
+            setDataOrientation={handleChangeDataOrientation}
             onClose={() => setSelectedChartInstanceId(null)}
           />
         ) : (

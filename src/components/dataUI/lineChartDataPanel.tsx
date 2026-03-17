@@ -55,6 +55,22 @@ export const LineChartDataPanel: FC<LineChartDataPanelProps> = ({
 
       <div className="rounded-md border border-gray-200 bg-white p-3 shadow-sm">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+          Line Labels
+        </p>
+        <label className="flex items-center gap-2 text-xs text-gray-700">
+          <input
+            type="checkbox"
+            checked={Boolean(data.showEndValueLabels)}
+            onChange={(e) =>
+              onChange({ ...data, showEndValueLabels: e.target.checked })
+            }
+          />
+          Show series name and current value at line end
+        </label>
+      </div>
+
+      <div className="rounded-md border border-gray-200 bg-white p-3 shadow-sm">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
           Series Style
         </p>
         <div className="space-y-2">

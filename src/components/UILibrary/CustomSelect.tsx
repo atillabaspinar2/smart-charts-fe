@@ -74,7 +74,9 @@ export const CustomSelect: FC<CustomSelectProps> = ({
       setInternalValue(nextValue);
     }
 
-    onChange?.({ target: { value: nextValue } } as React.ChangeEvent<HTMLSelectElement>);
+    onChange?.({
+      target: { value: nextValue },
+    } as React.ChangeEvent<HTMLSelectElement>);
     setOpen(false);
   };
 

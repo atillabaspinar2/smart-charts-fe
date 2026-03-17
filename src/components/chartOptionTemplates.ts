@@ -1,7 +1,6 @@
 export const lineOptions = {
   animationDuration: 1000,
   xAxis: {
-    type: "category",
     data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
   },
   yAxis: {

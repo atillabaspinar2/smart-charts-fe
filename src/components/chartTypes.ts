@@ -38,6 +38,7 @@ export interface LineSeriesData {
 export interface LineChartData {
   type: "line";
   variation?: LineChartVariation;
+  showEndValueLabels?: boolean;
   categories: string[];
   series: LineSeriesData[];
 }

@@ -5,6 +5,7 @@ import { CustomInput } from "./UILibrary/customInput";
 import { CustomButton } from "./UILibrary/CustomButton";
 import { CustomSelect } from "./UILibrary/CustomSelect";
 import { ECHARTS_THEMES } from "../assets/themes/registerThemes";
+import type { DataOrientation } from "../utils/spreadsheetImport";
 
 interface ChartSettingsPanelProps {
   animationDuration: number;
@@ -21,6 +22,8 @@ interface ChartSettingsPanelProps {
   setWorkspaceTheme?: (theme: string) => void;
   onApplyThemeColors?: () => void;
   onApplyThemeColorsToAll?: () => void;
+  dataOrientation?: DataOrientation;
+  setDataOrientation?: (orientation: DataOrientation) => void;
 }
 
 export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
@@ -38,6 +41,8 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
   setWorkspaceTheme,
   onApplyThemeColors,
   onApplyThemeColorsToAll,
+  dataOrientation,
+  setDataOrientation,
 }) => {
   const [animationInput, setAnimationInput] = useState(
     String(animationDuration),
@@ -138,6 +143,42 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
           </span>
         </div>
       </div>
+
+      {(selectedChartType === "line" || selectedChartType === "bar") &&
+        dataOrientation &&
+        setDataOrientation && (
+          <div className="mb-4 rounded-md border border-theme-primary bg-theme-bg p-3">
+            <p className="mb-2 text-sm font-medium">Data Orientation</p>
+            <div className="inline-flex overflow-hidden rounded-md border border-theme-primary">
+              <button
+                type="button"
+                className={`px-3 py-1.5 text-xs font-medium ${
+                  dataOrientation === "columns-as-series"
+                    ? "bg-theme-accent text-theme-bg"
+                    : "bg-theme-bg text-theme-text hover:bg-theme-surface"
+                }`}
+                onClick={() => setDataOrientation("columns-as-series")}
+              >
+                Columns as Series
+              </button>
+              <button
+                type="button"
+                className={`border-l border-theme-primary px-3 py-1.5 text-xs font-medium ${
+                  dataOrientation === "rows-as-series"
+                    ? "bg-theme-accent text-theme-bg"
+                    : "bg-theme-bg text-theme-text hover:bg-theme-surface"
+                }`}
+                onClick={() => setDataOrientation("rows-as-series")}
+              >
+                Rows as Series
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-theme-text/80">
+              Columns mode: first column values are x-axis labels. Rows mode:
+              first row values are x-axis labels.
+            </p>
+          </div>
+        )}
 
       {(selectedChartType === "line" || selectedChartType === "bar") &&
         onApplyThemeColors && (

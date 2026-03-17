@@ -29,6 +29,7 @@ interface ChartItemProps {
   onMoveToBottom: () => void;
   isSelected: boolean;
   onRequestRemoveChart: (id: number) => void;
+  onImportData: (instanceId: string) => void;
   mediaType: string;
   theme?: string;
 }
@@ -53,6 +54,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     onMoveToBottom,
     isSelected,
     onRequestRemoveChart,
+    onImportData,
     mediaType,
     theme,
   }) => {
@@ -175,6 +177,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
 
     if (type === "line" && chartData?.type === "line") {
       const categories = chartData.categories;
+      const showEndValueLabels = Boolean(chartData.showEndValueLabels);
       chartOption.tooltip = opts.tooltip || { trigger: "axis" };
       chartOption.legend = {
         ...(opts.legend || {}),
@@ -186,6 +189,8 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         data: categories,
       };
       chartOption.yAxis = opts.yAxis || { type: "value" };
+      chartOption.animationDurationUpdate =
+        settings.animationDuration ?? opts.animationDuration ?? 1000;
       chartOption.series = chartData.series.map((series, index) => {
         const templateSeries = Array.isArray(opts.series)
           ? opts.series[index] || opts.series[0] || {}
@@ -199,6 +204,25 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           ),
           smooth: series.smooth,
           step: series.step,
+          endLabel: showEndValueLabels
+            ? {
+                show: true,
+                valueAnimation: true,
+                formatter: (params: any) =>
+                  `${params.seriesName}: ${params.value ?? ""}`,
+              }
+            : { show: false },
+          labelLayout: showEndValueLabels
+            ? { moveOverlap: "shiftY" }
+            : undefined,
+          emphasis: showEndValueLabels
+            ? {
+                focus: "series",
+                label: {
+                  show: true,
+                },
+              }
+            : undefined,
           lineStyle: shouldUseSeriesColor(series.colorSource, series.color)
             ? {
                 ...(templateSeries.lineStyle || {}),
@@ -388,6 +412,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             onRecord={startRecording}
             onReanimate={reanimateChart}
             onDownload={captureImage}
+            onImport={() => onImportData(data.instanceId)}
             onExpandToFullWidth={onExpandToFullWidth}
             onMoveToTop={onMoveToTop}
             onMoveUp={onMoveUp}

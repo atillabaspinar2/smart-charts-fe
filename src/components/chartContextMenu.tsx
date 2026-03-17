@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  ArrowAllDirectionIcon,
+  ArrowHorizontalIcon,
   Delete02Icon,
+  FileImportIcon,
   FileVideoCameraIcon,
+  FitToScreenIcon,
   GridViewIcon,
   ImageDownload02Icon,
   Layers01Icon,
@@ -16,6 +18,7 @@ type ChartContextMenuProps = {
   onRecord: () => void;
   onReanimate: () => void;
   onDownload: () => void;
+  onImport?: () => void;
   onAutoArrange?: () => void;
   onExpandToFullWidth?: () => void;
   onExpandContainerToPanel?: () => void;
@@ -36,6 +39,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
   onRecord,
   onReanimate,
   onDownload,
+  onImport,
   onAutoArrange,
   onExpandToFullWidth,
   onExpandContainerToPanel,
@@ -66,183 +70,195 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
 
   const removeLabel = contextType === "canvas" ? "Remove all" : "Remove";
   const animateLabel = contextType === "canvas" ? "Animate all" : "Animate";
+  const showImport = contextType === "chart" && Boolean(onImport);
+  const iconButtonClassName =
+    "rounded p-0.5 text-gray-500 transition-colors hover:text-blue-600";
 
   return (
     <div
       id={id}
-      className={`relative drop-shadow-lg bg-white/90 rounded p-1 flex space-x-2 ${className}`}
+      className={`relative flex items-center rounded bg-white/90 p-0.5 drop-shadow-lg ${className}`}
     >
-      <Tooltip content="Download as video">
-        <button type="button" onClick={onRecord} aria-label="Download as video">
-          <HugeiconsIcon
-            icon={FileVideoCameraIcon}
-            size={16}
-            className={`cursor-pointer hover:text-blue-600 ${
-              isRecording ? "text-red-500 animate-pulse" : "text-gray-500"
-            }`}
-          />
-        </button>
-      </Tooltip>
-
-      <Tooltip content="Download as image">
-        <button
-          type="button"
-          onClick={onDownload}
-          aria-label="Download as image"
-        >
-          <HugeiconsIcon
-            icon={ImageDownload02Icon}
-            size={16}
-            className="text-gray-500 hover:text-blue-600 cursor-pointer"
-          />
-        </button>
-      </Tooltip>
-
-      <Tooltip content={animateLabel}>
-        <button type="button" onClick={onReanimate} aria-label={animateLabel}>
-          <HugeiconsIcon
-            icon={Refresh01Icon}
-            size={16}
-            className="text-gray-500 hover:text-blue-600 cursor-pointer"
-          />
-        </button>
-      </Tooltip>
-
-      {onAutoArrange && (
-        <Tooltip content="Auto arrange">
-          <button
-            type="button"
-            onClick={onAutoArrange}
-            aria-label="Auto arrange"
-          >
-            <HugeiconsIcon
-              icon={GridViewIcon}
-              size={16}
-              className="text-gray-500 hover:text-blue-600 cursor-pointer"
-            />
-          </button>
-        </Tooltip>
+      {showImport && (
+        <>
+          <div className="flex items-center gap-1.5">
+            <Tooltip content="Import CSV or Excel">
+              <button
+                type="button"
+                onClick={onImport}
+                aria-label="Import CSV or Excel"
+                className={iconButtonClassName}
+              >
+                <HugeiconsIcon icon={FileImportIcon} size={16} />
+              </button>
+            </Tooltip>
+          </div>
+          <div className="mx-1.5 h-4 w-px self-center bg-gray-300" />
+        </>
       )}
 
-      {onExpandToFullWidth && (
-        <Tooltip content="Expand chart">
+      <div className="flex items-center gap-1.5">
+        <Tooltip content="Download as video">
           <button
             type="button"
-            onClick={onExpandToFullWidth}
-            aria-label="Expand chart"
+            onClick={onRecord}
+            aria-label="Download as video"
+            className={`${iconButtonClassName} ${isRecording ? "text-red-500 animate-pulse hover:text-red-600" : ""}`}
           >
-            <HugeiconsIcon
-              icon={ArrowAllDirectionIcon}
-              size={16}
-              className="text-gray-500 hover:text-blue-600 cursor-pointer"
-            />
+            <HugeiconsIcon icon={FileVideoCameraIcon} size={16} />
           </button>
         </Tooltip>
-      )}
 
-      {onExpandContainerToPanel && (
-        <Tooltip content="Expand canvas">
+        <Tooltip content="Download as image">
           <button
             type="button"
-            onClick={onExpandContainerToPanel}
-            aria-label="Expand canvas"
+            onClick={onDownload}
+            aria-label="Download as image"
+            className={iconButtonClassName}
           >
-            <HugeiconsIcon
-              icon={ArrowAllDirectionIcon}
-              size={16}
-              className="text-gray-500 hover:text-blue-600 cursor-pointer"
-            />
+            <HugeiconsIcon icon={ImageDownload02Icon} size={16} />
           </button>
         </Tooltip>
-      )}
-      {onAutofitContainer && (
-        <Tooltip content="Autofit">
+      </div>
+
+      <div className="mx-1.5 h-4 w-px self-center bg-gray-300" />
+
+      <div className="flex items-center gap-1.5">
+        <Tooltip content={animateLabel}>
           <button
             type="button"
-            onClick={onAutofitContainer}
-            aria-label="Autofit"
+            onClick={onReanimate}
+            aria-label={animateLabel}
+            className={iconButtonClassName}
           >
-            <HugeiconsIcon
-              icon={ArrowAllDirectionIcon}
-              size={16}
-              className="text-gray-500 hover:text-blue-600 cursor-pointer rotate-45"
-            />
+            <HugeiconsIcon icon={Refresh01Icon} size={16} />
           </button>
         </Tooltip>
-      )}
-      {showLayers && (
-        <div ref={layersMenuRef} className="relative">
-          <Tooltip content="Layer order">
+
+        {onAutoArrange && (
+          <Tooltip content="Auto arrange">
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setLayersOpen((prev) => !prev);
-              }}
-              aria-label="Layer order"
+              onClick={onAutoArrange}
+              aria-label="Auto arrange"
+              className={iconButtonClassName}
             >
-              <HugeiconsIcon
-                icon={Layers01Icon}
-                size={16}
-                className="text-gray-500 hover:text-blue-600 cursor-pointer"
-              />
+              <HugeiconsIcon icon={GridViewIcon} size={16} />
             </button>
           </Tooltip>
+        )}
 
-          {layersOpen && (
-            <div className="absolute top-6 left-0 z-50 min-w-36 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+        {onExpandToFullWidth && (
+          <Tooltip content="Expand chart">
+            <button
+              type="button"
+              onClick={onExpandToFullWidth}
+              aria-label="Expand chart"
+              className={iconButtonClassName}
+            >
+              <HugeiconsIcon icon={ArrowHorizontalIcon} size={16} />
+            </button>
+          </Tooltip>
+        )}
+
+        {onExpandContainerToPanel && (
+          <Tooltip content="Expand canvas">
+            <button
+              type="button"
+              onClick={onExpandContainerToPanel}
+              aria-label="Expand canvas"
+              className={iconButtonClassName}
+            >
+              <HugeiconsIcon icon={ArrowHorizontalIcon} size={16} />
+            </button>
+          </Tooltip>
+        )}
+        {onAutofitContainer && (
+          <Tooltip content="Autofit">
+            <button
+              type="button"
+              onClick={onAutofitContainer}
+              aria-label="Autofit"
+              className={iconButtonClassName}
+            >
+              <HugeiconsIcon icon={FitToScreenIcon} size={16} />
+            </button>
+          </Tooltip>
+        )}
+        {showLayers && (
+          <div ref={layersMenuRef} className="relative flex items-center">
+            <Tooltip content="Layer order">
               <button
                 type="button"
-                className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  onMoveToTop?.();
-                  setLayersOpen(false);
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLayersOpen((prev) => !prev);
                 }}
+                aria-label="Layer order"
+                className={iconButtonClassName}
               >
-                Move to top
+                <HugeiconsIcon icon={Layers01Icon} size={16} />
               </button>
-              <button
-                type="button"
-                className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  onMoveUp?.();
-                  setLayersOpen(false);
-                }}
-              >
-                Move up
-              </button>
-              <button
-                type="button"
-                className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  onMoveDown?.();
-                  setLayersOpen(false);
-                }}
-              >
-                Move down
-              </button>
-              <button
-                type="button"
-                className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  onMoveToBottom?.();
-                  setLayersOpen(false);
-                }}
-              >
-                Move to bottom
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+            </Tooltip>
+
+            {layersOpen && (
+              <div className="absolute top-6 left-0 z-50 min-w-36 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+                <button
+                  type="button"
+                  className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={() => {
+                    onMoveToTop?.();
+                    setLayersOpen(false);
+                  }}
+                >
+                  Move to top
+                </button>
+                <button
+                  type="button"
+                  className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={() => {
+                    onMoveUp?.();
+                    setLayersOpen(false);
+                  }}
+                >
+                  Move up
+                </button>
+                <button
+                  type="button"
+                  className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={() => {
+                    onMoveDown?.();
+                    setLayersOpen(false);
+                  }}
+                >
+                  Move down
+                </button>
+                <button
+                  type="button"
+                  className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={() => {
+                    onMoveToBottom?.();
+                    setLayersOpen(false);
+                  }}
+                >
+                  Move to bottom
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="mx-1.5 h-4 w-px self-center bg-gray-300" />
 
       <Tooltip content={removeLabel}>
-        <button type="button" onClick={onRemove} aria-label={removeLabel}>
-          <HugeiconsIcon
-            icon={Delete02Icon}
-            size={16}
-            className="text-gray-500 hover:text-blue-600 cursor-pointer"
-          />
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={removeLabel}
+          className={iconButtonClassName}
+        >
+          <HugeiconsIcon icon={Delete02Icon} size={16} />
         </button>
       </Tooltip>
     </div>
