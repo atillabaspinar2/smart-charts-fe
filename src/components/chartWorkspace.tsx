@@ -36,6 +36,8 @@ const defaultContainerSize = {
 
 const DATA_PANEL_FIXED_TOP = 120;
 const DATA_PANEL_HEADER_HEIGHT = 40;
+const CHART_Z_INDEX_MAX = 90;
+const CHART_Z_INDEX_SELECTED = 95;
 
 export const ChartWorkspace: React.FC<{
   charts: ChartItemData[];
@@ -1016,7 +1018,7 @@ export const ChartWorkspace: React.FC<{
 
       <PanelView
         title="Workspace"
-        className="relative"
+        className="relative z-10"
         onClick={() => setSelectedChartInstanceId(null)}
         headerRight={
           <CanvasContextMenu
@@ -1042,6 +1044,7 @@ export const ChartWorkspace: React.FC<{
             maxWidth: "100%",
             height: `${containerSize.height}px`,
             backgroundColor: canvasSettings.backgroundColor,
+            isolation: "isolate",
             cursor:
               isMobileMode && pendingMobileChartType ? "crosshair" : "default",
           }}
@@ -1062,8 +1065,11 @@ export const ChartWorkspace: React.FC<{
               onResize={onResizeChart}
               zIndex={
                 selectedChartInstanceId === c.instanceId
-                  ? 9999
-                  : (chartStackOrder.indexOf(c.instanceId) + 1) * 10
+                  ? CHART_Z_INDEX_SELECTED
+                  : Math.min(
+                      CHART_Z_INDEX_MAX,
+                      Math.max(1, chartStackOrder.indexOf(c.instanceId) + 1),
+                    )
               }
               onExpandToFullWidth={() =>
                 handleExpandChartToFullWidth(c.instanceId)
@@ -1107,7 +1113,7 @@ export const ChartWorkspace: React.FC<{
         </div>
       </Modal>
 
-      <PanelView title="Settings">
+      <PanelView title="Settings" className="relative z-20">
         {selectedChartInstanceId ? (
           <ChartSettingsPanel
             animationDuration={
@@ -1170,7 +1176,7 @@ export const ChartWorkspace: React.FC<{
       </PanelView>
 
       {dataPanelMode === "grid" && (
-        <div ref={gridDataPanelRef} className="md:col-span-2">
+        <div ref={gridDataPanelRef} className="md:col-span-2 relative z-30">
           <PanelView
             title="Chart Data"
             headerRight={dataPanelHeaderRight}
