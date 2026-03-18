@@ -12,6 +12,8 @@ export interface ChartSettingsData {
   animationDuration: number;
   backgroundColor: string;
   title: string;
+  fontFamily: string;
+  fontSize: number;
 }
 
 export type SeriesColorSource = "theme" | "custom";

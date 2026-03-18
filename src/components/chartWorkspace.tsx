@@ -102,6 +102,8 @@ export const ChartWorkspace: React.FC<{
     animationDuration: 1000,
     backgroundColor: "#ffffff",
     title: "Workspace",
+    fontFamily: "Noto Sans",
+    fontSize: 12,
   });
   const [workspaceTheme, setWorkspaceTheme] = useState<string>("");
   const [chartDataOrientationMap, setChartDataOrientationMap] = useState<
@@ -124,6 +126,8 @@ export const ChartWorkspace: React.FC<{
         animationDuration: templateOptions.animationDuration || 1000,
         backgroundColor: "#ffffff",
         title: templateOptions?.title?.text || "",
+        fontFamily: canvasSettings.fontFamily,
+        fontSize: canvasSettings.fontSize,
       },
     }));
   };
@@ -228,6 +232,8 @@ export const ChartWorkspace: React.FC<{
           animationDuration: 1000,
           backgroundColor: "#ffffff",
           title: "",
+          fontFamily: canvasSettings.fontFamily,
+          fontSize: canvasSettings.fontSize,
         } as ChartSettingsData);
       const next = { ...current, ...updates };
 
@@ -239,8 +245,22 @@ export const ChartWorkspace: React.FC<{
         updates.backgroundColor !== current.backgroundColor;
       const titleChanged =
         typeof updates.title === "string" && updates.title !== current.title;
+      const fontFamilyChanged =
+        typeof updates.fontFamily === "string" &&
+        updates.fontFamily !== current.fontFamily;
+      const fontSizeChanged =
+        typeof updates.fontSize === "number" &&
+        updates.fontSize !== current.fontSize;
 
-      if (!animationChanged && !backgroundChanged && !titleChanged) return prev;
+      if (
+        !animationChanged &&
+        !backgroundChanged &&
+        !titleChanged &&
+        !fontFamilyChanged &&
+        !fontSizeChanged
+      ) {
+        return prev;
+      }
 
       if (animationChanged) {
         setReanimateSignal({ instanceId, key: Date.now() });
@@ -259,6 +279,8 @@ export const ChartWorkspace: React.FC<{
         animationDuration: 1000,
         backgroundColor: "#ffffff",
         title: "",
+        fontFamily: canvasSettings.fontFamily,
+        fontSize: canvasSettings.fontSize,
       }
     );
   };
@@ -1299,6 +1321,18 @@ export const ChartWorkspace: React.FC<{
                 animationDuration: value,
               })
             }
+            fontFamily={getChartSettings(selectedChartInstanceId).fontFamily}
+            setFontFamily={(value) =>
+              updateChartSettings(selectedChartInstanceId, {
+                fontFamily: value,
+              })
+            }
+            fontSize={getChartSettings(selectedChartInstanceId).fontSize}
+            setFontSize={(value) =>
+              updateChartSettings(selectedChartInstanceId, {
+                fontSize: value,
+              })
+            }
             mediaType={mediaType}
             setMediaType={setMediaType}
             backgroundColor={
@@ -1335,6 +1369,28 @@ export const ChartWorkspace: React.FC<{
                 animationDuration: value,
               }))
             }
+            fontFamily={canvasSettings.fontFamily}
+            setFontFamily={(value) => {
+              setCanvasSettings((prev) => ({ ...prev, fontFamily: value }));
+              setChartSettingsMap((prev) => {
+                const next: Record<string, ChartSettingsData> = {};
+                Object.entries(prev).forEach(([instanceId, settings]) => {
+                  next[instanceId] = { ...settings, fontFamily: value };
+                });
+                return next;
+              });
+            }}
+            fontSize={canvasSettings.fontSize}
+            setFontSize={(value) => {
+              setCanvasSettings((prev) => ({ ...prev, fontSize: value }));
+              setChartSettingsMap((prev) => {
+                const next: Record<string, ChartSettingsData> = {};
+                Object.entries(prev).forEach(([instanceId, settings]) => {
+                  next[instanceId] = { ...settings, fontSize: value };
+                });
+                return next;
+              });
+            }}
             mediaType={mediaType}
             setMediaType={setMediaType}
             backgroundColor={canvasSettings.backgroundColor}

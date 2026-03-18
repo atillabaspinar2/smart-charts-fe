@@ -170,6 +170,16 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       title: {
         ...(opts.title || {}),
         text: settings.title,
+        textStyle: {
+          ...(opts.title?.textStyle || {}),
+          fontFamily: settings.fontFamily,
+          fontSize: settings.fontSize,
+        },
+      },
+      textStyle: {
+        ...(opts.textStyle || {}),
+        fontFamily: settings.fontFamily,
+        fontSize: settings.fontSize,
       },
       backgroundColor: effectiveBackgroundColor,
       animationDuration: settings.animationDuration ?? opts.animationDuration,

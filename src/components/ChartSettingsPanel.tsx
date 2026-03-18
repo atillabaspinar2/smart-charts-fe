@@ -10,6 +10,10 @@ import type { DataOrientation } from "../utils/spreadsheetImport";
 interface ChartSettingsPanelProps {
   animationDuration: number;
   setAnimationDuration: (v: number) => void;
+  fontFamily: string;
+  setFontFamily: (v: string) => void;
+  fontSize: number;
+  setFontSize: (v: number) => void;
   mediaType: string;
   setMediaType: (v: string) => void;
   backgroundColor: string;
@@ -29,6 +33,10 @@ interface ChartSettingsPanelProps {
 export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
   animationDuration,
   setAnimationDuration,
+  fontFamily,
+  setFontFamily,
+  fontSize,
+  setFontSize,
   mediaType,
   setMediaType,
   backgroundColor,
@@ -47,14 +55,24 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
   const [animationInput, setAnimationInput] = useState(
     String(animationDuration),
   );
+  const [fontSizeInput, setFontSizeInput] = useState(String(fontSize));
 
   useEffect(() => {
     setAnimationInput(String(animationDuration));
   }, [animationDuration]);
 
+  useEffect(() => {
+    setFontSizeInput(String(fontSize));
+  }, [fontSize]);
+
   const handleAnimationChange = (value: string = "1000") => {
     if (!/^\d*$/.test(value)) return;
     setAnimationInput(value);
+  };
+
+  const handleFontSizeChange = (value: string = "12") => {
+    if (!/^\d*$/.test(value)) return;
+    setFontSizeInput(value);
   };
 
   useEffect(() => {
@@ -66,6 +84,16 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
     }, 500);
     return () => clearTimeout(timeout);
   }, [animationInput, animationDuration, setAnimationDuration]);
+
+  useEffect(() => {
+    if (fontSizeInput === "") return;
+    const parsed = Number(fontSizeInput);
+    if (parsed === fontSize) return;
+    const timeout = setTimeout(() => {
+      setFontSize(Math.max(8, parsed));
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [fontSizeInput, fontSize, setFontSize]);
 
   const panelTitle = selectedChartType
     ? `${selectedChartType.charAt(0).toUpperCase() + selectedChartType.slice(1)} Settings`
@@ -111,6 +139,33 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
         placeholder="1000"
         onChange={(e) => handleAnimationChange(e.target.value)}
       />
+
+      <div className="mb-4">
+        <CustomSelect
+          id="settings-font-family"
+          label="Font Family"
+          value={fontFamily}
+          options={[
+            { value: "Noto Sans", label: "Noto Sans" },
+            { value: "Georgia", label: "Georgia" },
+            { value: "Courier New", label: "Courier New" },
+            { value: "Trebuchet MS", label: "Trebuchet MS" },
+          ]}
+          onChange={(e) => setFontFamily(e.target.value)}
+        />
+      </div>
+
+      <CustomInput
+        id="settings-font-size"
+        label="Font Size (px)"
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={fontSizeInput}
+        placeholder="12"
+        onChange={(e) => handleFontSizeChange(e.target.value)}
+      />
+
       {!selectedChartType && (
         <div className="mb-4">
           <CustomSelect
