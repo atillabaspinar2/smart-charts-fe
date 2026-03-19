@@ -22,6 +22,10 @@ export interface ChartSettingsData {
   barBackgroundColor: string;
   barAxisOrientation: "vertical" | "horizontal";
   barStackEnabled: boolean;
+  lineShowLabels: boolean;
+  lineSmooth: boolean;
+  lineStep: boolean;
+  lineArea: boolean;
 }
 
 export type SeriesColorSource = "theme" | "custom";
@@ -40,15 +44,11 @@ export interface LineSeriesData {
   colorSource?: SeriesColorSource;
   themeColorIndex?: number | null;
   values: number[];
-  smooth: boolean;
-  step: boolean;
-  areaStyle: Record<string, never> | null;
 }
 
 export interface LineChartData {
   type: "line";
   variation?: LineChartVariation;
-  showEndValueLabels?: boolean;
   categories: string[];
   series: LineSeriesData[];
 }

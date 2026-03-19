@@ -226,7 +226,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
 
     if (type === "line" && chartData?.type === "line") {
       const categories = chartData.categories;
-      const showEndValueLabels = Boolean(chartData.showEndValueLabels);
+      const showEndValueLabels = Boolean(settings.lineShowLabels);
       chartOption.tooltip = opts.tooltip || { trigger: "axis" };
       chartOption.legend = {
         ...baseLegend,
@@ -253,8 +253,8 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           data: categories.map(
             (_, valueIndex) => series.values[valueIndex] ?? null,
           ),
-          smooth: series.smooth,
-          step: series.step,
+          smooth: settings.lineSmooth,
+          step: settings.lineStep ? "end" : false,
           endLabel: showEndValueLabels
             ? {
                 show: true,
@@ -286,10 +286,9 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
                 color: series.color,
               }
             : templateSeries.itemStyle,
-          areaStyle: series.areaStyle
+          areaStyle: settings.lineArea
             ? {
                 ...(templateSeries.areaStyle || {}),
-                ...series.areaStyle,
                 ...(shouldUseSeriesColor(series.colorSource, series.color)
                   ? { color: series.color }
                   : {}),

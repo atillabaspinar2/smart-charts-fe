@@ -176,6 +176,10 @@ export const ChartWorkspace: React.FC<{
         barBackgroundColor: "#f3f4f6",
         barAxisOrientation: "vertical",
         barStackEnabled: false,
+        lineShowLabels: false,
+        lineSmooth: false,
+        lineStep: false,
+        lineArea: false,
       },
     }));
   };
@@ -263,7 +267,6 @@ export const ChartWorkspace: React.FC<{
 
     const nextData: LineChartData = {
       type: "line",
-      showEndValueLabels: false,
       categories,
       series: templateSeries.length
         ? templateSeries.map((series: any, index: number) => ({
@@ -275,9 +278,6 @@ export const ChartWorkspace: React.FC<{
             values: Array.isArray(series.data)
               ? series.data.map((value: unknown) => Number(value) || 0)
               : [],
-            smooth: Boolean(series.smooth),
-            step: Boolean(series.step),
-            areaStyle: series.areaStyle ? {} : null,
           }))
         : [
             {
@@ -287,9 +287,6 @@ export const ChartWorkspace: React.FC<{
               colorSource: "theme",
               themeColorIndex: 0,
               values: [150, 230, 224, 218, 135, 147, 260],
-              smooth: false,
-              step: false,
-              areaStyle: {},
             },
           ],
     };
@@ -318,6 +315,10 @@ export const ChartWorkspace: React.FC<{
           barBackgroundColor: "#f3f4f6",
           barAxisOrientation: "vertical",
           barStackEnabled: false,
+          lineShowLabels: false,
+          lineSmooth: false,
+          lineStep: false,
+          lineArea: false,
         } as ChartSettingsData);
       const next = { ...current, ...updates };
 
@@ -359,6 +360,18 @@ export const ChartWorkspace: React.FC<{
       const barStackEnabledChanged =
         typeof updates.barStackEnabled === "boolean" &&
         updates.barStackEnabled !== current.barStackEnabled;
+      const lineShowLabelsChanged =
+        typeof updates.lineShowLabels === "boolean" &&
+        updates.lineShowLabels !== current.lineShowLabels;
+      const lineSmoothChanged =
+        typeof updates.lineSmooth === "boolean" &&
+        updates.lineSmooth !== current.lineSmooth;
+      const lineStepChanged =
+        typeof updates.lineStep === "boolean" &&
+        updates.lineStep !== current.lineStep;
+      const lineAreaChanged =
+        typeof updates.lineArea === "boolean" &&
+        updates.lineArea !== current.lineArea;
 
       if (
         !animationChanged &&
@@ -373,7 +386,11 @@ export const ChartWorkspace: React.FC<{
         !barShowBackgroundChanged &&
         !barBackgroundColorChanged &&
         !barAxisOrientationChanged &&
-        !barStackEnabledChanged
+        !barStackEnabledChanged &&
+        !lineShowLabelsChanged &&
+        !lineSmoothChanged &&
+        !lineStepChanged &&
+        !lineAreaChanged
       ) {
         return prev;
       }
@@ -405,6 +422,10 @@ export const ChartWorkspace: React.FC<{
         barBackgroundColor: "#f3f4f6",
         barAxisOrientation: "vertical",
         barStackEnabled: false,
+        lineShowLabels: false,
+        lineSmooth: false,
+        lineStep: false,
+        lineArea: false,
       }
     );
   };
@@ -1147,16 +1168,6 @@ export const ChartWorkspace: React.FC<{
         return;
       }
 
-      if (
-        selected.type === "line" &&
-        nextData.type === "line" &&
-        chartDataMap[selected.instanceId]?.type === "line"
-      ) {
-        nextData.showEndValueLabels =
-          (chartDataMap[selected.instanceId] as LineChartData)
-            .showEndValueLabels ?? false;
-      }
-
       updateChartData(selected.instanceId, nextData, { reanimate: true });
     } catch (error) {
       console.error("Failed to import spreadsheet", error);
@@ -1202,14 +1213,8 @@ export const ChartWorkspace: React.FC<{
       if (data.type === "line") {
         return {
           type: "line",
-          showEndValueLabels: data.showEndValueLabels ?? false,
           categories: newCategories,
-          series: newSeries.map((series) => ({
-            ...series,
-            smooth: false,
-            step: false,
-            areaStyle: {},
-          })),
+          series: newSeries,
         } satisfies LineChartData;
       }
 
@@ -1629,6 +1634,26 @@ export const ChartWorkspace: React.FC<{
               updateChartSettings(selectedChartInstanceId, {
                 barStackEnabled: value,
               })
+            }
+            lineShowLabels={
+              getChartSettings(selectedChartInstanceId).lineShowLabels
+            }
+            setLineShowLabels={(value) =>
+              updateChartSettings(selectedChartInstanceId, {
+                lineShowLabels: value,
+              })
+            }
+            lineSmooth={getChartSettings(selectedChartInstanceId).lineSmooth}
+            setLineSmooth={(value) =>
+              updateChartSettings(selectedChartInstanceId, { lineSmooth: value })
+            }
+            lineStep={getChartSettings(selectedChartInstanceId).lineStep}
+            setLineStep={(value) =>
+              updateChartSettings(selectedChartInstanceId, { lineStep: value })
+            }
+            lineArea={getChartSettings(selectedChartInstanceId).lineArea}
+            setLineArea={(value) =>
+              updateChartSettings(selectedChartInstanceId, { lineArea: value })
             }
             selectedChartType={
               charts.find((c) => c.instanceId === selectedChartInstanceId)

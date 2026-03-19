@@ -59,6 +59,14 @@ interface ChartSettingsPanelProps {
   setBarAxisOrientation?: (value: "vertical" | "horizontal") => void;
   barStackEnabled?: boolean;
   setBarStackEnabled?: (value: boolean) => void;
+  lineShowLabels?: boolean;
+  setLineShowLabels?: (value: boolean) => void;
+  lineSmooth?: boolean;
+  setLineSmooth?: (value: boolean) => void;
+  lineStep?: boolean;
+  setLineStep?: (value: boolean) => void;
+  lineArea?: boolean;
+  setLineArea?: (value: boolean) => void;
   pieSettings?: PieChartSettings;
   setPieSettings?: (updates: Partial<PieChartSettings>) => void;
 }
@@ -98,6 +106,14 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
   setBarAxisOrientation = () => {},
   barStackEnabled = false,
   setBarStackEnabled = () => {},
+  lineShowLabels = false,
+  setLineShowLabels = () => {},
+  lineSmooth = false,
+  setLineSmooth = () => {},
+  lineStep = false,
+  setLineStep = () => {},
+  lineArea = false,
+  setLineArea = () => {},
   pieSettings,
   setPieSettings,
 }) => {
@@ -263,6 +279,14 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
                 <LineChartStylesTabContent
                   dataOrientation={dataOrientation}
                   setDataOrientation={setDataOrientation}
+                  lineShowLabels={lineShowLabels}
+                  setLineShowLabels={setLineShowLabels}
+                  lineSmooth={lineSmooth}
+                  setLineSmooth={setLineSmooth}
+                  lineStep={lineStep}
+                  setLineStep={setLineStep}
+                  lineArea={lineArea}
+                  setLineArea={setLineArea}
                 />
               ) : (
                 <BarChartStylesTabContent
