@@ -1,13 +1,6 @@
 import type { FC } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface CommonChartSettingsTabContentProps {
   chartLabel: string;
@@ -15,9 +8,6 @@ interface CommonChartSettingsTabContentProps {
   setTitle: (v: string) => void;
   animationInput: string;
   onAnimationChange: (value: string) => void;
-  fontFamily: string;
-  setFontFamily: (v: string) => void;
-  fontFamilies: string[];
   fontSizeInput: string;
   onFontSizeChange: (value: string) => void;
   backgroundColor: string;
@@ -32,9 +22,6 @@ export const CommonChartSettingsTabContent: FC<
   setTitle,
   animationInput,
   onAnimationChange,
-  fontFamily,
-  setFontFamily,
-  fontFamilies,
   fontSizeInput,
   onFontSizeChange,
   backgroundColor,
@@ -57,7 +44,6 @@ export const CommonChartSettingsTabContent: FC<
           onChange={(e) => setTitle(e.target.value)}
         />
       </div>
-
       <div>
         <Label
           htmlFor="settings-animation"
@@ -75,23 +61,6 @@ export const CommonChartSettingsTabContent: FC<
           onChange={(e) => onAnimationChange(e.target.value)}
         />
       </div>
-
-      <div>
-        <Label className="mb-1 block text-sm font-medium">Font Family</Label>
-        <Select value={fontFamily} onValueChange={setFontFamily}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select font family" />
-          </SelectTrigger>
-          <SelectContent>
-            {fontFamilies.map((family) => (
-              <SelectItem key={family} value={family}>
-                {family}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
       <div>
         <Label
           htmlFor="settings-font-size"
@@ -109,7 +78,6 @@ export const CommonChartSettingsTabContent: FC<
           onChange={(e) => onFontSizeChange(e.target.value)}
         />
       </div>
-
       <div>
         <Label className="mb-1 block text-sm font-medium">
           Background Color

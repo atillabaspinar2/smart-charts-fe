@@ -29,8 +29,6 @@ interface ChartSettingsPanelProps {
   setAnimationDuration: (v: number) => void;
   fontFamily: string;
   setFontFamily: (v: string) => void;
-  fontSize: number;
-  setFontSize: (v: number) => void;
   mediaType: string;
   setMediaType: (v: string) => void;
   backgroundColor: string;
@@ -69,6 +67,9 @@ interface ChartSettingsPanelProps {
   setLineArea?: (value: boolean) => void;
   pieSettings?: PieChartSettings;
   setPieSettings?: (updates: Partial<PieChartSettings>) => void;
+  // Only present for per-chart context
+  fontSize?: number;
+  setFontSize?: (v: number) => void;
 }
 
 export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
@@ -76,8 +77,6 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
   setAnimationDuration,
   fontFamily,
   setFontFamily,
-  fontSize,
-  setFontSize,
   mediaType,
   setMediaType,
   backgroundColor,
@@ -116,11 +115,13 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
   setLineArea = () => {},
   pieSettings,
   setPieSettings,
+  fontSize,
+  setFontSize,
 }) => {
   const [animationInput, setAnimationInput] = useState(
     String(animationDuration),
   );
-  const [fontSizeInput, setFontSizeInput] = useState(String(fontSize));
+  // fontSize removed from global settings
   const [activeChartAccordionItem, setActiveChartAccordionItem] =
     useState<string>("");
 
@@ -134,9 +135,7 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
     setAnimationInput(String(animationDuration));
   }, [animationDuration]);
 
-  useEffect(() => {
-    setFontSizeInput(String(fontSize));
-  }, [fontSize]);
+  // fontSize effect removed
 
   useEffect(() => {
     if (isLineOrBarChart) {
@@ -155,10 +154,7 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
     setAnimationInput(value);
   };
 
-  const handleFontSizeChange = (value: string = "12") => {
-    if (!/^\d*$/.test(value)) return;
-    setFontSizeInput(value);
-  };
+  // fontSize handler removed
 
   useEffect(() => {
     if (animationInput === "") return;
@@ -170,15 +166,7 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
     return () => clearTimeout(timeout);
   }, [animationInput, animationDuration, setAnimationDuration]);
 
-  useEffect(() => {
-    if (fontSizeInput === "") return;
-    const parsed = Number(fontSizeInput);
-    if (parsed === fontSize) return;
-    const timeout = setTimeout(() => {
-      setFontSize(Math.max(8, parsed));
-    }, 500);
-    return () => clearTimeout(timeout);
-  }, [fontSizeInput, fontSize, setFontSize]);
+  // fontSize effect removed
 
   return (
     <div className="chart-options p-1">
@@ -240,112 +228,95 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
             </Select>
           </div>
 
-          <div className="mb-4">
-            <Label
-              htmlFor="settings-font-size"
-              className="mb-1 block text-sm font-medium"
-            >
-              Font Size (px)
-            </Label>
-            <Input
-              id="settings-font-size"
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={fontSizeInput}
-              placeholder="12"
-              onChange={(e) => handleFontSizeChange(e.target.value)}
-            />
-          </div>
+          {/* Font size removed from global settings */}
         </>
       )}
 
-      {isLineOrBarChart && (
-        <Accordion
-          type="single"
-          collapsible
-          value={activeChartAccordionItem}
-          onValueChange={setActiveChartAccordionItem}
-          className="mb-4"
-        >
-          <AccordionItem value="chart-data-styles">
-            <AccordionTrigger className="text-sm font-medium">
-              {selectedChartType === "line"
-                ? "Line Data Style"
-                : "Bar Data Style"}
-            </AccordionTrigger>
-            <AccordionContent>
-              {selectedChartType === "line" ? (
-                <LineChartStylesTabContent
-                  dataOrientation={dataOrientation}
-                  setDataOrientation={setDataOrientation}
-                  lineShowLabels={lineShowLabels}
-                  setLineShowLabels={setLineShowLabels}
-                  lineSmooth={lineSmooth}
-                  setLineSmooth={setLineSmooth}
-                  lineStep={lineStep}
-                  setLineStep={setLineStep}
-                  lineArea={lineArea}
-                  setLineArea={setLineArea}
-                />
-              ) : (
-                <BarChartStylesTabContent
-                  dataOrientation={dataOrientation}
-                  setDataOrientation={setDataOrientation}
-                  barShowBackground={barShowBackground}
-                  setBarShowBackground={setBarShowBackground}
-                  barBackgroundColor={barBackgroundColor}
-                  setBarBackgroundColor={setBarBackgroundColor}
-                  barAxisOrientation={barAxisOrientation}
-                  setBarAxisOrientation={setBarAxisOrientation}
-                  barStackEnabled={barStackEnabled}
-                  setBarStackEnabled={setBarStackEnabled}
-                />
-              )}
-            </AccordionContent>
-          </AccordionItem>
+      {isLineOrBarChart &&
+        typeof fontSize === "number" &&
+        typeof setFontSize === "function" && (
+          <Accordion
+            type="single"
+            collapsible
+            value={activeChartAccordionItem}
+            onValueChange={setActiveChartAccordionItem}
+            className="mb-4"
+          >
+            <AccordionItem value="chart-data-styles">
+              <AccordionTrigger className="text-sm font-medium">
+                {selectedChartType === "line"
+                  ? "Line Data Style"
+                  : "Bar Data Style"}
+              </AccordionTrigger>
+              <AccordionContent>
+                {selectedChartType === "line" ? (
+                  <LineChartStylesTabContent
+                    dataOrientation={dataOrientation}
+                    setDataOrientation={setDataOrientation}
+                    lineShowLabels={lineShowLabels}
+                    setLineShowLabels={setLineShowLabels}
+                    lineSmooth={lineSmooth}
+                    setLineSmooth={setLineSmooth}
+                    lineStep={lineStep}
+                    setLineStep={setLineStep}
+                    lineArea={lineArea}
+                    setLineArea={setLineArea}
+                  />
+                ) : (
+                  <BarChartStylesTabContent
+                    dataOrientation={dataOrientation}
+                    setDataOrientation={setDataOrientation}
+                    barShowBackground={barShowBackground}
+                    setBarShowBackground={setBarShowBackground}
+                    barBackgroundColor={barBackgroundColor}
+                    setBarBackgroundColor={setBarBackgroundColor}
+                    barAxisOrientation={barAxisOrientation}
+                    setBarAxisOrientation={setBarAxisOrientation}
+                    barStackEnabled={barStackEnabled}
+                    setBarStackEnabled={setBarStackEnabled}
+                  />
+                )}
+              </AccordionContent>
+            </AccordionItem>
 
-          <AccordionItem value="chart-legend">
-            <AccordionTrigger className="text-sm font-medium">
-              Legend
-            </AccordionTrigger>
-            <AccordionContent>
-              <CommonLegendTabContent
-                showLegend={showLegend}
-                setShowLegend={setShowLegend}
-                legendTop={legendTop}
-                setLegendTop={setLegendTop}
-                legendLeft={legendLeft}
-                setLegendLeft={setLegendLeft}
-                legendOrient={legendOrient}
-                setLegendOrient={setLegendOrient}
-              />
-            </AccordionContent>
-          </AccordionItem>
+            <AccordionItem value="chart-legend">
+              <AccordionTrigger className="text-sm font-medium">
+                Legend
+              </AccordionTrigger>
+              <AccordionContent>
+                <CommonLegendTabContent
+                  showLegend={showLegend}
+                  setShowLegend={setShowLegend}
+                  legendTop={legendTop}
+                  setLegendTop={setLegendTop}
+                  legendLeft={legendLeft}
+                  setLegendLeft={setLegendLeft}
+                  legendOrient={legendOrient}
+                  setLegendOrient={setLegendOrient}
+                />
+              </AccordionContent>
+            </AccordionItem>
 
-          <AccordionItem value={`${selectedChartType}-settings`}>
-            <AccordionTrigger className="text-sm font-medium">
-              Common Settings
-            </AccordionTrigger>
-            <AccordionContent>
-              <CommonChartSettingsTabContent
-                chartLabel="Chart"
-                title={title}
-                setTitle={setTitle}
-                animationInput={animationInput}
-                onAnimationChange={handleAnimationChange}
-                fontFamily={fontFamily}
-                setFontFamily={setFontFamily}
-                fontFamilies={FONT_FAMILIES}
-                fontSizeInput={fontSizeInput}
-                onFontSizeChange={handleFontSizeChange}
-                backgroundColor={backgroundColor}
-                setBackgroundColor={setBackgroundColor}
-              />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      )}
+            <AccordionItem value={`${selectedChartType}-settings`}>
+              <AccordionTrigger className="text-sm font-medium">
+                Common Settings
+              </AccordionTrigger>
+              <AccordionContent>
+                <CommonChartSettingsTabContent
+                  chartLabel="Chart"
+                  title={title}
+                  setTitle={setTitle}
+                  animationInput={animationInput}
+                  onAnimationChange={handleAnimationChange}
+                  fontSizeInput={String(fontSize)}
+                  onFontSizeChange={(value) => setFontSize(Number(value))}
+                  backgroundColor={backgroundColor}
+                  setBackgroundColor={setBackgroundColor}
+                />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        )}
 
       {!selectedChartType && (
         <div className="mb-4">
@@ -383,67 +354,68 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
         </div>
       )}
 
-      {isPieChart && pieSettings && setPieSettings && (
-        <Accordion
-          type="single"
-          collapsible
-          value={activeChartAccordionItem}
-          onValueChange={setActiveChartAccordionItem}
-          className="mb-4"
-        >
-          <AccordionItem value="pie-data-styles">
-            <AccordionTrigger className="text-sm font-medium">
-              Pie Data Style
-            </AccordionTrigger>
-            <AccordionContent>
-              <PieChartStylesTabContent
-                pieSettings={pieSettings}
-                setPieSettings={setPieSettings}
-              />
-            </AccordionContent>
-          </AccordionItem>
+      {isPieChart &&
+        pieSettings &&
+        setPieSettings &&
+        typeof fontSize === "number" &&
+        typeof setFontSize === "function" && (
+          <Accordion
+            type="single"
+            collapsible
+            value={activeChartAccordionItem}
+            onValueChange={setActiveChartAccordionItem}
+            className="mb-4"
+          >
+            <AccordionItem value="pie-data-styles">
+              <AccordionTrigger className="text-sm font-medium">
+                Pie Data Style
+              </AccordionTrigger>
+              <AccordionContent>
+                <PieChartStylesTabContent
+                  pieSettings={pieSettings}
+                  setPieSettings={setPieSettings}
+                />
+              </AccordionContent>
+            </AccordionItem>
 
-          <AccordionItem value="pie-legend">
-            <AccordionTrigger className="text-sm font-medium">
-              Legend
-            </AccordionTrigger>
-            <AccordionContent>
-              <CommonLegendTabContent
-                showLegend={showLegend}
-                setShowLegend={setShowLegend}
-                legendTop={legendTop}
-                setLegendTop={setLegendTop}
-                legendLeft={legendLeft}
-                setLegendLeft={setLegendLeft}
-                legendOrient={legendOrient}
-                setLegendOrient={setLegendOrient}
-              />
-            </AccordionContent>
-          </AccordionItem>
+            <AccordionItem value="pie-legend">
+              <AccordionTrigger className="text-sm font-medium">
+                Legend
+              </AccordionTrigger>
+              <AccordionContent>
+                <CommonLegendTabContent
+                  showLegend={showLegend}
+                  setShowLegend={setShowLegend}
+                  legendTop={legendTop}
+                  setLegendTop={setLegendTop}
+                  legendLeft={legendLeft}
+                  setLegendLeft={setLegendLeft}
+                  legendOrient={legendOrient}
+                  setLegendOrient={setLegendOrient}
+                />
+              </AccordionContent>
+            </AccordionItem>
 
-          <AccordionItem value="pie-settings">
-            <AccordionTrigger className="text-sm font-medium">
-              Common Settings
-            </AccordionTrigger>
-            <AccordionContent>
-              <CommonChartSettingsTabContent
-                chartLabel="Chart"
-                title={title}
-                setTitle={setTitle}
-                animationInput={animationInput}
-                onAnimationChange={handleAnimationChange}
-                fontFamily={fontFamily}
-                setFontFamily={setFontFamily}
-                fontFamilies={FONT_FAMILIES}
-                fontSizeInput={fontSizeInput}
-                onFontSizeChange={handleFontSizeChange}
-                backgroundColor={backgroundColor}
-                setBackgroundColor={setBackgroundColor}
-              />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      )}
+            <AccordionItem value="pie-settings">
+              <AccordionTrigger className="text-sm font-medium">
+                Common Settings
+              </AccordionTrigger>
+              <AccordionContent>
+                <CommonChartSettingsTabContent
+                  chartLabel="Chart"
+                  title={title}
+                  setTitle={setTitle}
+                  animationInput={animationInput}
+                  onAnimationChange={handleAnimationChange}
+                  fontSizeInput={String(fontSize)}
+                  onFontSizeChange={(value) => setFontSize(Number(value))}
+                  backgroundColor={backgroundColor}
+                  setBackgroundColor={setBackgroundColor}
+                />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        )}
 
       {!selectedChartType && (
         <>

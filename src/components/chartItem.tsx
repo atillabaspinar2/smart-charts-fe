@@ -196,7 +196,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       textStyle: {
         ...(opts.textStyle || {}),
         fontFamily: settings.fontFamily,
-        fontSize: settings.fontSize,
+        // fontSize intentionally omitted from global textStyle
       },
       backgroundColor: effectiveBackgroundColor,
       animation: animateOnNextMount,
