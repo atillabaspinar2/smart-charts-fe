@@ -38,21 +38,44 @@ export const pieOptions = {
   animationDuration: 1200,
   title: {
     text: "Referer of a Website",
-    subtext: "Fake Data",
     left: "center",
   },
   tooltip: {
     trigger: "item",
   },
   legend: {
-    orient: "vertical",
+    top: "bottom",
     left: "left",
+    orient: "vertical",
+    padding: [15, 15],
   },
   series: [
     {
       name: "Access From",
       type: "pie",
-      radius: "50%",
+      radius: ["40%", "70%"],
+      padAngle: 10,
+      roseType: "area",
+      avoidLabelOverlap: false,
+      itemStyle: {
+        borderRadius: 10,
+        borderColor: "black",
+        borderWidth: 2,
+      },
+      label: {
+        show: false,
+        position: "center",
+      },
+      emphasis: {
+        label: {
+          show: true,
+          fontSize: 16,
+          fontWeight: "bold",
+        },
+      },
+      labelLine: {
+        show: false,
+      },
       data: [
         { value: 1048, name: "Search Engine" },
         { value: 735, name: "Direct" },
@@ -60,13 +83,6 @@ export const pieOptions = {
         { value: 484, name: "Union Ads" },
         { value: 300, name: "Video Ads" },
       ],
-      emphasis: {
-        itemStyle: {
-          shadowBlur: 10,
-          shadowOffsetX: 0,
-          shadowColor: "rgba(0, 0, 0, 0.5)",
-        },
-      },
     },
   ],
 };

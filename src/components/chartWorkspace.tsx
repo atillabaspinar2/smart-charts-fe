@@ -26,7 +26,9 @@ import {
   type ChartItemData,
   type ChartSettingsData,
   type LineChartData,
+  type PieChartSettings,
   type ReanimateSignal,
+  defaultPieChartSettings,
 } from "./chartTypes";
 
 const defaultChartSize = {
@@ -108,6 +110,9 @@ export const ChartWorkspace: React.FC<{
   const [workspaceTheme, setWorkspaceTheme] = useState<string>("");
   const [chartDataOrientationMap, setChartDataOrientationMap] = useState<
     Record<string, DataOrientation>
+  >({});
+  const [pieSettingsMap, setPieSettingsMap] = useState<
+    Record<string, PieChartSettings>
   >({});
   const [pendingImportChartInstanceId, setPendingImportChartInstanceId] =
     useState<string | null>(null);
@@ -285,6 +290,22 @@ export const ChartWorkspace: React.FC<{
     );
   };
 
+  const getPieSettings = (instanceId: string): PieChartSettings =>
+    pieSettingsMap[instanceId] ?? defaultPieChartSettings;
+
+  const updatePieSettings = (
+    instanceId: string,
+    updates: Partial<PieChartSettings>,
+  ) => {
+    setPieSettingsMap((prev) => ({
+      ...prev,
+      [instanceId]: {
+        ...(prev[instanceId] ?? defaultPieChartSettings),
+        ...updates,
+      },
+    }));
+  };
+
   const updateChartData = (instanceId: string, nextData: ChartData) => {
     setChartDataMap((prev) => ({
       ...prev,
@@ -335,8 +356,14 @@ export const ChartWorkspace: React.FC<{
       ) {
         initializeChartData(chart.instanceId, chart.type);
       }
+      if (chart.type === "pie" && !pieSettingsMap[chart.instanceId]) {
+        setPieSettingsMap((prev) => ({
+          ...prev,
+          [chart.instanceId]: defaultPieChartSettings,
+        }));
+      }
     });
-  }, [charts, chartSettingsMap, chartDataMap]);
+  }, [charts, chartSettingsMap, chartDataMap, pieSettingsMap]);
 
   useEffect(() => {
     setChartPositionMap((prev) => {
@@ -1277,6 +1304,7 @@ export const ChartWorkspace: React.FC<{
               onImportData={handleOpenImportDialog}
               mediaType={mediaType}
               theme={workspaceTheme || undefined}
+              pieSettings={getPieSettings(c.instanceId)}
             />
           ))}
         </div>
@@ -1356,6 +1384,10 @@ export const ChartWorkspace: React.FC<{
             }
             dataOrientation={selectedChartDataOrientation}
             setDataOrientation={handleChangeDataOrientation}
+            pieSettings={getPieSettings(selectedChartInstanceId)}
+            setPieSettings={(updates) =>
+              updatePieSettings(selectedChartInstanceId, updates)
+            }
             onClose={() => setSelectedChartInstanceId(null)}
           />
         ) : (

@@ -4,6 +4,7 @@ import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { ECHARTS_THEMES } from "../assets/themes/registerThemes";
 import type { DataOrientation } from "../utils/spreadsheetImport";
+import type { PieChartSettings } from "./chartTypes";
 
 interface ChartSettingsPanelProps {
   animationDuration: number;
@@ -35,6 +37,8 @@ interface ChartSettingsPanelProps {
   onApplyThemeColorsToAll?: () => void;
   dataOrientation?: DataOrientation;
   setDataOrientation?: (orientation: DataOrientation) => void;
+  pieSettings?: PieChartSettings;
+  setPieSettings?: (updates: Partial<PieChartSettings>) => void;
 }
 
 export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
@@ -58,6 +62,8 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
   onApplyThemeColorsToAll,
   dataOrientation,
   setDataOrientation,
+  pieSettings,
+  setPieSettings,
 }) => {
   const [animationInput, setAnimationInput] = useState(
     String(animationDuration),
@@ -230,6 +236,210 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
           </span>
         </div>
       </div>
+
+      {selectedChartType === "pie" && pieSettings && setPieSettings && (
+        <div className="mb-4 rounded-md border border-border bg-background p-3 space-y-4">
+          <p className="text-sm font-medium">Pie Settings</p>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Inner Radius</Label>
+              <span className="text-xs text-muted-foreground w-8 text-right">
+                {pieSettings.innerRadius}%
+              </span>
+            </div>
+            <Slider
+              min={0}
+              max={pieSettings.outerRadius - 5}
+              step={1}
+              value={[pieSettings.innerRadius]}
+              onValueChange={([v]) => setPieSettings({ innerRadius: v })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Outer Radius</Label>
+              <span className="text-xs text-muted-foreground w-8 text-right">
+                {pieSettings.outerRadius}%
+              </span>
+            </div>
+            <Slider
+              min={pieSettings.innerRadius + 5}
+              max={90}
+              step={1}
+              value={[pieSettings.outerRadius]}
+              onValueChange={([v]) => setPieSettings({ outerRadius: v })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Pad Angle</Label>
+              <span className="text-xs text-muted-foreground w-8 text-right">
+                {pieSettings.padAngle}
+              </span>
+            </div>
+            <Slider
+              min={0}
+              max={20}
+              step={1}
+              value={[pieSettings.padAngle]}
+              onValueChange={([v]) => setPieSettings({ padAngle: v })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Border Width</Label>
+              <span className="text-xs text-muted-foreground w-8 text-right">
+                {pieSettings.borderWidth}
+              </span>
+            </div>
+            <Slider
+              min={0}
+              max={30}
+              step={1}
+              value={[pieSettings.borderWidth]}
+              onValueChange={([v]) => setPieSettings({ borderWidth: v })}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Style</Label>
+            <div className="inline-flex overflow-hidden rounded-md border border-border">
+              <button
+                type="button"
+                className={`px-3 py-1 text-xs font-medium ${
+                  pieSettings.roseType === "area"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background text-foreground hover:bg-muted"
+                }`}
+                onClick={() => setPieSettings({ roseType: "area" })}
+              >
+                Rose
+              </button>
+              <button
+                type="button"
+                className={`border-l border-border px-3 py-1 text-xs font-medium ${
+                  pieSettings.roseType === false
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background text-foreground hover:bg-muted"
+                }`}
+                onClick={() => setPieSettings({ roseType: false })}
+              >
+                Normal
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Show Label</Label>
+            <div className="inline-flex overflow-hidden rounded-md border border-border">
+              <button
+                type="button"
+                className={`px-3 py-1 text-xs font-medium ${
+                  pieSettings.showLabel
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background text-foreground hover:bg-muted"
+                }`}
+                onClick={() => setPieSettings({ showLabel: true })}
+              >
+                True
+              </button>
+              <button
+                type="button"
+                className={`border-l border-border px-3 py-1 text-xs font-medium ${
+                  !pieSettings.showLabel
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background text-foreground hover:bg-muted"
+                }`}
+                onClick={() => setPieSettings({ showLabel: false })}
+              >
+                False
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Legend Position</Label>
+            <div className="inline-flex overflow-hidden rounded-md border border-border">
+              <button
+                type="button"
+                className={`px-3 py-1 text-xs font-medium ${
+                  pieSettings.legendTop === "top"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background text-foreground hover:bg-muted"
+                }`}
+                onClick={() => setPieSettings({ legendTop: "top" })}
+              >
+                Top
+              </button>
+              <button
+                type="button"
+                className={`border-l border-border px-3 py-1 text-xs font-medium ${
+                  pieSettings.legendTop === "bottom"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background text-foreground hover:bg-muted"
+                }`}
+                onClick={() => setPieSettings({ legendTop: "bottom" })}
+              >
+                Bottom
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Legend Align</Label>
+            <div className="inline-flex overflow-hidden rounded-md border border-border">
+              {(["left", "center", "right"] as const).map((val, i) => (
+                <button
+                  key={val}
+                  type="button"
+                  className={`${
+                    i > 0 ? "border-l border-border" : ""
+                  } px-3 py-1 text-xs font-medium capitalize ${
+                    pieSettings.legendLeft === val
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-background text-foreground hover:bg-muted"
+                  }`}
+                  onClick={() => setPieSettings({ legendLeft: val })}
+                >
+                  {val}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Legend Orient</Label>
+            <div className="inline-flex overflow-hidden rounded-md border border-border">
+              <button
+                type="button"
+                className={`px-3 py-1 text-xs font-medium ${
+                  pieSettings.legendOrient === "horizontal"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background text-foreground hover:bg-muted"
+                }`}
+                onClick={() => setPieSettings({ legendOrient: "horizontal" })}
+              >
+                Horizontal
+              </button>
+              <button
+                type="button"
+                className={`border-l border-border px-3 py-1 text-xs font-medium ${
+                  pieSettings.legendOrient === "vertical"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background text-foreground hover:bg-muted"
+                }`}
+                onClick={() => setPieSettings({ legendOrient: "vertical" })}
+              >
+                Vertical
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {(selectedChartType === "line" || selectedChartType === "bar") &&
         dataOrientation &&

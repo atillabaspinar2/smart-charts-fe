@@ -67,6 +67,30 @@ export interface BarChartData {
   series: BarSeriesData[];
 }
 
+export interface PieChartSettings {
+  innerRadius: number;
+  outerRadius: number;
+  padAngle: number;
+  borderWidth: number;
+  roseType: "area" | false;
+  showLabel: boolean;
+  legendTop: "top" | "bottom";
+  legendLeft: "left" | "right" | "center";
+  legendOrient: "horizontal" | "vertical";
+}
+
+export const defaultPieChartSettings: PieChartSettings = {
+  innerRadius: 40,
+  outerRadius: 70,
+  padAngle: 10,
+  borderWidth: 0,
+  roseType: "area",
+  showLabel: false,
+  legendTop: "bottom",
+  legendLeft: "center",
+  legendOrient: "horizontal",
+};
+
 export type ChartData = LineChartData | BarChartData;
 
 export interface ReanimateSignal {

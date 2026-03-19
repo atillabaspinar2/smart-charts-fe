@@ -5,7 +5,9 @@ import {
   type ChartData,
   type ChartItemData,
   type ChartSettingsData,
+  type PieChartSettings,
   type ReanimateSignal,
+  defaultPieChartSettings,
 } from "./chartTypes";
 import { getOptionsByType } from "./chartOptionTemplates";
 import { ChartContextMenu } from "./chartContextMenu";
@@ -32,6 +34,7 @@ interface ChartItemProps {
   onImportData: (instanceId: string) => void;
   mediaType: string;
   theme?: string;
+  pieSettings?: PieChartSettings;
 }
 
 export const ChartItem: React.FC<ChartItemProps> = React.memo(
@@ -57,6 +60,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     onImportData,
     mediaType,
     theme,
+    pieSettings,
   }) => {
     const { id, type } = data;
     const chartRef = useRef<any>(null);
@@ -291,6 +295,60 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             : templateSeries.itemStyle,
         };
       });
+    }
+
+    if (type === "pie") {
+      const ps = pieSettings ?? defaultPieChartSettings;
+      const templateSeries = Array.isArray(opts.series)
+        ? opts.series[0] || {}
+        : {};
+      const {
+        left: _legendLeft,
+        right: _legendRight,
+        top: _legendTop,
+        bottom: _legendBottom,
+        orient: _legendOrient,
+        ...baseLegend
+      } = opts.legend || {};
+      const legendVerticalPosition =
+        ps.legendTop === "top" ? { top: 12 } : { bottom: 12 };
+      const legendHorizontalPosition =
+        ps.legendLeft === "left"
+          ? { left: 12 }
+          : ps.legendLeft === "right"
+            ? { right: 12 }
+            : { left: "center" };
+      chartOption.legend = {
+        ...baseLegend,
+        orient: ps.legendOrient,
+        ...legendVerticalPosition,
+        ...legendHorizontalPosition,
+      };
+      chartOption.series = [
+        {
+          ...templateSeries,
+          type: "pie",
+          radius: [`${ps.innerRadius}%`, `${ps.outerRadius}%`],
+          padAngle: ps.padAngle,
+          roseType: ps.roseType,
+          avoidLabelOverlap: false,
+          itemStyle: {
+            ...(templateSeries.itemStyle || {}),
+            borderWidth: ps.borderWidth,
+          },
+          label: { show: ps.showLabel, position: "inside" },
+          emphasis: {
+            label: {
+              show: ps.showLabel,
+              position: "inside",
+              fontSize: 12,
+              fontWeight: "bold",
+            },
+          },
+          labelLine: { show: false },
+          data: templateSeries.data,
+        },
+      ];
     }
 
     const chartHighlighted = isSelected
