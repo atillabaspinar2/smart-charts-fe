@@ -25,12 +25,15 @@ import {
   type BarChartData,
   type ChartData,
   type ChartItemData,
-  type ChartSettingsData,
   type LineChartData,
   type PieChartData,
   type PieChartSettings,
+  type LineChartSettings,
+  type BarChartSettings,
   type ReanimateSignal,
   defaultPieChartSettings,
+  defaultLineChartSettings,
+  defaultBarChartSettings,
 } from "./chartTypes";
 
 const defaultChartSize = {
@@ -88,7 +91,7 @@ export const ChartWorkspace: React.FC<{
     Record<string, boolean>
   >({});
   const [chartSettingsMap, setChartSettingsMap] = useState<
-    Record<string, ChartSettingsData>
+    Record<string, LineChartSettings | BarChartSettings | PieChartSettings>
   >({});
   const [mediaType, setMediaType] = useState<string>("webm");
   const [reanimateSignal, setReanimateSignal] =
@@ -296,30 +299,10 @@ export const ChartWorkspace: React.FC<{
 
   const updateChartSettings = (
     instanceId: string,
-    updates: Partial<ChartSettingsData>,
+    updates: Partial<LineChartSettings & BarChartSettings & PieChartSettings>,
   ) => {
     setChartSettingsMap((prev) => {
-      const current =
-        prev[instanceId] ||
-        ({
-          animationDuration: 1000,
-          backgroundColor: "#ffffff",
-          title: "",
-          fontFamily: canvasSettings.fontFamily,
-          fontSize: canvasSettings.fontSize,
-          showLegend: true,
-          legendTop: "bottom",
-          legendLeft: "center",
-          legendOrient: "horizontal",
-          barShowBackground: false,
-          barBackgroundColor: "#f3f4f6",
-          barAxisOrientation: "vertical",
-          barStackEnabled: false,
-          lineShowLabels: false,
-          lineSmooth: false,
-          lineStep: false,
-          lineArea: false,
-        } as ChartSettingsData);
+      const current = prev[instanceId] || defaultLineChartSettings;
       const next = { ...current, ...updates };
 
       const animationChanged =
@@ -349,27 +332,35 @@ export const ChartWorkspace: React.FC<{
         typeof updates.legendOrient === "string" &&
         updates.legendOrient !== current.legendOrient;
       const barShowBackgroundChanged =
+        "barShowBackground" in current &&
         typeof updates.barShowBackground === "boolean" &&
         updates.barShowBackground !== current.barShowBackground;
       const barBackgroundColorChanged =
+        "barBackgroundColor" in current &&
         typeof updates.barBackgroundColor === "string" &&
         updates.barBackgroundColor !== current.barBackgroundColor;
       const barAxisOrientationChanged =
+        "barAxisOrientation" in current &&
         typeof updates.barAxisOrientation === "string" &&
         updates.barAxisOrientation !== current.barAxisOrientation;
       const barStackEnabledChanged =
+        "barStackEnabled" in current &&
         typeof updates.barStackEnabled === "boolean" &&
         updates.barStackEnabled !== current.barStackEnabled;
       const lineShowLabelsChanged =
+        "lineShowLabels" in current &&
         typeof updates.lineShowLabels === "boolean" &&
         updates.lineShowLabels !== current.lineShowLabels;
       const lineSmoothChanged =
+        "lineSmooth" in current &&
         typeof updates.lineSmooth === "boolean" &&
         updates.lineSmooth !== current.lineSmooth;
       const lineStepChanged =
+        "lineStep" in current &&
         typeof updates.lineStep === "boolean" &&
         updates.lineStep !== current.lineStep;
       const lineAreaChanged =
+        "lineArea" in current &&
         typeof updates.lineArea === "boolean" &&
         updates.lineArea !== current.lineArea;
 
@@ -406,28 +397,16 @@ export const ChartWorkspace: React.FC<{
     });
   };
 
-  const getChartSettings = (instanceId: string): ChartSettingsData => {
-    return (
-      chartSettingsMap[instanceId] || {
-        animationDuration: 1000,
-        backgroundColor: "#ffffff",
-        title: "",
-        fontFamily: canvasSettings.fontFamily,
-        fontSize: canvasSettings.fontSize,
-        showLegend: true,
-        legendTop: "bottom",
-        legendLeft: "center",
-        legendOrient: "horizontal",
-        barShowBackground: false,
-        barBackgroundColor: "#f3f4f6",
-        barAxisOrientation: "vertical",
-        barStackEnabled: false,
-        lineShowLabels: false,
-        lineSmooth: false,
-        lineStep: false,
-        lineArea: false,
-      }
-    );
+  const getChartSettings = (
+    instanceId: string,
+    type?: string,
+  ): LineChartSettings | BarChartSettings | PieChartSettings => {
+    const settings = chartSettingsMap[instanceId];
+    if (settings) return settings;
+    if (type === "pie") return defaultPieChartSettings;
+    if (type === "bar") return defaultBarChartSettings;
+    if (type === "line") return defaultLineChartSettings;
+    return defaultLineChartSettings; // fallback
   };
 
   const getPieSettings = (instanceId: string): PieChartSettings =>
@@ -1616,57 +1595,81 @@ export const ChartWorkspace: React.FC<{
                 legendOrient: value,
               })
             }
-            barShowBackground={
-              getChartSettings(selectedChartInstanceId).barShowBackground
-            }
+            barShowBackground={(() => {
+              const settings = getChartSettings(selectedChartInstanceId);
+              return "barShowBackground" in settings
+                ? settings.barShowBackground
+                : undefined;
+            })()}
             setBarShowBackground={(value) =>
               updateChartSettings(selectedChartInstanceId, {
                 barShowBackground: value,
               })
             }
-            barBackgroundColor={
-              getChartSettings(selectedChartInstanceId).barBackgroundColor
-            }
+            barBackgroundColor={(() => {
+              const settings = getChartSettings(selectedChartInstanceId);
+              return "barBackgroundColor" in settings
+                ? settings.barBackgroundColor
+                : undefined;
+            })()}
             setBarBackgroundColor={(value) =>
               updateChartSettings(selectedChartInstanceId, {
                 barBackgroundColor: value,
               })
             }
-            barAxisOrientation={
-              getChartSettings(selectedChartInstanceId).barAxisOrientation
-            }
+            barAxisOrientation={(() => {
+              const settings = getChartSettings(selectedChartInstanceId);
+              return "barAxisOrientation" in settings
+                ? settings.barAxisOrientation
+                : undefined;
+            })()}
             setBarAxisOrientation={(value) =>
               updateChartSettings(selectedChartInstanceId, {
                 barAxisOrientation: value,
               })
             }
-            barStackEnabled={
-              getChartSettings(selectedChartInstanceId).barStackEnabled
-            }
+            barStackEnabled={(() => {
+              const settings = getChartSettings(selectedChartInstanceId);
+              return "barStackEnabled" in settings
+                ? settings.barStackEnabled
+                : undefined;
+            })()}
             setBarStackEnabled={(value) =>
               updateChartSettings(selectedChartInstanceId, {
                 barStackEnabled: value,
               })
             }
-            lineShowLabels={
-              getChartSettings(selectedChartInstanceId).lineShowLabels
-            }
+            lineShowLabels={(() => {
+              const settings = getChartSettings(selectedChartInstanceId);
+              return "lineShowLabels" in settings
+                ? settings.lineShowLabels
+                : undefined;
+            })()}
             setLineShowLabels={(value) =>
               updateChartSettings(selectedChartInstanceId, {
                 lineShowLabels: value,
               })
             }
-            lineSmooth={getChartSettings(selectedChartInstanceId).lineSmooth}
+            lineSmooth={(() => {
+              const settings = getChartSettings(selectedChartInstanceId);
+              return "lineSmooth" in settings ? settings.lineSmooth : undefined;
+            })()}
             setLineSmooth={(value) =>
               updateChartSettings(selectedChartInstanceId, {
                 lineSmooth: value,
               })
             }
-            lineStep={getChartSettings(selectedChartInstanceId).lineStep}
+            lineStep={(() => {
+              const settings = getChartSettings(selectedChartInstanceId);
+              return "lineStep" in settings ? settings.lineStep : undefined;
+            })()}
             setLineStep={(value) =>
               updateChartSettings(selectedChartInstanceId, { lineStep: value })
             }
-            lineArea={getChartSettings(selectedChartInstanceId).lineArea}
+            lineArea={(() => {
+              const settings = getChartSettings(selectedChartInstanceId);
+              return "lineArea" in settings ? settings.lineArea : undefined;
+            })()}
             setLineArea={(value) =>
               updateChartSettings(selectedChartInstanceId, { lineArea: value })
             }
@@ -1694,7 +1697,10 @@ export const ChartWorkspace: React.FC<{
             setFontFamily={(value) => {
               setCanvasSettings((prev) => ({ ...prev, fontFamily: value }));
               setChartSettingsMap((prev) => {
-                const next: Record<string, ChartSettingsData> = {};
+                const next: Record<
+                  string,
+                  LineChartSettings | BarChartSettings | PieChartSettings
+                > = {};
                 Object.entries(prev).forEach(([instanceId, settings]) => {
                   next[instanceId] = { ...settings, fontFamily: value };
                 });
@@ -1705,7 +1711,10 @@ export const ChartWorkspace: React.FC<{
             setFontSize={(value) => {
               setCanvasSettings((prev) => ({ ...prev, fontSize: value }));
               setChartSettingsMap((prev) => {
-                const next: Record<string, ChartSettingsData> = {};
+                const next: Record<
+                  string,
+                  LineChartSettings | BarChartSettings | PieChartSettings
+                > = {};
                 Object.entries(prev).forEach(([instanceId, settings]) => {
                   next[instanceId] = { ...settings, fontSize: value };
                 });

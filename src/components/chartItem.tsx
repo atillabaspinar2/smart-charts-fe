@@ -4,7 +4,8 @@ import { recordCanvas } from "./record";
 import {
   type ChartData,
   type ChartItemData,
-  type ChartSettingsData,
+  type LineChartSettings,
+  type BarChartSettings,
   type PieChartSettings,
   type ReanimateSignal,
   defaultPieChartSettings,
@@ -16,7 +17,7 @@ interface ChartItemProps {
   data: ChartItemData;
   reanimateSignal: ReanimateSignal | null;
   reanimateAllKey: number;
-  settings: ChartSettingsData;
+  settings: LineChartSettings | BarChartSettings | PieChartSettings;
   chartData?: ChartData;
   onSelectChart: (instanceId: string) => void;
   position: { x: number; y: number };
@@ -215,16 +216,37 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       show: _legendShow,
       ...baseLegend
     } = opts.legend || {};
-    const legendVerticalPosition =
-      settings.legendTop === "top" ? { top: 12 } : { bottom: 12 };
-    const legendHorizontalPosition =
-      settings.legendLeft === "left"
-        ? { left: 12 }
-        : settings.legendLeft === "right"
-          ? { right: 12 }
-          : { left: "center" };
+    // Type guards for settings
+    const isLineSettings = (
+      s: typeof settings,
+    ): s is import("./chartTypes").LineChartSettings =>
+      (s as any).lineShowLabels !== undefined;
+    const isBarSettings = (
+      s: typeof settings,
+    ): s is import("./chartTypes").BarChartSettings =>
+      (s as any).barShowBackground !== undefined;
 
-    if (type === "line" && chartData?.type === "line") {
+    // Legend position helpers
+    const legendVerticalPosition =
+      isLineSettings(settings) || isBarSettings(settings)
+        ? settings.legendTop === "top"
+          ? { top: 12 }
+          : { bottom: 12 }
+        : {};
+    const legendHorizontalPosition =
+      isLineSettings(settings) || isBarSettings(settings)
+        ? settings.legendLeft === "left"
+          ? { left: 12 }
+          : settings.legendLeft === "right"
+            ? { right: 12 }
+            : { left: "center" }
+        : {};
+
+    if (
+      type === "line" &&
+      chartData?.type === "line" &&
+      isLineSettings(settings)
+    ) {
       const categories = chartData.categories;
       const showEndValueLabels = Boolean(settings.lineShowLabels);
       chartOption.tooltip = opts.tooltip || { trigger: "axis" };
@@ -295,11 +317,20 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
                 opacity: 0.2,
               }
             : undefined,
+          // Animation options for every series
+          animation: animateOnNextMount,
+          animationDuration: animateOnNextMount
+            ? (settings.animationDuration ?? 1000)
+            : 0,
         };
       });
     }
 
-    if (type === "bar" && chartData?.type === "bar") {
+    if (
+      type === "bar" &&
+      chartData?.type === "bar" &&
+      isBarSettings(settings)
+    ) {
       const categories = chartData.categories;
       const isHorizontalBar = settings.barAxisOrientation === "horizontal";
       chartOption.tooltip = opts.tooltip || { trigger: "axis" };
@@ -356,6 +387,11 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             color: settings.barBackgroundColor,
           },
           stack: settings.barStackEnabled ? "x" : undefined,
+          // Animation options for every series
+          animation: animateOnNextMount,
+          animationDuration: animateOnNextMount
+            ? (settings.animationDuration ?? 1000)
+            : 0,
         };
       });
     }
@@ -365,10 +401,9 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       const templateSeries = Array.isArray(opts.series)
         ? opts.series[0] || {}
         : {};
+      // Pie settings do not have legendTop/legendLeft/legendOrient/showLegend
       chartOption.legend = {
         ...baseLegend,
-        show: settings.showLegend,
-        orient: settings.legendOrient,
         ...legendVerticalPosition,
         ...legendHorizontalPosition,
       };
@@ -411,6 +446,11 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           },
           labelLine: { show: false },
           data: pieSeriesData,
+          // Explicitly set animation options for pie
+          animation: animateOnNextMount,
+          animationDuration: animateOnNextMount
+            ? (settings.animationDuration ?? 1000)
+            : 0,
         },
       ];
     }

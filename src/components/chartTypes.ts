@@ -8,7 +8,8 @@ export interface ChartItemData {
   };
 }
 
-export interface ChartSettingsData {
+// Base settings shared by all chart types
+export interface ChartSettingsBase {
   animationDuration: number;
   backgroundColor: string;
   title: string;
@@ -18,14 +19,33 @@ export interface ChartSettingsData {
   legendTop: "top" | "bottom";
   legendLeft: "left" | "right" | "center";
   legendOrient: "horizontal" | "vertical";
-  barShowBackground: boolean;
-  barBackgroundColor: string;
-  barAxisOrientation: "vertical" | "horizontal";
-  barStackEnabled: boolean;
+}
+
+// Line chart specific settings
+export interface LineChartSettings extends ChartSettingsBase {
   lineShowLabels: boolean;
   lineSmooth: boolean;
   lineStep: boolean;
   lineArea: boolean;
+}
+
+// Bar chart specific settings
+export interface BarChartSettings extends ChartSettingsBase {
+  barShowBackground: boolean;
+  barBackgroundColor: string;
+  barAxisOrientation: "vertical" | "horizontal";
+  barStackEnabled: boolean;
+}
+
+// Pie chart specific settings (extends base)
+export interface PieChartSettings extends ChartSettingsBase {
+  chartType: "pie" | "funnel";
+  innerRadius: number;
+  outerRadius: number;
+  padAngle: number;
+  borderWidth: number;
+  roseType: "area" | false;
+  showLabel: boolean;
 }
 
 export type SeriesColorSource = "theme" | "custom";
@@ -80,17 +100,48 @@ export interface PieChartData {
   data: PieDataPoint[];
 }
 
-export interface PieChartSettings {
-  chartType: "pie" | "funnel";
-  innerRadius: number;
-  outerRadius: number;
-  padAngle: number;
-  borderWidth: number;
-  roseType: "area" | false;
-  showLabel: boolean;
-}
+export const defaultLineChartSettings: LineChartSettings = {
+  animationDuration: 1000,
+  backgroundColor: "#ffffff",
+  title: "",
+  fontFamily: "Inter, sans-serif",
+  fontSize: 14,
+  showLegend: true,
+  legendTop: "top",
+  legendLeft: "center",
+  legendOrient: "horizontal",
+  lineShowLabels: false,
+  lineSmooth: false,
+  lineStep: false,
+  lineArea: false,
+};
+
+export const defaultBarChartSettings: BarChartSettings = {
+  animationDuration: 1000,
+  backgroundColor: "#ffffff",
+  title: "",
+  fontFamily: "Inter, sans-serif",
+  fontSize: 14,
+  showLegend: true,
+  legendTop: "top",
+  legendLeft: "center",
+  legendOrient: "horizontal",
+  barShowBackground: false,
+  barBackgroundColor: "#eee",
+  barAxisOrientation: "vertical",
+  barStackEnabled: false,
+};
 
 export const defaultPieChartSettings: PieChartSettings = {
+  animationDuration: 1000,
+  backgroundColor: "#ffffff",
+  title: "",
+  fontFamily: "Inter, sans-serif",
+  fontSize: 14,
+  showLegend: true,
+  legendTop: "top",
+  legendLeft: "center",
+  legendOrient: "horizontal",
   chartType: "pie",
   innerRadius: 40,
   outerRadius: 70,
