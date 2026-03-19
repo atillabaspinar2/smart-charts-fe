@@ -67,6 +67,18 @@ export interface BarChartData {
   series: BarSeriesData[];
 }
 
+export interface PieDataPoint {
+  id: string;
+  name: string;
+  value: number;
+}
+
+export interface PieChartData {
+  type: "pie";
+  seriesName?: string;
+  data: PieDataPoint[];
+}
+
 export interface PieChartSettings {
   innerRadius: number;
   outerRadius: number;
@@ -91,7 +103,7 @@ export const defaultPieChartSettings: PieChartSettings = {
   legendOrient: "horizontal",
 };
 
-export type ChartData = LineChartData | BarChartData;
+export type ChartData = LineChartData | BarChartData | PieChartData;
 
 export interface ReanimateSignal {
   instanceId: string;

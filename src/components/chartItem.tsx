@@ -70,6 +70,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     const didDragRef = useRef(false);
     const [isRecording, setIsRecording] = useState(false);
     const [recordKey, setRecordKey] = useState<number>(0);
+    const [animateOnNextMount, setAnimateOnNextMount] = useState(false);
     const lastAppliedReanimateKeyRef = useRef<number>(0);
     const lastAppliedReanimateAllKeyRef = useRef<number>(0);
 
@@ -87,8 +88,17 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     }, [data.instanceId, onResize]);
 
     const reanimateChart = () => {
+      setAnimateOnNextMount(true);
       setRecordKey(Date.now());
     };
+
+    useEffect(() => {
+      if (!animateOnNextMount) return;
+      const timer = window.setTimeout(() => {
+        setAnimateOnNextMount(false);
+      }, 0);
+      return () => window.clearTimeout(timer);
+    }, [animateOnNextMount]);
 
     useEffect(() => {
       if (!reanimateSignal) return;
@@ -186,7 +196,11 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         fontSize: settings.fontSize,
       },
       backgroundColor: effectiveBackgroundColor,
-      animationDuration: settings.animationDuration ?? opts.animationDuration,
+      animation: animateOnNextMount,
+      animationDuration: animateOnNextMount
+        ? (settings.animationDuration ?? opts.animationDuration)
+        : 0,
+      animationDurationUpdate: 0,
     };
 
     if (type === "line" && chartData?.type === "line") {
@@ -203,8 +217,6 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         data: categories,
       };
       chartOption.yAxis = opts.yAxis || { type: "value" };
-      chartOption.animationDurationUpdate =
-        settings.animationDuration ?? opts.animationDuration ?? 1000;
       chartOption.series = chartData.series.map((series, index) => {
         const templateSeries = Array.isArray(opts.series)
           ? opts.series[index] || opts.series[0] || {}
@@ -221,7 +233,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           endLabel: showEndValueLabels
             ? {
                 show: true,
-                valueAnimation: true,
+                valueAnimation: animateOnNextMount,
                 formatter: (params: any) =>
                   `${params.seriesName}: ${params.value ?? ""}`,
               }
@@ -324,10 +336,22 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         ...legendVerticalPosition,
         ...legendHorizontalPosition,
       };
+      const pieSeriesData =
+        chartData?.type === "pie"
+          ? chartData.data.map((point) => ({
+              name: point.name,
+              value: point.value,
+            }))
+          : templateSeries.data;
+
       chartOption.series = [
         {
           ...templateSeries,
           type: "pie",
+          name:
+            chartData?.type === "pie"
+              ? chartData.seriesName || templateSeries.name
+              : templateSeries.name,
           radius: [`${ps.innerRadius}%`, `${ps.outerRadius}%`],
           padAngle: ps.padAngle,
           roseType: ps.roseType,
@@ -346,7 +370,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             },
           },
           labelLine: { show: false },
-          data: templateSeries.data,
+          data: pieSeriesData,
         },
       ];
     }

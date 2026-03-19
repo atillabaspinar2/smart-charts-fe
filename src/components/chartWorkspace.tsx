@@ -15,6 +15,7 @@ import {
 import { getOptionsByType } from "./chartOptionTemplates";
 import { LineChartDataPanel } from "./dataUI/lineChartDataPanel";
 import { BarChartDataPanel } from "./dataUI/barChartDataPanel";
+import { PieChartDataPanel } from "./dataUI/pieChartDataPanel";
 import {
   buildChartDataFromSheetRows,
   readSheetRowsFromFile,
@@ -26,6 +27,7 @@ import {
   type ChartItemData,
   type ChartSettingsData,
   type LineChartData,
+  type PieChartData,
   type PieChartSettings,
   type ReanimateSignal,
   defaultPieChartSettings,
@@ -79,6 +81,12 @@ export const ChartWorkspace: React.FC<{
   const [chartDataMap, setChartDataMap] = useState<Record<string, ChartData>>(
     {},
   );
+  const [chartDataDraftMap, setChartDataDraftMap] = useState<
+    Record<string, ChartData>
+  >({});
+  const [chartDataDraftDirtyMap, setChartDataDraftDirtyMap] = useState<
+    Record<string, boolean>
+  >({});
   const [chartSettingsMap, setChartSettingsMap] = useState<
     Record<string, ChartSettingsData>
   >({});
@@ -116,7 +124,34 @@ export const ChartWorkspace: React.FC<{
   >({});
   const [pendingImportChartInstanceId, setPendingImportChartInstanceId] =
     useState<string | null>(null);
+  const dataPanelApplyHandlerRef = useRef<(() => ChartData) | null>(null);
   const activeThemeColors = getThemePalette(workspaceTheme);
+
+  const commitChartData = (instanceId: string, nextData: ChartData) => {
+    setChartDataMap((prev) => ({
+      ...prev,
+      [instanceId]: nextData,
+    }));
+    setChartDataDraftMap((prev) => ({
+      ...prev,
+      [instanceId]: nextData,
+    }));
+    setChartDataDraftDirtyMap((prev) => ({
+      ...prev,
+      [instanceId]: false,
+    }));
+  };
+
+  const updateChartDataDraft = (instanceId: string, nextData: ChartData) => {
+    setChartDataDraftMap((prev) => ({
+      ...prev,
+      [instanceId]: nextData,
+    }));
+    setChartDataDraftDirtyMap((prev) => ({
+      ...prev,
+      [instanceId]: true,
+    }));
+  };
 
   const getThemeColor = useCallback(
     (index: number) => activeThemeColors[index % activeThemeColors.length],
@@ -138,7 +173,38 @@ export const ChartWorkspace: React.FC<{
   };
 
   const initializeChartData = (instanceId: string, type: string) => {
-    if (type !== "line" && type !== "bar") return;
+    if (type !== "line" && type !== "bar" && type !== "pie") return;
+
+    if (type === "pie") {
+      const templateOptions: any = getOptionsByType(type);
+      const templateSeries = Array.isArray(templateOptions?.series)
+        ? templateOptions.series[0] || {}
+        : {};
+      const templateData = Array.isArray(templateSeries?.data)
+        ? templateSeries.data
+        : [];
+
+      const nextData: PieChartData = {
+        type: "pie",
+        seriesName: templateSeries?.name || "Pie Series",
+        data: templateData.length
+          ? templateData.map((point: any, index: number) => ({
+              id: `${instanceId}-slice-${index + 1}`,
+              name: String(point?.name || `Slice ${index + 1}`),
+              value: Number(point?.value) || 0,
+            }))
+          : [
+              {
+                id: `${instanceId}-slice-1`,
+                name: "Slice 1",
+                value: 100,
+              },
+            ],
+      };
+
+      commitChartData(instanceId, nextData);
+      return;
+    }
 
     if (type === "bar") {
       const templateOptions: any = getOptionsByType(type);
@@ -175,7 +241,7 @@ export const ChartWorkspace: React.FC<{
             ],
       };
 
-      setChartDataMap((prev) => ({ ...prev, [instanceId]: nextData }));
+      commitChartData(instanceId, nextData);
       return;
     }
 
@@ -220,10 +286,7 @@ export const ChartWorkspace: React.FC<{
           ],
     };
 
-    setChartDataMap((prev) => ({
-      ...prev,
-      [instanceId]: nextData,
-    }));
+    commitChartData(instanceId, nextData);
   };
 
   const updateChartSettings = (
@@ -306,12 +369,15 @@ export const ChartWorkspace: React.FC<{
     }));
   };
 
-  const updateChartData = (instanceId: string, nextData: ChartData) => {
-    setChartDataMap((prev) => ({
-      ...prev,
-      [instanceId]: nextData,
-    }));
-    setReanimateSignal({ instanceId, key: Date.now() });
+  const updateChartData = (
+    instanceId: string,
+    nextData: ChartData,
+    options?: { reanimate?: boolean },
+  ) => {
+    commitChartData(instanceId, nextData);
+    if (options?.reanimate) {
+      setReanimateSignal({ instanceId, key: Date.now() });
+    }
   };
 
   const applyThemeColorsToChartSeries = useCallback(
@@ -326,10 +392,14 @@ export const ChartWorkspace: React.FC<{
         themeColorIndex: index,
       }));
 
-      updateChartData(instanceId, {
-        ...data,
-        series: nextSeries,
-      } as ChartData);
+      updateChartData(
+        instanceId,
+        {
+          ...data,
+          series: nextSeries,
+        } as ChartData,
+        { reanimate: true },
+      );
 
       const themeBg = getThemeBackground(workspaceTheme);
       if (themeBg) {
@@ -351,7 +421,9 @@ export const ChartWorkspace: React.FC<{
         initializeChartSettings(chart.instanceId, chart.type);
       }
       if (
-        (chart.type === "line" || chart.type === "bar") &&
+        (chart.type === "line" ||
+          chart.type === "bar" ||
+          chart.type === "pie") &&
         !chartDataMap[chart.instanceId]
       ) {
         initializeChartData(chart.instanceId, chart.type);
@@ -1029,7 +1101,7 @@ export const ChartWorkspace: React.FC<{
             .showEndValueLabels ?? false;
       }
 
-      updateChartData(selected.instanceId, nextData);
+      updateChartData(selected.instanceId, nextData, { reanimate: true });
     } catch (error) {
       console.error("Failed to import spreadsheet", error);
       window.alert(
@@ -1111,7 +1183,9 @@ export const ChartWorkspace: React.FC<{
           currentData,
           selectedChartInstanceId,
         );
-        updateChartData(selectedChartInstanceId, nextData);
+        updateChartData(selectedChartInstanceId, nextData, {
+          reanimate: true,
+        });
       }
 
       setChartDataOrientationMap((prev) => ({
@@ -1129,6 +1203,44 @@ export const ChartWorkspace: React.FC<{
 
   const dataPanelHeaderRight = (
     <div className="flex items-center gap-1">
+      <Tooltip content="Apply">
+        <button
+          type="button"
+          onClick={() => {
+            if (!selectedChartInstanceId) return;
+            const appliedData = dataPanelApplyHandlerRef.current?.() ?? null;
+
+            if (appliedData) {
+              updateChartData(selectedChartInstanceId, appliedData, {
+                reanimate: true,
+              });
+              return;
+            }
+
+            const draft = chartDataDraftMap[selectedChartInstanceId];
+            const isDirty = chartDataDraftDirtyMap[selectedChartInstanceId];
+
+            if (draft && isDirty) {
+              updateChartData(selectedChartInstanceId, draft, {
+                reanimate: true,
+              });
+              return;
+            }
+
+            setReanimateSignal({
+              instanceId: selectedChartInstanceId,
+              key: Date.now(),
+            });
+          }}
+          data-no-panel-drag="true"
+          aria-label="Apply chart animation"
+          title="Apply"
+          className="rounded bg-white/20 px-2 py-1 text-xs font-medium text-zinc-100 hover:bg-white/30 disabled:opacity-50"
+          disabled={!selectedChartInstanceId}
+        >
+          Apply
+        </button>
+      </Tooltip>
       <Tooltip content={dataPanelMode === "fixed-up" ? "move down" : "move up"}>
         <button
           type="button"
@@ -1170,27 +1282,55 @@ export const ChartWorkspace: React.FC<{
 
       {selectedChart?.type === "line" && selectedChartInstanceId && (
         <LineChartDataPanel
-          data={chartDataMap[selectedChartInstanceId] as LineChartData}
-          onChange={(nextData) =>
-            updateChartData(selectedChartInstanceId, nextData)
+          data={
+            (chartDataDraftMap[selectedChartInstanceId] as LineChartData) ||
+            (chartDataMap[selectedChartInstanceId] as LineChartData)
           }
+          onChange={(nextData) =>
+            updateChartDataDraft(selectedChartInstanceId, nextData)
+          }
+          registerApplyHandler={(handler) => {
+            dataPanelApplyHandlerRef.current = handler;
+          }}
           themeColors={activeThemeColors}
         />
       )}
 
       {selectedChart?.type === "bar" && selectedChartInstanceId && (
         <BarChartDataPanel
-          data={chartDataMap[selectedChartInstanceId] as BarChartData}
-          onChange={(nextData) =>
-            updateChartData(selectedChartInstanceId, nextData)
+          data={
+            (chartDataDraftMap[selectedChartInstanceId] as BarChartData) ||
+            (chartDataMap[selectedChartInstanceId] as BarChartData)
           }
+          onChange={(nextData) =>
+            updateChartDataDraft(selectedChartInstanceId, nextData)
+          }
+          registerApplyHandler={(handler) => {
+            dataPanelApplyHandlerRef.current = handler;
+          }}
           themeColors={activeThemeColors}
+        />
+      )}
+
+      {selectedChart?.type === "pie" && selectedChartInstanceId && (
+        <PieChartDataPanel
+          data={
+            (chartDataDraftMap[selectedChartInstanceId] as PieChartData) ||
+            (chartDataMap[selectedChartInstanceId] as PieChartData)
+          }
+          onChange={(nextData) =>
+            updateChartDataDraft(selectedChartInstanceId, nextData)
+          }
+          registerApplyHandler={(handler) => {
+            dataPanelApplyHandlerRef.current = handler;
+          }}
         />
       )}
 
       {selectedChart &&
         selectedChart.type !== "line" &&
-        selectedChart.type !== "bar" && (
+        selectedChart.type !== "bar" &&
+        selectedChart.type !== "pie" && (
           <p className="text-sm text-gray-600">
             Data editing for {selectedChart.type} charts is not implemented yet.
           </p>

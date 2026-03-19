@@ -1,5 +1,19 @@
-import type { FC } from "react";
+import { type FC, useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  type ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import { DEFAULT_THEME_COLORS } from "../../assets/themes/registerThemes";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { SeriesColorSource } from "../chartTypes";
 
 export interface GridSeriesRow {
@@ -16,6 +30,10 @@ interface DataGridProps {
   series: GridSeriesRow[];
   onCategoriesChange: (categories: string[]) => void;
   onSeriesChange: (series: GridSeriesRow[]) => void;
+  onDataChange?: (categories: string[], series: GridSeriesRow[]) => void;
+  registerApplyHandler?: (
+    handler: (() => { categories: string[]; series: GridSeriesRow[] }) | null,
+  ) => void;
   themeColors?: string[];
   minSeries?: number;
 }
@@ -25,58 +43,116 @@ export const DataGrid: FC<DataGridProps> = ({
   series,
   onCategoriesChange,
   onSeriesChange,
+  onDataChange,
+  registerApplyHandler,
   themeColors = DEFAULT_THEME_COLORS,
   minSeries = 1,
 }) => {
-  const updateCategory = (index: number, value: string) => {
-    const next = [...categories];
-    next[index] = value;
-    onCategoriesChange(next);
-  };
+  const gridRef = useRef<HTMLDivElement>(null);
+  const categoriesRef = useRef(categories);
+  const seriesRef = useRef(series);
 
-  const addCategory = () => {
-    onCategoriesChange([...categories, `Col ${categories.length + 1}`]);
-    onSeriesChange(
-      series.map((row) => ({ ...row, values: [...row.values, 0] })),
-    );
-  };
+  useEffect(() => {
+    categoriesRef.current = categories;
+  }, [categories]);
 
-  const removeCategory = (index: number) => {
-    if (categories.length <= 1) return;
-    onCategoriesChange(categories.filter((_, i) => i !== index));
-    onSeriesChange(
-      series.map((row) => ({
+  useEffect(() => {
+    seriesRef.current = series;
+  }, [series]);
+
+  const collectGridSnapshot = useCallback(() => {
+    const gridElement = gridRef.current;
+    const currentSeries = seriesRef.current;
+    const currentCategories = categoriesRef.current;
+
+    if (!gridElement) {
+      return {
+        categories: currentCategories,
+        series: currentSeries,
+      };
+    }
+
+    const nextCategories = currentCategories.map((category, index) => {
+      const input = gridElement.querySelector<HTMLInputElement>(
+        `[data-grid-kind="category"][data-col-index="${index}"]`,
+      );
+      return input?.value ?? category;
+    });
+
+    const nextSeries = currentSeries.map((row, rowIndex) => {
+      const colorInput = gridElement.querySelector<HTMLInputElement>(
+        `[data-grid-kind="series-color"][data-row-index="${rowIndex}"]`,
+      );
+      const nameInput = gridElement.querySelector<HTMLInputElement>(
+        `[data-grid-kind="series-name"][data-row-index="${rowIndex}"]`,
+      );
+
+      const values = nextCategories.map((_, colIndex) => {
+        const valueInput = gridElement.querySelector<HTMLInputElement>(
+          `[data-grid-kind="value"][data-row-index="${rowIndex}"][data-col-index="${colIndex}"]`,
+        );
+        const parsed = Number.parseFloat(valueInput?.value ?? "0");
+        return Number.isFinite(parsed) ? parsed : 0;
+      });
+
+      return {
+        ...row,
+        color: colorInput?.value ?? row.color,
+        name: nameInput?.value ?? row.name,
+        values,
+      };
+    });
+
+    return {
+      categories: nextCategories,
+      series: nextSeries,
+    };
+  }, []);
+
+  const applyGridChange = useCallback(
+    (nextCategories: string[], nextSeries: GridSeriesRow[]) => {
+      if (onDataChange) {
+        onDataChange(nextCategories, nextSeries);
+        return;
+      }
+
+      onCategoriesChange(nextCategories);
+      onSeriesChange(nextSeries);
+    },
+    [onCategoriesChange, onDataChange, onSeriesChange],
+  );
+
+  const addCategory = useCallback(() => {
+    const { categories: currentCategories, series: currentSeries } =
+      collectGridSnapshot();
+    const nextCategories = [...currentCategories, ""];
+    const nextSeries = currentSeries.map((row) => ({
+      ...row,
+      values: [...row.values, 0],
+    }));
+    applyGridChange(nextCategories, nextSeries);
+  }, [applyGridChange, collectGridSnapshot]);
+
+  const removeCategory = useCallback(
+    (index: number) => {
+      const { categories: currentCategories, series: currentSeries } =
+        collectGridSnapshot();
+      if (currentCategories.length <= 1) return;
+      const nextCategories = currentCategories.filter((_, i) => i !== index);
+      const nextSeries = currentSeries.map((row) => ({
         ...row,
         values: row.values.filter((_, i) => i !== index),
-      })),
-    );
-  };
+      }));
+      applyGridChange(nextCategories, nextSeries);
+    },
+    [applyGridChange, collectGridSnapshot],
+  );
 
-  const updateSeriesName = (id: string, name: string) => {
-    onSeriesChange(
-      series.map((row) => (row.id === id ? { ...row, name } : row)),
-    );
-  };
-
-  const updateSeriesColor = (id: string, color: string) => {
-    onSeriesChange(
-      series.map((row) =>
-        row.id === id
-          ? {
-              ...row,
-              color,
-              colorSource: "custom",
-              themeColorIndex: null,
-            }
-          : row,
-      ),
-    );
-  };
-
-  const getNextThemeColorIndex = () => {
+  const getNextThemeColorIndex = useCallback(() => {
+    const currentSeries = seriesRef.current;
     if (!themeColors.length) return 0;
     const used = new Set(
-      series
+      currentSeries
         .filter(
           (row) =>
             row.colorSource === "theme" &&
@@ -89,169 +165,226 @@ export const DataGrid: FC<DataGridProps> = ({
     for (let i = 0; i < themeColors.length; i += 1) {
       if (!used.has(i)) return i;
     }
-    return series.length;
-  };
+    return currentSeries.length;
+  }, [themeColors]);
 
-  const updateValue = (seriesId: string, colIndex: number, raw: string) => {
-    const value = parseFloat(raw);
-    onSeriesChange(
-      series.map((row) => {
-        if (row.id !== seriesId) return row;
-        const next = [...row.values];
-        next[colIndex] = Number.isFinite(value) ? value : 0;
-        return { ...row, values: next };
-      }),
-    );
-  };
-
-  const addSeries = () => {
-    const nextIndex = series.length;
+  const addSeries = useCallback(() => {
+    const { categories: currentCategories, series: currentSeries } =
+      collectGridSnapshot();
+    const nextIndex = currentSeries.length;
     const themeColorIndex = getNextThemeColorIndex();
     const color = themeColors[themeColorIndex % themeColors.length];
     onSeriesChange([
-      ...series,
+      ...currentSeries,
       {
         id: `series-${Date.now()}-${nextIndex}`,
         name: `Series ${nextIndex + 1}`,
         color,
         colorSource: "theme",
         themeColorIndex,
-        values: Array.from({ length: categories.length }, () => 0),
+        values: Array.from({ length: currentCategories.length }, () => 0),
       },
     ]);
-  };
+  }, [
+    collectGridSnapshot,
+    getNextThemeColorIndex,
+    onSeriesChange,
+    themeColors,
+  ]);
 
-  const removeSeries = (id: string) => {
-    if (series.length <= minSeries) return;
-    onSeriesChange(series.filter((row) => row.id !== id));
-  };
+  const removeSeries = useCallback(
+    (id: string) => {
+      const currentSeries = collectGridSnapshot().series;
+      if (currentSeries.length <= minSeries) return;
+      onSeriesChange(currentSeries.filter((row) => row.id !== id));
+    },
+    [collectGridSnapshot, minSeries, onSeriesChange],
+  );
 
-  return (
-    <div className="overflow-x-auto rounded-md border border-gray-200 bg-white shadow-sm">
-      <table
-        className="w-full border-collapse text-sm"
-        style={{ minWidth: `${200 + categories.length * 80}px` }}
-      >
-        <thead>
-          <tr className="bg-gray-50">
-            {/* Series column header */}
-            <th className="sticky left-0 z-10 w-48 min-w-48 border-b border-r border-gray-200 bg-gray-50 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Series
-            </th>
+  useEffect(() => {
+    if (!registerApplyHandler) return;
 
-            {/* Category column headers (editable) */}
-            {categories.map((cat, ci) => (
-              <th
-                key={ci}
-                className="min-w-18 border-b border-r border-gray-200 px-1 py-1"
-              >
-                <div className="flex items-center gap-0.5">
-                  <input
-                    type="text"
-                    value={cat}
-                    onChange={(e) => updateCategory(ci, e.target.value)}
-                    className="w-full min-w-0 rounded bg-transparent px-1 py-1 text-center text-xs font-medium text-gray-700 outline-none focus:bg-white focus:ring-1 focus:ring-blue-400"
-                    aria-label={`Category ${ci + 1}`}
-                  />
-                  {categories.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeCategory(ci)}
-                      title="Remove column"
-                      className="shrink-0 leading-none text-gray-300 hover:text-red-400"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              </th>
-            ))}
+    registerApplyHandler(collectGridSnapshot);
+    return () => registerApplyHandler(null);
+  }, [collectGridSnapshot, registerApplyHandler]);
 
-            {/* Add column button */}
-            <th className="w-8 border-b border-gray-200 px-2 py-1">
+  const columns = useMemo<ColumnDef<GridSeriesRow>[]>(() => {
+    const seriesColumn: ColumnDef<GridSeriesRow> = {
+      id: "series",
+      header: () => <span>Series</span>,
+      cell: ({ row }) => {
+        const rowData = row.original;
+        const rowIndex = row.index;
+        return (
+          <div className="flex items-center gap-2">
+            <input
+              data-grid-kind="series-color"
+              data-row-index={rowIndex}
+              type="color"
+              defaultValue={rowData.color}
+              className="size-6 shrink-0 cursor-pointer rounded border border-input bg-background p-0.5"
+              title={`Color for ${rowData.name}`}
+            />
+            <input
+              data-grid-kind="series-name"
+              data-row-index={rowIndex}
+              type="text"
+              defaultValue={rowData.name}
+              className="min-w-0 flex-1 rounded bg-transparent px-1 py-0.5 text-xs font-medium text-foreground outline-none focus:bg-background focus:ring-1 focus:ring-ring"
+              aria-label="Series name"
+            />
+            <button
+              type="button"
+              onClick={() => removeSeries(rowData.id)}
+              disabled={series.length <= minSeries}
+              title="Remove series"
+              className="shrink-0 leading-none text-muted-foreground hover:text-destructive disabled:pointer-events-none"
+            >
+              ×
+            </button>
+          </div>
+        );
+      },
+      size: 240,
+    };
+
+    const categoryColumns: ColumnDef<GridSeriesRow>[] = categories.map(
+      (cat, ci) => ({
+        id: `category-${ci}`,
+        header: () => (
+          <div className="flex items-center gap-0.5">
+            <input
+              data-grid-kind="category"
+              data-col-index={ci}
+              type="text"
+              defaultValue={cat}
+              className="w-full min-w-0 rounded bg-transparent px-1 py-1 text-center text-xs font-medium text-foreground outline-none focus:bg-background focus:ring-1 focus:ring-ring"
+              aria-label={`Category ${ci + 1}`}
+            />
+            {categories.length > 1 && (
               <button
                 type="button"
-                onClick={addCategory}
-                title="Add column"
-                className="flex size-5 items-center justify-center rounded bg-gray-200 text-xs font-bold text-gray-600 hover:bg-blue-100 hover:text-blue-600"
+                onClick={() => removeCategory(ci)}
+                title="Remove column"
+                className="shrink-0 leading-none text-muted-foreground hover:text-destructive"
               >
-                +
+                ×
               </button>
-            </th>
-          </tr>
-        </thead>
+            )}
+          </div>
+        ),
+        cell: ({ row }) => (
+          <input
+            data-grid-kind="value"
+            data-row-index={row.index}
+            data-col-index={ci}
+            type="number"
+            defaultValue={row.original.values[ci] ?? 0}
+            className="w-full rounded bg-transparent px-1 py-0.5 text-center text-xs text-foreground outline-none focus:bg-background focus:ring-1 focus:ring-ring"
+            aria-label={`${row.original.name} — ${categories[ci]}`}
+          />
+        ),
+        size: 100,
+      }),
+    );
 
-        <tbody>
-          {series.map((row) => (
-            <tr key={row.id} className="group hover:bg-blue-50/30">
-              {/* Series name + color (sticky) */}
-              <td className="sticky left-0 z-10 border-b border-r border-gray-200 bg-white px-2 py-1 group-hover:bg-blue-50/30">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={row.color}
-                    onChange={(e) => updateSeriesColor(row.id, e.target.value)}
-                    className="size-6 shrink-0 cursor-pointer rounded border border-gray-200 bg-white p-0.5"
-                    title={`Color for ${row.name}`}
-                  />
-                  <input
-                    type="text"
-                    value={row.name}
-                    onChange={(e) => updateSeriesName(row.id, e.target.value)}
-                    className="min-w-0 flex-1 rounded bg-transparent px-1 py-0.5 text-xs font-medium text-gray-800 outline-none focus:bg-white focus:ring-1 focus:ring-blue-400"
-                    aria-label="Series name"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeSeries(row.id)}
-                    disabled={series.length <= minSeries}
-                    title="Remove series"
-                    className="shrink-0 leading-none text-gray-300 hover:text-red-400 disabled:pointer-events-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              </td>
+    const addColumn: ColumnDef<GridSeriesRow> = {
+      id: "add-column",
+      header: () => (
+        <button
+          type="button"
+          onClick={addCategory}
+          title="Add column"
+          className="mx-auto flex size-5 items-center justify-center rounded bg-muted text-xs font-bold text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+        >
+          +
+        </button>
+      ),
+      cell: () => null,
+      size: 32,
+    };
 
-              {/* Value cells */}
-              {categories.map((_, ci) => (
-                <td
-                  key={ci}
-                  className="border-b border-r border-gray-200 px-1 py-1"
+    return [seriesColumn, ...categoryColumns, addColumn];
+  }, [
+    addCategory,
+    categories,
+    minSeries,
+    removeCategory,
+    removeSeries,
+    series.length,
+    addSeries,
+  ]);
+
+  const table = useReactTable({
+    data: series,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  return (
+    <div
+      ref={gridRef}
+      className="overflow-x-auto rounded-md border border-border bg-card shadow-sm"
+    >
+      <Table
+        className="w-full"
+        style={{ minWidth: `${260 + categories.length * 100}px` }}
+      >
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id} className="bg-muted/60">
+              {headerGroup.headers.map((header, index) => (
+                <TableHead
+                  key={header.id}
+                  style={{ width: header.getSize() }}
+                  className={
+                    index === 0
+                      ? "sticky left-0 z-10 border-b border-r border-border bg-muted/60 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                      : "border-b border-r border-border px-1 py-1 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                  }
                 >
-                  <input
-                    type="number"
-                    value={row.values[ci] ?? 0}
-                    onChange={(e) => updateValue(row.id, ci, e.target.value)}
-                    className="w-full rounded bg-transparent px-1 py-0.5 text-center text-xs outline-none focus:bg-white focus:ring-1 focus:ring-blue-400"
-                    aria-label={`${row.name} — ${categories[ci]}`}
-                  />
-                </td>
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
+                </TableHead>
               ))}
-
-              {/* Empty cell under the add-column header */}
-              <td className="border-b border-gray-200 px-1 py-1" />
-            </tr>
+            </TableRow>
           ))}
-        </tbody>
+        </TableHeader>
 
-        <tfoot>
-          <tr>
-            <td
-              colSpan={categories.length + 2}
-              className="border-t border-gray-100 px-3 py-1.5"
-            >
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <TableRow key={row.id} className="group hover:bg-accent/30">
+              {row.getVisibleCells().map((cell, index) => (
+                <TableCell
+                  key={cell.id}
+                  className={
+                    index === 0
+                      ? "sticky left-0 z-10 border-b border-r border-border bg-card px-2 py-1 group-hover:bg-accent/30"
+                      : "border-b border-r border-border px-1 py-1"
+                  }
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+          <TableRow>
+            <TableCell colSpan={categories.length + 2} className="px-3 py-1.5">
               <button
                 type="button"
                 onClick={addSeries}
-                className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                className="text-xs font-medium text-primary hover:text-primary/80"
               >
                 + Add series
               </button>
-            </td>
-          </tr>
-        </tfoot>
-      </table>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
   );
 };
