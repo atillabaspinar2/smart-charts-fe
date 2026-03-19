@@ -4,11 +4,14 @@ import "@fontsource/noto-sans/index.css";
 import "./index.css";
 import App from "./App.tsx";
 import { registerThemes } from "./assets/themes/registerThemes";
+import { ThemeProvider } from "./components/theme-provider";
 
 registerThemes();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
   </StrictMode>,
 );

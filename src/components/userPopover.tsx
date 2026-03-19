@@ -7,7 +7,7 @@ export const UserPopover: React.FC<{
       <button
         id="popover-btn"
         popoverTarget="popover-content"
-        className="popover-btn px-4   text-theme-bg rounded text-xs hover:text-theme-primary"
+        className="popover-btn rounded px-4 text-xs text-zinc-100 hover:text-zinc-300"
       >
         <span className="block">Signed in as</span>
         <span className="block">{user.fullName}</span>
@@ -15,7 +15,7 @@ export const UserPopover: React.FC<{
       <div
         id="popover-content"
         popover="auto"
-        className="popover-content min-w-52 rounded-lg border border-theme-primary bg-theme-bg p-4 text-theme-text shadow-xl backdrop:bg-black/20"
+        className="popover-content min-w-52 rounded-lg border border-zinc-700 bg-zinc-900 p-4 text-zinc-100 shadow-xl backdrop:bg-black/20"
       >
         <div className="mb-4">
           <h3 className="font-bold">User Menu</h3>
@@ -24,7 +24,7 @@ export const UserPopover: React.FC<{
           <li>
             <button
               type="button"
-              className="w-full rounded border border-theme-primary bg-theme-surface px-3 py-2 text-left text-sm text-theme-text transition-colors hover:bg-theme-primary"
+              className="w-full rounded border border-zinc-700 bg-zinc-800 px-3 py-2 text-left text-sm text-zinc-100 transition-colors hover:bg-zinc-700"
             >
               My Charts
             </button>
@@ -32,7 +32,7 @@ export const UserPopover: React.FC<{
           <li>
             <button
               type="button"
-              className="w-full rounded border border-theme-primary bg-theme-surface px-3 py-2 text-left text-sm text-theme-text transition-colors hover:bg-theme-primary"
+              className="w-full rounded border border-zinc-700 bg-zinc-800 px-3 py-2 text-left text-sm text-zinc-100 transition-colors hover:bg-zinc-700"
             >
               Settings
             </button>
@@ -40,7 +40,7 @@ export const UserPopover: React.FC<{
           <li>
             <button
               type="button"
-              className="w-full rounded border border-theme-primary bg-theme-surface px-3 py-2 text-left text-sm text-theme-text transition-colors hover:bg-theme-primary"
+              className="w-full rounded border border-zinc-700 bg-zinc-800 px-3 py-2 text-left text-sm text-zinc-100 transition-colors hover:bg-zinc-700"
               popoverTarget="popover-content"
               popoverTargetAction="hide"
               onClick={() => {

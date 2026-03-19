@@ -1,4 +1,11 @@
 import React from "react";
+import {
+  CardAction,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export const PanelView: React.FC<{
   title: string;
@@ -22,23 +29,31 @@ export const PanelView: React.FC<{
   bodyClassName = "",
 }) => {
   return (
-    <section
+    <Card
       style={style}
       onClick={onClick}
-      className={`rounded-md overflow-visible bg-theme-bg border border-theme-primary shadow-[0_3px_8px_rgba(34,34,59,0.12)] ${className}`}
+      className={`gap-0 overflow-hidden border border-border bg-card py-0 text-card-foreground shadow-[0_3px_8px_rgba(34,34,59,0.12)] ${className}`}
     >
-      <header
-        className={`min-h-10 px-3 py-2 bg-theme-accent border-b border-theme-primary text-theme-bg flex items-center justify-between gap-2 ${
+      <CardHeader
+        className={`min-h-10 flex! flex-row! items-center! justify-between! rounded-t-lg border-b border-zinc-700 bg-zinc-700 px-3 py-2! text-zinc-100 ${
           onHeaderMouseDown ? "cursor-ns-resize select-none" : ""
         }`}
         onMouseDown={onHeaderMouseDown}
       >
-        <h3 className="text-[11px] font-semibold tracking-wide uppercase text-theme-bg">
+        <CardTitle className="self-center text-[11px] font-semibold leading-none tracking-wide uppercase text-zinc-100">
           {title}
-        </h3>
-        {headerRight}
-      </header>
-      {!hideBody && <div className={`p-2 ${bodyClassName}`}>{children}</div>}
-    </section>
+        </CardTitle>
+        {headerRight ? (
+          <CardAction className="self-center">{headerRight}</CardAction>
+        ) : null}
+      </CardHeader>
+      {!hideBody && (
+        <CardContent
+          className={`flex-1 rounded-b-lg bg-card p-0 text-card-foreground ${bodyClassName}`}
+        >
+          {children}
+        </CardContent>
+      )}
+    </Card>
   );
 };

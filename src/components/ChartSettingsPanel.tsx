@@ -1,9 +1,16 @@
 import { useEffect, useState, type FC } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
-import { CustomInput } from "./UILibrary/customInput";
-import { CustomButton } from "./UILibrary/CustomButton";
-import { CustomSelect } from "./UILibrary/CustomSelect";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ECHARTS_THEMES } from "../assets/themes/registerThemes";
 import type { DataOrientation } from "../utils/spreadsheetImport";
 
@@ -99,6 +106,9 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
     ? `${selectedChartType.charAt(0).toUpperCase() + selectedChartType.slice(1)} Settings`
     : "Canvas Options";
 
+  const FONT_FAMILIES = ["Noto Sans", "Georgia", "Courier New", "Trebuchet MS"];
+  const DEFAULT_THEME_SELECT_VALUE = "__default_theme__";
+
   return (
     <div className="chart-options p-1">
       <div className="flex justify-between items-center mb-4">
@@ -118,72 +128,94 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
         )}
       </div>
 
-      <CustomInput
-        id="settings-title"
-        label={selectedChartType ? "Chart Title" : "Title"}
-        type="text"
-        placeholder={
-          selectedChartType ? "Enter chart title" : "Enter workspace title"
-        }
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-
-      <CustomInput
-        id="settings-animation"
-        label="Animation (ms)"
-        type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        value={animationInput}
-        placeholder="1000"
-        onChange={(e) => handleAnimationChange(e.target.value)}
-      />
-
       <div className="mb-4">
-        <CustomSelect
-          id="settings-font-family"
-          label="Font Family"
-          value={fontFamily}
-          options={[
-            { value: "Noto Sans", label: "Noto Sans" },
-            { value: "Georgia", label: "Georgia" },
-            { value: "Courier New", label: "Courier New" },
-            { value: "Trebuchet MS", label: "Trebuchet MS" },
-          ]}
-          onChange={(e) => setFontFamily(e.target.value)}
+        <Label
+          htmlFor="settings-title"
+          className="mb-1 block text-sm font-medium"
+        >
+          {selectedChartType ? "Chart Title" : "Title"}
+        </Label>
+        <Input
+          id="settings-title"
+          type="text"
+          placeholder={
+            selectedChartType ? "Enter chart title" : "Enter workspace title"
+          }
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
         />
       </div>
 
-      <CustomInput
-        id="settings-font-size"
-        label="Font Size (px)"
-        type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        value={fontSizeInput}
-        placeholder="12"
-        onChange={(e) => handleFontSizeChange(e.target.value)}
-      />
+      <div className="mb-4">
+        <Label
+          htmlFor="settings-animation"
+          className="mb-1 block text-sm font-medium"
+        >
+          Animation (ms)
+        </Label>
+        <Input
+          id="settings-animation"
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={animationInput}
+          placeholder="1000"
+          onChange={(e) => handleAnimationChange(e.target.value)}
+        />
+      </div>
+
+      <div className="mb-4">
+        <Label className="mb-1 block text-sm font-medium">Font Family</Label>
+        <Select value={fontFamily} onValueChange={setFontFamily}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select font family" />
+          </SelectTrigger>
+          <SelectContent>
+            {FONT_FAMILIES.map((family) => (
+              <SelectItem key={family} value={family}>
+                {family}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="mb-4">
+        <Label
+          htmlFor="settings-font-size"
+          className="mb-1 block text-sm font-medium"
+        >
+          Font Size (px)
+        </Label>
+        <Input
+          id="settings-font-size"
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={fontSizeInput}
+          placeholder="12"
+          onChange={(e) => handleFontSizeChange(e.target.value)}
+        />
+      </div>
 
       {!selectedChartType && (
         <div className="mb-4">
-          <CustomSelect
-            id="settings-media-format"
-            label="Media Format"
-            value={mediaType}
-            options={[
-              { value: "webm", label: "WebM" },
-              { value: "mp4", label: "MP4" },
-            ]}
-            onChange={(e) => setMediaType(e.target.value)}
-          />
+          <Label className="mb-1 block text-sm font-medium">Media Format</Label>
+          <Select value={mediaType} onValueChange={setMediaType}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select media format" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="webm">WebM</SelectItem>
+              <SelectItem value="mp4">MP4</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       )}
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">
+        <Label className="block text-sm font-medium mb-1">
           Background Color
-        </label>
+        </Label>
         <div className="flex items-center gap-3">
           <input
             type="color"
@@ -202,15 +234,15 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
       {(selectedChartType === "line" || selectedChartType === "bar") &&
         dataOrientation &&
         setDataOrientation && (
-          <div className="mb-4 rounded-md border border-theme-primary bg-theme-bg p-3">
+          <div className="mb-4 rounded-md border border-border bg-background p-3">
             <p className="mb-2 text-sm font-medium">Data Orientation</p>
-            <div className="inline-flex overflow-hidden rounded-md border border-theme-primary">
+            <div className="inline-flex overflow-hidden rounded-md border border-border">
               <button
                 type="button"
                 className={`px-3 py-1.5 text-xs font-medium ${
                   dataOrientation === "columns-as-series"
-                    ? "bg-theme-accent text-theme-bg"
-                    : "bg-theme-bg text-theme-text hover:bg-theme-surface"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background text-foreground hover:bg-muted"
                 }`}
                 onClick={() => setDataOrientation("columns-as-series")}
               >
@@ -218,17 +250,17 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
               </button>
               <button
                 type="button"
-                className={`border-l border-theme-primary px-3 py-1.5 text-xs font-medium ${
+                className={`border-l border-border px-3 py-1.5 text-xs font-medium ${
                   dataOrientation === "rows-as-series"
-                    ? "bg-theme-accent text-theme-bg"
-                    : "bg-theme-bg text-theme-text hover:bg-theme-surface"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background text-foreground hover:bg-muted"
                 }`}
                 onClick={() => setDataOrientation("rows-as-series")}
               >
                 Rows as Series
               </button>
             </div>
-            <p className="mt-2 text-xs text-theme-text/80">
+            <p className="mt-2 text-xs text-muted-foreground">
               Columns mode: first column values are x-axis labels. Rows mode:
               first row values are x-axis labels.
             </p>
@@ -237,14 +269,14 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
 
       {(selectedChartType === "line" || selectedChartType === "bar") &&
         onApplyThemeColors && (
-          <div className="mb-4 rounded-md border border-theme-primary bg-theme-bg p-3">
+          <div className="mb-4 rounded-md border border-border bg-background p-3">
             <div className="mb-2 flex items-center justify-between gap-2">
               <p className="text-sm font-medium">Series Colors</p>
-              <CustomButton onClick={onApplyThemeColors}>
+              <Button size="sm" onClick={onApplyThemeColors}>
                 Apply Theme Colors
-              </CustomButton>
+              </Button>
             </div>
-            <p className="text-xs text-theme-text/80">
+            <p className="text-xs text-muted-foreground">
               Applies current theme palette to all series in order. You can
               still override individual series colors from the Chart Data panel.
             </p>
@@ -253,22 +285,44 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
 
       {!selectedChartType && (
         <>
-          <CustomSelect
-            id="settings-chart-theme"
-            label="Chart Theme"
-            value={workspaceTheme ?? ""}
-            options={ECHARTS_THEMES}
-            onChange={(e) => setWorkspaceTheme?.(e.target.value)}
-          />
+          <div className="mb-4">
+            <Label className="mb-1 block text-sm font-medium">
+              Chart Theme
+            </Label>
+            <Select
+              value={
+                workspaceTheme ? workspaceTheme : DEFAULT_THEME_SELECT_VALUE
+              }
+              onValueChange={(theme) =>
+                setWorkspaceTheme?.(
+                  theme === DEFAULT_THEME_SELECT_VALUE ? "" : theme,
+                )
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select chart theme" />
+              </SelectTrigger>
+              <SelectContent>
+                {ECHARTS_THEMES.map((theme) => (
+                  <SelectItem
+                    key={theme.value || DEFAULT_THEME_SELECT_VALUE}
+                    value={theme.value || DEFAULT_THEME_SELECT_VALUE}
+                  >
+                    {theme.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           {onApplyThemeColorsToAll && (
-            <div className="mb-4 rounded-md border border-theme-primary bg-theme-bg p-3">
+            <div className="mb-4 rounded-md border border-border bg-background p-3">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="text-sm font-medium">Series Colors</p>
-                <CustomButton onClick={onApplyThemeColorsToAll}>
+                <Button size="sm" onClick={onApplyThemeColorsToAll}>
                   Apply to All Charts
-                </CustomButton>
+                </Button>
               </div>
-              <p className="text-xs text-theme-text/80">
+              <p className="text-xs text-muted-foreground">
                 Applies the current theme palette and background to all charts
                 on the canvas.
               </p>

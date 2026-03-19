@@ -6,7 +6,6 @@ import { Modal } from "./components/UILibrary/Modal";
 import { AuthForm } from "./components/signupForm";
 import { UserMenu } from "./components/userMenu";
 import { Sidebar } from "./components/sidebar";
-import type { ThemeName } from "./components/themeSwitcher";
 import { AuthProvider } from "./context/AuthContext";
 import logo from "./assets/logo.svg";
 
@@ -38,16 +37,11 @@ function App() {
     setCharts((prev) => prev.filter((c) => c.id !== id));
   };
   const [authModal, setAuthModal] = useState<"signup" | "signin" | null>(null);
-  const [selectedTheme, setSelectedTheme] = useState<ThemeName>("rose-wine");
   const [isCoarsePointer, setIsCoarsePointer] = useState(false);
   const [pendingMobileChartType, setPendingMobileChartType] = useState<
     string | null
   >(null);
   const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", selectedTheme);
-  }, [selectedTheme]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(pointer: coarse)");
@@ -67,9 +61,9 @@ function App() {
 
   return (
     <AuthProvider>
-      <div className="grid grid-rows-[auto_1fr] grid-cols-[64px_1fr] h-screen gap-0 bg-theme-bg">
+      <div className="grid h-screen grid-cols-[64px_1fr] grid-rows-[auto_1fr] gap-0 bg-background text-foreground">
         {/* Header */}
-        <header className="col-span-2 shadow-lg bg-theme-strong text-theme-bg">
+        <header className="col-span-2 shadow-lg bg-zinc-950 text-zinc-100">
           <div className="px-6 py-4 flex items-center justify-between relative">
             <h1 className="text-3xl font-bold flex items-center gap-3">
               <img
@@ -85,19 +79,17 @@ function App() {
                   type="button"
                   aria-label={headerMenuOpen ? "Close menu" : "Open menu"}
                   onClick={() => setHeaderMenuOpen((v) => !v)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white/90 text-xl font-medium text-theme-text ring-1 ring-inset ring-theme-primary shadow-sm transition hover:bg-theme-bg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-theme-accent"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800 text-xl font-medium text-zinc-100 ring-1 ring-inset ring-zinc-700 shadow-sm transition hover:bg-zinc-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400"
                 >
                   {headerMenuOpen ? "✕" : "☰"}
                 </button>
                 {headerMenuOpen && (
-                  <div className="absolute right-0 top-full z-[10002] mt-2 min-w-52 rounded-xl bg-white/95 p-1 ring-1 ring-theme-primary shadow-lg backdrop-blur">
+                  <div className="absolute right-0 top-full z-[10002] mt-2 min-w-52 rounded-xl bg-zinc-900 p-1 ring-1 ring-zinc-700 shadow-lg backdrop-blur">
                     <UserMenu
                       openAuthModal={(mode) => {
                         setAuthModal(mode);
                         setHeaderMenuOpen(false);
                       }}
-                      selectedTheme={selectedTheme}
-                      setSelectedTheme={setSelectedTheme}
                       stacked
                     />
                   </div>
@@ -105,11 +97,7 @@ function App() {
               </div>
             ) : (
               <div className="right-6 top-4">
-                <UserMenu
-                  openAuthModal={setAuthModal}
-                  selectedTheme={selectedTheme}
-                  setSelectedTheme={setSelectedTheme}
-                />
+                <UserMenu openAuthModal={setAuthModal} />
               </div>
             )}
           </div>
@@ -124,7 +112,7 @@ function App() {
         )}
 
         {/* Sidebar */}
-        <aside className="shadow-md overflow-y-auto bg-theme-accent text-theme-bg">
+        <aside className="shadow-md overflow-y-auto bg-zinc-900 text-zinc-100">
           <nav className="p-4">
             <Sidebar
               isMobileMode={isCoarsePointer}
@@ -135,7 +123,7 @@ function App() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="overflow-y-auto p-2 bg-theme-surface">
+        <main className="overflow-y-auto bg-background p-2 text-foreground">
           <ChartWorkspace
             charts={charts}
             addChart={addChart}

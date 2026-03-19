@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../context/AuthContext";
-import { CustomButton } from "./UILibrary/CustomButton";
-import { CustomInput } from "./UILibrary/customInput";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface AuthFormProps {
   initialMode?: "signup" | "signin";
@@ -53,7 +54,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
 
   return (
     <div className="w-full">
-      <h2 className="text-xl font-bold mb-6 text-theme-text">
+      <h2 className="text-xl font-bold mb-6 text-foreground">
         {mode === "signup" ? "Create account" : "Sign in"}
       </h2>
 
@@ -65,62 +66,83 @@ export const AuthForm: React.FC<AuthFormProps> = ({
         method="post"
       >
         {mode === "signup" && (
-          <CustomInput
-            id="fullName"
-            label="Full Name"
-            type="text"
-            name="name"
-            autoComplete="name"
-            placeholder="Your full name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            required
-            minLength={2}
-          />
+          <div className="space-y-1">
+            <Label htmlFor="fullName" className="block text-sm font-medium">
+              Full Name
+            </Label>
+            <Input
+              id="fullName"
+              type="text"
+              name="name"
+              autoComplete="name"
+              placeholder="Your full name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+              minLength={2}
+            />
+          </div>
         )}
-        <CustomInput
-          id="email"
-          label="Email"
-          type="email"
-          name="username"
-          autoComplete="username"
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <CustomInput
-          id="password"
-          label="Password"
-          type="password"
-          name="password"
-          autoComplete={mode === "signup" ? "new-password" : "current-password"}
-          placeholder="••••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          minLength={8}
-        />
-        {mode === "signup" && (
-          <CustomInput
-            id="confirmPassword"
-            label="Confirm Password"
+        <div className="space-y-1">
+          <Label htmlFor="email" className="block text-sm font-medium">
+            Email
+          </Label>
+          <Input
+            id="email"
+            type="email"
+            name="username"
+            autoComplete="username"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="password" className="block text-sm font-medium">
+            Password
+          </Label>
+          <Input
+            id="password"
             type="password"
-            name="confirmPassword"
-            autoComplete="new-password"
+            name="password"
+            autoComplete={
+              mode === "signup" ? "new-password" : "current-password"
+            }
             placeholder="••••••••"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
             minLength={8}
           />
+        </div>
+        {mode === "signup" && (
+          <div className="space-y-1">
+            <Label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium"
+            >
+              Confirm Password
+            </Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              name="confirmPassword"
+              autoComplete="new-password"
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              minLength={8}
+            />
+          </div>
         )}
         {error && <p className="text-sm text-red-500">{error}</p>}
 
-        <CustomButton
+        <Button
           type="submit"
-          variant="primary"
-          size="md"
+          variant="default"
+          size="default"
           className="w-full"
           disabled={loading}
         >
@@ -131,16 +153,16 @@ export const AuthForm: React.FC<AuthFormProps> = ({
             : mode === "signup"
               ? "Create account"
               : "Sign in"}
-        </CustomButton>
+        </Button>
       </form>
 
-      <p className="mt-4 text-center text-sm text-theme-text">
+      <p className="mt-4 text-center text-sm text-muted-foreground">
         {mode === "signup"
           ? "Already have an account?"
           : "Don't have an account?"}{" "}
         <button
           type="button"
-          className="text-theme-accent underline hover:text-theme-strong"
+          className="text-primary underline hover:text-primary/80"
           onClick={toggleMode}
         >
           {mode === "signup" ? "Sign in" : "Sign up"}

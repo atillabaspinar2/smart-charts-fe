@@ -71,13 +71,16 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
   const removeLabel = contextType === "canvas" ? "Remove all" : "Remove";
   const animateLabel = contextType === "canvas" ? "Animate all" : "Animate";
   const showImport = contextType === "chart" && Boolean(onImport);
+  const menuContainerClassName =
+    "border border-border bg-card text-card-foreground drop-shadow-lg";
   const iconButtonClassName =
-    "rounded p-0.5 text-gray-500 transition-colors hover:text-blue-600";
+    "rounded p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground";
+  const separatorClassName = "bg-border";
 
   return (
     <div
       id={id}
-      className={`relative flex items-center rounded bg-white/90 p-0.5 drop-shadow-lg ${className}`}
+      className={`relative flex items-center rounded p-0.5 ${menuContainerClassName} ${className}`}
     >
       {showImport && (
         <>
@@ -93,7 +96,9 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
               </button>
             </Tooltip>
           </div>
-          <div className="mx-1.5 h-4 w-px self-center bg-gray-300" />
+          <div
+            className={`mx-1.5 h-4 w-px self-center ${separatorClassName}`}
+          />
         </>
       )}
 
@@ -121,7 +126,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
         </Tooltip>
       </div>
 
-      <div className="mx-1.5 h-4 w-px self-center bg-gray-300" />
+      <div className={`mx-1.5 h-4 w-px self-center ${separatorClassName}`} />
 
       <div className="flex items-center gap-1.5">
         <Tooltip content={animateLabel}>
@@ -202,10 +207,10 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
             </Tooltip>
 
             {layersOpen && (
-              <div className="absolute top-6 left-0 z-50 min-w-36 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+              <div className="absolute top-6 left-0 z-50 min-w-36 rounded-md border border-border bg-card py-1 text-card-foreground shadow-lg">
                 <button
                   type="button"
-                  className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  className="w-full px-3 py-1.5 text-left text-sm text-card-foreground hover:bg-accent hover:text-accent-foreground"
                   onClick={() => {
                     onMoveToTop?.();
                     setLayersOpen(false);
@@ -215,7 +220,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
                 </button>
                 <button
                   type="button"
-                  className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  className="w-full px-3 py-1.5 text-left text-sm text-card-foreground hover:bg-accent hover:text-accent-foreground"
                   onClick={() => {
                     onMoveUp?.();
                     setLayersOpen(false);
@@ -225,7 +230,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
                 </button>
                 <button
                   type="button"
-                  className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  className="w-full px-3 py-1.5 text-left text-sm text-card-foreground hover:bg-accent hover:text-accent-foreground"
                   onClick={() => {
                     onMoveDown?.();
                     setLayersOpen(false);
@@ -235,7 +240,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
                 </button>
                 <button
                   type="button"
-                  className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  className="w-full px-3 py-1.5 text-left text-sm text-card-foreground hover:bg-accent hover:text-accent-foreground"
                   onClick={() => {
                     onMoveToBottom?.();
                     setLayersOpen(false);
@@ -249,7 +254,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
         )}
       </div>
 
-      <div className="mx-1.5 h-4 w-px self-center bg-gray-300" />
+      <div className="mx-1.5 h-4 w-px self-center bg-border" />
 
       <Tooltip content={removeLabel}>
         <button

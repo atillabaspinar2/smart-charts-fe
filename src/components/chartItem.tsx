@@ -385,7 +385,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           }
           onSelectChart(data.instanceId);
         }}
-        className={`group absolute cursor-move resize overflow-auto border bg-white w-100 h-75 ${chartHighlighted}`}
+        className={`group absolute h-75 w-100 cursor-move resize overflow-auto border border-border bg-card text-card-foreground ${chartHighlighted}`}
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,

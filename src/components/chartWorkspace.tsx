@@ -7,7 +7,7 @@ import { CanvasContextMenu } from "./canvasContextMenu";
 import { Modal } from "./UILibrary/Modal";
 import { Tooltip } from "./UILibrary/Tooltip";
 import { PanelView } from "./UILibrary/PanelView";
-import { CustomButton } from "./UILibrary/CustomButton";
+import { Button } from "@/components/ui/button";
 import {
   getThemeBackground,
   getThemePalette,
@@ -1126,7 +1126,7 @@ export const ChartWorkspace: React.FC<{
               dataPanelMode === "fixed-up" ? ArrowDown01Icon : ArrowUp01Icon
             }
             size={16}
-            className="text-theme-bg"
+            className="text-zinc-100"
           />
         </button>
       </Tooltip>
@@ -1195,8 +1195,8 @@ export const ChartWorkspace: React.FC<{
       />
 
       {isMobileMode && pendingMobileChartType && (
-        <div className="fixed top-2 left-1/2 z-[10001] -translate-x-1/2">
-          <div className="flex items-center gap-2 rounded-full border border-theme-primary bg-theme-accent px-3 py-2 text-xs font-semibold text-theme-bg shadow-lg">
+        <div className="fixed top-2 left-1/2 z-10001 -translate-x-1/2">
+          <div className="flex items-center gap-2 rounded-full border border-primary bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground shadow-lg">
             <span>
               Tap canvas to place {pendingMobileChartType} chart or cancel
               with{" "}
@@ -1204,7 +1204,7 @@ export const ChartWorkspace: React.FC<{
             <button
               type="button"
               onClick={onCancelMobileChartPlacement}
-              className="rounded-full bg-theme-bg px-2 py-1 text-theme-strong"
+              className="rounded-full bg-background px-2 py-1 text-foreground"
             >
               Cancel
             </button>
@@ -1215,11 +1215,11 @@ export const ChartWorkspace: React.FC<{
       <PanelView
         title="Workspace"
         className="relative z-10"
+        bodyClassName="p-0 overflow-hidden"
         onClick={() => setSelectedChartInstanceId(null)}
         headerRight={
           <CanvasContextMenu
             id="canvas-context-menu"
-            className="bg-transparent p-0 drop-shadow-none"
             onRemoveAll={requestRemoveAll}
             onCaptureAll={handleCaptureAll}
             onRefreshAll={handleRefreshAll}
@@ -1234,10 +1234,8 @@ export const ChartWorkspace: React.FC<{
         <div
           id="chart-container"
           ref={containerRef}
-          className="relative resize overflow-auto p-1 border border-theme-bg rounded-md bg-white/50 shadow-lg"
+          className="relative w-full resize overflow-auto p-1 border border-border rounded-md bg-white/50 shadow-lg"
           style={{
-            width: `${containerSize.width}px`,
-            maxWidth: "100%",
             height: `${containerSize.height}px`,
             backgroundColor: canvasSettings.backgroundColor,
             isolation: "isolate",
@@ -1289,28 +1287,28 @@ export const ChartWorkspace: React.FC<{
         onClose={() => setPendingRemoval(null)}
       >
         <div>
-          <h3 className="mb-3 text-lg font-semibold text-theme-text">
+          <h3 className="mb-3 text-lg font-semibold text-foreground">
             Confirm removal
           </h3>
-          <p className="text-sm text-theme-text">
+          <p className="text-sm text-muted-foreground">
             Are you sure you want to remove the selected chart(s)?
           </p>
           <div className="mt-5 flex justify-end gap-2">
-            <CustomButton
+            <Button
               variant="secondary"
-              size="md"
+              size="sm"
               onClick={() => setPendingRemoval(null)}
             >
               Cancel
-            </CustomButton>
-            <CustomButton variant="primary" size="md" onClick={confirmRemoval}>
+            </Button>
+            <Button variant="default" size="sm" onClick={confirmRemoval}>
               Remove
-            </CustomButton>
+            </Button>
           </div>
         </div>
       </Modal>
 
-      <PanelView title="Settings" className="relative z-20">
+      <PanelView title="Settings" className="relative z-20" bodyClassName="p-2">
         {selectedChartInstanceId ? (
           <ChartSettingsPanel
             animationDuration={
@@ -1414,6 +1412,7 @@ export const ChartWorkspace: React.FC<{
             title="Chart Data"
             headerRight={dataPanelHeaderRight}
             onHeaderMouseDown={handleDataPanelHeaderMouseDown}
+            bodyClassName="p-2"
           >
             {dataPanelBody}
           </PanelView>

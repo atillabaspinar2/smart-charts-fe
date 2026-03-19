@@ -17,12 +17,12 @@ export const Modal: React.FC<{
         className="absolute inset-0 bg-black opacity-50"
         onClick={onClose}
       ></div>
-      <div className="relative z-10 w-96 rounded-lg bg-white p-6 shadow-lg">
+      <div className="relative z-10 w-96 rounded-lg border border-border bg-card p-6 text-card-foreground shadow-lg">
         <button
           type="button"
           aria-label="Close modal"
           onClick={onClose}
-          className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded border border-theme-primary bg-theme-surface text-theme-text transition-colors hover:bg-theme-primary"
+          className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded border border-border bg-muted text-foreground transition-colors hover:bg-muted/80"
         >
           <HugeiconsIcon icon={Cancel01Icon} size={16} />
         </button>
