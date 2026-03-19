@@ -9,15 +9,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface CanvasSettingsPanelProps {
+// Base type for all settings panels
+export interface BaseSettingsPanelProps {
   title: string;
   setTitle: (v: string) => void;
   animationInput: string;
   handleAnimationChange: (value: string) => void;
-  fontFamily: string;
-  setFontFamily: (v: string) => void;
   backgroundColor: string;
   setBackgroundColor: (v: string) => void;
+}
+
+// Canvas-specific settings panel props
+export interface CanvasSettingsPanelProps extends BaseSettingsPanelProps {
+  fontFamily: string;
+  setFontFamily: (v: string) => void;
   mediaType: string;
   setMediaType: (v: string) => void;
   workspaceTheme: string;

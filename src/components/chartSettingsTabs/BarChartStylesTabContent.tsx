@@ -3,7 +3,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import type { DataOrientation } from "@/utils/spreadsheetImport";
 
-interface BarChartStylesTabContentProps {
+export interface BarChartStylesTabContentProps {
   dataOrientation?: DataOrientation;
   setDataOrientation?: (orientation: DataOrientation) => void;
   barShowBackground: boolean;

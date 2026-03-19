@@ -1,59 +1,31 @@
 import { useEffect, useState, type FC } from "react";
 // Removed unused UI imports after refactor
 import { ECHARTS_THEMES } from "../assets/themes/registerThemes";
-import type { DataOrientation } from "../utils/spreadsheetImport";
-import type { PieChartSettings } from "./chartTypes";
-import { LineBarChartSettingsPanel } from "./chartSettingsTabs/LineBarChartSettingsPanel";
-import { PieChartSettingsPanel } from "./chartSettingsTabs/PieChartSettingsPanel";
-import { CanvasSettingsPanel } from "./chartSettingsTabs/CanvasSettingsPanel";
+import {
+  CanvasSettingsPanel,
+  type CanvasSettingsPanelProps,
+} from "./chartSettingsTabs/CanvasSettingsPanel";
+import {
+  LineBarChartSettingsPanel,
+  type LineBarChartSettingsPanelProps,
+} from "./chartSettingsTabs/LineBarChartSettingsPanel";
+import {
+  PieChartSettingsPanel,
+  type PieChartSettingsPanelProps,
+} from "./chartSettingsTabs/PieChartSettingsPanel";
 
-interface ChartSettingsPanelProps {
+// Compose the main ChartSettingsPanelProps from all relevant panel/tab types
+export type ChartSettingsPanelProps = {
   animationDuration: number;
   setAnimationDuration: (v: number) => void;
-  fontFamily: string;
-  setFontFamily: (v: string) => void;
-  mediaType: string;
-  setMediaType: (v: string) => void;
-  backgroundColor: string;
-  setBackgroundColor: (v: string) => void;
-  title: string;
-  setTitle: (v: string) => void;
-  showLegend?: boolean;
-  setShowLegend?: (v: boolean) => void;
-  legendTop?: "top" | "bottom";
-  setLegendTop?: (v: "top" | "bottom") => void;
-  legendLeft?: "left" | "right" | "center";
-  setLegendLeft?: (v: "left" | "right" | "center") => void;
-  legendOrient?: "horizontal" | "vertical";
-  setLegendOrient?: (v: "horizontal" | "vertical") => void;
   selectedChartType?: string;
+  // Used for internal state
   workspaceTheme?: string;
   setWorkspaceTheme?: (theme: string) => void;
   onApplyThemeColorsToAll?: () => void;
-  dataOrientation?: DataOrientation;
-  setDataOrientation?: (orientation: DataOrientation) => void;
-  barShowBackground?: boolean;
-  setBarShowBackground?: (value: boolean) => void;
-  barBackgroundColor?: string;
-  setBarBackgroundColor?: (value: string) => void;
-  barAxisOrientation?: "vertical" | "horizontal";
-  setBarAxisOrientation?: (value: "vertical" | "horizontal") => void;
-  barStackEnabled?: boolean;
-  setBarStackEnabled?: (value: boolean) => void;
-  lineShowLabels?: boolean;
-  setLineShowLabels?: (value: boolean) => void;
-  lineSmooth?: boolean;
-  setLineSmooth?: (value: boolean) => void;
-  lineStep?: boolean;
-  setLineStep?: (value: boolean) => void;
-  lineArea?: boolean;
-  setLineArea?: (value: boolean) => void;
-  pieSettings?: PieChartSettings;
-  setPieSettings?: (updates: Partial<PieChartSettings>) => void;
-  // Only present for per-chart context
-  fontSize?: number;
-  setFontSize?: (v: number) => void;
-}
+} & Partial<CanvasSettingsPanelProps> &
+  Partial<LineBarChartSettingsPanelProps> &
+  Partial<PieChartSettingsPanelProps>;
 
 export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
   const {
@@ -182,14 +154,14 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
         setLegendLeft={setLegendLeft}
         legendOrient={legendOrient}
         setLegendOrient={setLegendOrient}
-        title={title}
-        setTitle={setTitle}
+        title={title ?? ""}
+        setTitle={setTitle ?? (() => {})}
         animationInput={animationInput}
-        onAnimationChange={handleAnimationChange}
+        handleAnimationChange={handleAnimationChange}
         fontSize={fontSize}
         setFontSize={setFontSize}
-        backgroundColor={backgroundColor}
-        setBackgroundColor={setBackgroundColor}
+        backgroundColor={backgroundColor ?? "#fff"}
+        setBackgroundColor={setBackgroundColor ?? (() => {})}
       />
     );
   }
@@ -214,14 +186,14 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
         setLegendLeft={setLegendLeft}
         legendOrient={legendOrient}
         setLegendOrient={setLegendOrient}
-        title={title}
-        setTitle={setTitle}
+        title={title ?? ""}
+        setTitle={setTitle ?? (() => {})}
         animationInput={animationInput}
-        onAnimationChange={handleAnimationChange}
+        handleAnimationChange={handleAnimationChange}
         fontSize={fontSize}
         setFontSize={setFontSize}
-        backgroundColor={backgroundColor}
-        setBackgroundColor={setBackgroundColor}
+        backgroundColor={backgroundColor ?? "#fff"}
+        setBackgroundColor={setBackgroundColor ?? (() => {})}
       />
     );
   }
@@ -229,16 +201,16 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
   return (
     <div className="chart-options p-1">
       <CanvasSettingsPanel
-        title={title}
-        setTitle={setTitle}
+        title={title ?? ""}
+        setTitle={setTitle ?? (() => {})}
         animationInput={animationInput}
         handleAnimationChange={handleAnimationChange}
-        fontFamily={fontFamily}
-        setFontFamily={setFontFamily}
-        backgroundColor={backgroundColor}
-        setBackgroundColor={setBackgroundColor}
-        mediaType={mediaType}
-        setMediaType={setMediaType}
+        fontFamily={fontFamily ?? "Noto Sans"}
+        setFontFamily={setFontFamily ?? (() => {})}
+        backgroundColor={backgroundColor ?? "#fff"}
+        setBackgroundColor={setBackgroundColor ?? (() => {})}
+        mediaType={mediaType ?? "webm"}
+        setMediaType={setMediaType ?? (() => {})}
         workspaceTheme={workspaceTheme || ""}
         setWorkspaceTheme={setWorkspaceTheme || (() => {})}
         onApplyThemeColorsToAll={onApplyThemeColorsToAll}

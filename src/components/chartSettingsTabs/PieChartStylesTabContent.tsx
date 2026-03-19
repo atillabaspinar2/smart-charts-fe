@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import type { PieChartSettings } from "@/components/chartTypes";
 
-interface PieChartStylesTabContentProps {
+export interface PieChartStylesTabContentProps {
   pieSettings: PieChartSettings;
   setPieSettings: (updates: Partial<PieChartSettings>) => void;
 }

@@ -13,7 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { DataOrientation } from "../../utils/spreadsheetImport";
 
-interface LineBarChartSettingsPanelProps {
+import type { BaseSettingsPanelProps } from "./CanvasSettingsPanel";
+
+export interface LineBarChartSettingsPanelProps extends BaseSettingsPanelProps {
   selectedChartType: string;
   activeChartAccordionItem: string;
   setActiveChartAccordionItem: (v: string) => void;
@@ -36,7 +38,7 @@ interface LineBarChartSettingsPanelProps {
   setLineStep?: (value: boolean) => void;
   lineArea?: boolean;
   setLineArea?: (value: boolean) => void;
-  // Common props
+  // Legend tab
   showLegend: boolean;
   setShowLegend: (v: boolean) => void;
   legendTop: "top" | "bottom";
@@ -45,14 +47,9 @@ interface LineBarChartSettingsPanelProps {
   setLegendLeft: (v: "left" | "right" | "center") => void;
   legendOrient: "horizontal" | "vertical";
   setLegendOrient: (v: "horizontal" | "vertical") => void;
-  title: string;
-  setTitle: (v: string) => void;
-  animationInput: string;
-  onAnimationChange: (value: string) => void;
+  // Common settings tab
   fontSize: number;
   setFontSize: (v: number) => void;
-  backgroundColor: string;
-  setBackgroundColor: (v: string) => void;
 }
 
 export const LineBarChartSettingsPanel: FC<LineBarChartSettingsPanelProps> = ({

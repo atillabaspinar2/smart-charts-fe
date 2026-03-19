@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-interface CommonChartSettingsTabContentProps {
+export interface CommonChartSettingsTabContentProps {
   chartLabel: string;
   title: string;
   setTitle: (v: string) => void;

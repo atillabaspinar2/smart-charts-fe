@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
-interface CommonLegendTabContentProps {
+export interface CommonLegendTabContentProps {
   showLegend: boolean;
   setShowLegend: (v: boolean) => void;
   legendTop: "top" | "bottom";
