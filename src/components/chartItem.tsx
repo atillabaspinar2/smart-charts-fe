@@ -96,9 +96,9 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       if (!animateOnNextMount) return;
       const timer = window.setTimeout(() => {
         setAnimateOnNextMount(false);
-      }, 0);
+      }, Math.max(50, (settings.animationDuration ?? 1000) + 50));
       return () => window.clearTimeout(timer);
-    }, [animateOnNextMount]);
+    }, [animateOnNextMount, settings.animationDuration]);
 
     useEffect(() => {
       if (!reanimateSignal) return;
