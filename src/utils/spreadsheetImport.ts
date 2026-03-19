@@ -1,4 +1,8 @@
-import type { BarChartData, LineChartData } from "../components/chartTypes";
+import type {
+  BarChartData,
+  LineChartData,
+  PieChartData,
+} from "../components/chartTypes";
 
 export type DataOrientation = "columns-as-series" | "rows-as-series";
 
@@ -24,11 +28,11 @@ export const readSheetRowsFromFile = async (
 
 export const buildChartDataFromSheetRows = (
   rows: unknown[][],
-  chartType: "line" | "bar",
+  chartType: "line" | "bar" | "pie",
   instanceId: string,
   getThemeColor: (index: number) => string,
   orientation: DataOrientation = "columns-as-series",
-): LineChartData | BarChartData | null => {
+): LineChartData | BarChartData | PieChartData | null => {
   if (rows.length < 2) return null;
 
   const normalizedRows = rows
@@ -62,12 +66,7 @@ export const buildChartDataFromSheetRows = (
   ): LineChartData => ({
     type: "line",
     categories: xAxisLabels,
-    series: series.map((item) => ({
-      ...item,
-      smooth: false,
-      step: false,
-      areaStyle: {} as Record<string, never>,
-    })),
+    series,
   });
 
   const createBarData = (
@@ -85,6 +84,41 @@ export const buildChartDataFromSheetRows = (
     categories: xAxisLabels,
     series,
   });
+
+  const createPieData = (items: Array<{ name: string; value: number }>) => {
+    const data = items
+      .filter((item) => item.name.trim() !== "")
+      .map((item, index) => ({
+        id: `${instanceId}-slice-${index + 1}`,
+        name: item.name,
+        value: item.value,
+      }));
+
+    if (data.length === 0) return null;
+
+    return {
+      type: "pie",
+      data,
+    } satisfies PieChartData;
+  };
+
+  if (chartType === "pie") {
+    if (orientation === "rows-as-series") {
+      const labels = headers.slice(1).map((cell) => String(cell ?? "").trim());
+      const valueRow = bodyRows[0] || [];
+      const items = labels.map((name, index) => ({
+        name,
+        value: toNumber(valueRow[index + 1]),
+      }));
+      return createPieData(items);
+    }
+
+    const items = bodyRows.map((row) => ({
+      name: String(row[0] ?? "").trim(),
+      value: toNumber(row[1]),
+    }));
+    return createPieData(items);
+  }
 
   if (orientation === "rows-as-series") {
     const xAxisLabels = headers.slice(1);

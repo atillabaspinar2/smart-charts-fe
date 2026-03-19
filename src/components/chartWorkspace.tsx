@@ -1136,16 +1136,21 @@ export const ChartWorkspace: React.FC<{
     targetChartInstanceId: string | null,
   ) => {
     if (!targetChartInstanceId) {
-      window.alert("Select a line or bar chart first.");
+      window.alert("Select a line, bar, or pie chart first.");
       return;
     }
 
     const selected = charts.find(
       (chart) => chart.instanceId === targetChartInstanceId,
     );
-    if (!selected || (selected.type !== "line" && selected.type !== "bar")) {
+    if (
+      !selected ||
+      (selected.type !== "line" &&
+        selected.type !== "bar" &&
+        selected.type !== "pie")
+    ) {
       window.alert(
-        "Import is currently available only for line and bar charts.",
+        "Import is currently available only for line, bar, and pie charts.",
       );
       return;
     }
@@ -1161,9 +1166,17 @@ export const ChartWorkspace: React.FC<{
         chartDataOrientationMap[selected.instanceId] || "columns-as-series",
       );
 
-      if (!nextData || nextData.series.length === 0) {
+      const hasImportedData =
+        nextData?.type === "pie"
+          ? nextData.data.length > 0
+          : Boolean(nextData && nextData.series.length > 0);
+
+      if (!nextData || !hasImportedData) {
+        const isPie = selected.type === "pie";
         window.alert(
-          "Could not map this file. Expected header row + at least one data row with one x-axis column and one or more numeric series columns.",
+          isPie
+            ? "Could not map this file. For pie charts, expected header row + at least one data row with label in the first column and numeric value in the second column."
+            : "Could not map this file. Expected header row + at least one data row with one x-axis column and one or more numeric series columns.",
         );
         return;
       }
