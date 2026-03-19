@@ -402,6 +402,34 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
               </div>
 
               <div className="flex items-center justify-between">
+                <Label className="text-xs">Type</Label>
+                <div className="inline-flex overflow-hidden rounded-md border border-border">
+                  <button
+                    type="button"
+                    className={`px-3 py-1 text-xs font-medium ${
+                      pieSettings.chartType === "pie"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-foreground hover:bg-muted"
+                    }`}
+                    onClick={() => setPieSettings({ chartType: "pie" })}
+                  >
+                    Pie
+                  </button>
+                  <button
+                    type="button"
+                    className={`border-l border-border px-3 py-1 text-xs font-medium ${
+                      pieSettings.chartType === "funnel"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-foreground hover:bg-muted"
+                    }`}
+                    onClick={() => setPieSettings({ chartType: "funnel" })}
+                  >
+                    Funnel
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
                 <Label className="text-xs">Style</Label>
                 <div className="inline-flex overflow-hidden rounded-md border border-border">
                   <button

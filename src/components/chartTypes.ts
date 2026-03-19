@@ -80,6 +80,7 @@ export interface PieChartData {
 }
 
 export interface PieChartSettings {
+  chartType: "pie" | "funnel";
   innerRadius: number;
   outerRadius: number;
   padAngle: number;
@@ -92,6 +93,7 @@ export interface PieChartSettings {
 }
 
 export const defaultPieChartSettings: PieChartSettings = {
+  chartType: "pie",
   innerRadius: 40,
   outerRadius: 70,
   padAngle: 10,

@@ -347,14 +347,18 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       chartOption.series = [
         {
           ...templateSeries,
-          type: "pie",
+          type: ps.chartType,
           name:
             chartData?.type === "pie"
               ? chartData.seriesName || templateSeries.name
               : templateSeries.name,
-          radius: [`${ps.innerRadius}%`, `${ps.outerRadius}%`],
-          padAngle: ps.padAngle,
-          roseType: ps.roseType,
+          ...(ps.chartType === "pie"
+            ? {
+                radius: [`${ps.innerRadius}%`, `${ps.outerRadius}%`],
+                padAngle: ps.padAngle,
+                roseType: ps.roseType,
+              }
+            : {}),
           avoidLabelOverlap: false,
           itemStyle: {
             ...(templateSeries.itemStyle || {}),
