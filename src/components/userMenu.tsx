@@ -23,6 +23,7 @@ export const UserMenu: React.FC<{
         >
           <Button
             variant="outline"
+            size="lg"
             className="border-zinc-500/60 text-zinc-100 hover:bg-zinc-800 hover:text-zinc-100 bg-transparent"
             onClick={() => openAuthModal("signin")}
           >
@@ -30,6 +31,7 @@ export const UserMenu: React.FC<{
           </Button>
           <Button
             variant="outline"
+            size="lg"
             className="border-zinc-500/60 text-zinc-100 hover:bg-zinc-800 hover:text-zinc-100 bg-transparent"
             onClick={() => openAuthModal("signup")}
           >
