@@ -14,6 +14,10 @@ export interface ChartSettingsData {
   title: string;
   fontFamily: string;
   fontSize: number;
+  showLegend: boolean;
+  legendTop: "top" | "bottom";
+  legendLeft: "left" | "right" | "center";
+  legendOrient: "horizontal" | "vertical";
 }
 
 export type SeriesColorSource = "theme" | "custom";
@@ -87,9 +91,6 @@ export interface PieChartSettings {
   borderWidth: number;
   roseType: "area" | false;
   showLabel: boolean;
-  legendTop: "top" | "bottom";
-  legendLeft: "left" | "right" | "center";
-  legendOrient: "horizontal" | "vertical";
 }
 
 export const defaultPieChartSettings: PieChartSettings = {
@@ -100,9 +101,6 @@ export const defaultPieChartSettings: PieChartSettings = {
   borderWidth: 0,
   roseType: "area",
   showLabel: false,
-  legendTop: "bottom",
-  legendLeft: "center",
-  legendOrient: "horizontal",
 };
 
 export type ChartData = LineChartData | BarChartData | PieChartData;

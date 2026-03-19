@@ -206,12 +206,34 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       animationDurationUpdate: 0,
     };
 
+    const {
+      left: _legendLeft,
+      right: _legendRight,
+      top: _legendTop,
+      bottom: _legendBottom,
+      orient: _legendOrient,
+      show: _legendShow,
+      ...baseLegend
+    } = opts.legend || {};
+    const legendVerticalPosition =
+      settings.legendTop === "top" ? { top: 12 } : { bottom: 12 };
+    const legendHorizontalPosition =
+      settings.legendLeft === "left"
+        ? { left: 12 }
+        : settings.legendLeft === "right"
+          ? { right: 12 }
+          : { left: "center" };
+
     if (type === "line" && chartData?.type === "line") {
       const categories = chartData.categories;
       const showEndValueLabels = Boolean(chartData.showEndValueLabels);
       chartOption.tooltip = opts.tooltip || { trigger: "axis" };
       chartOption.legend = {
-        ...(opts.legend || {}),
+        ...baseLegend,
+        show: settings.showLegend,
+        orient: settings.legendOrient,
+        ...legendVerticalPosition,
+        ...legendHorizontalPosition,
         data: chartData.series.map((series) => series.name || "Series"),
       };
       chartOption.xAxis = {
@@ -282,7 +304,11 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       const categories = chartData.categories;
       chartOption.tooltip = opts.tooltip || { trigger: "axis" };
       chartOption.legend = {
-        ...(opts.legend || {}),
+        ...baseLegend,
+        show: settings.showLegend,
+        orient: settings.legendOrient,
+        ...legendVerticalPosition,
+        ...legendHorizontalPosition,
         data: chartData.series.map((series) => series.name || "Series"),
       };
       chartOption.xAxis = {
@@ -317,25 +343,10 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       const templateSeries = Array.isArray(opts.series)
         ? opts.series[0] || {}
         : {};
-      const {
-        left: _legendLeft,
-        right: _legendRight,
-        top: _legendTop,
-        bottom: _legendBottom,
-        orient: _legendOrient,
-        ...baseLegend
-      } = opts.legend || {};
-      const legendVerticalPosition =
-        ps.legendTop === "top" ? { top: 12 } : { bottom: 12 };
-      const legendHorizontalPosition =
-        ps.legendLeft === "left"
-          ? { left: 12 }
-          : ps.legendLeft === "right"
-            ? { right: 12 }
-            : { left: "center" };
       chartOption.legend = {
         ...baseLegend,
-        orient: ps.legendOrient,
+        show: settings.showLegend,
+        orient: settings.legendOrient,
         ...legendVerticalPosition,
         ...legendHorizontalPosition,
       };

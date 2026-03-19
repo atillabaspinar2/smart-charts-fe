@@ -168,6 +168,10 @@ export const ChartWorkspace: React.FC<{
         title: templateOptions?.title?.text || "",
         fontFamily: canvasSettings.fontFamily,
         fontSize: canvasSettings.fontSize,
+        showLegend: true,
+        legendTop: "bottom",
+        legendLeft: "center",
+        legendOrient: "horizontal",
       },
     }));
   };
@@ -302,6 +306,10 @@ export const ChartWorkspace: React.FC<{
           title: "",
           fontFamily: canvasSettings.fontFamily,
           fontSize: canvasSettings.fontSize,
+          showLegend: true,
+          legendTop: "bottom",
+          legendLeft: "center",
+          legendOrient: "horizontal",
         } as ChartSettingsData);
       const next = { ...current, ...updates };
 
@@ -319,13 +327,29 @@ export const ChartWorkspace: React.FC<{
       const fontSizeChanged =
         typeof updates.fontSize === "number" &&
         updates.fontSize !== current.fontSize;
+      const showLegendChanged =
+        typeof updates.showLegend === "boolean" &&
+        updates.showLegend !== current.showLegend;
+      const legendTopChanged =
+        typeof updates.legendTop === "string" &&
+        updates.legendTop !== current.legendTop;
+      const legendLeftChanged =
+        typeof updates.legendLeft === "string" &&
+        updates.legendLeft !== current.legendLeft;
+      const legendOrientChanged =
+        typeof updates.legendOrient === "string" &&
+        updates.legendOrient !== current.legendOrient;
 
       if (
         !animationChanged &&
         !backgroundChanged &&
         !titleChanged &&
         !fontFamilyChanged &&
-        !fontSizeChanged
+        !fontSizeChanged &&
+        !showLegendChanged &&
+        !legendTopChanged &&
+        !legendLeftChanged &&
+        !legendOrientChanged
       ) {
         return prev;
       }
@@ -349,6 +373,10 @@ export const ChartWorkspace: React.FC<{
         title: "",
         fontFamily: canvasSettings.fontFamily,
         fontSize: canvasSettings.fontSize,
+        showLegend: true,
+        legendTop: "bottom",
+        legendLeft: "center",
+        legendOrient: "horizontal",
       }
     );
   };
@@ -1516,12 +1544,35 @@ export const ChartWorkspace: React.FC<{
                 title: value,
               })
             }
+            showLegend={getChartSettings(selectedChartInstanceId).showLegend}
+            setShowLegend={(value) =>
+              updateChartSettings(selectedChartInstanceId, {
+                showLegend: value,
+              })
+            }
+            legendTop={getChartSettings(selectedChartInstanceId).legendTop}
+            setLegendTop={(value) =>
+              updateChartSettings(selectedChartInstanceId, {
+                legendTop: value,
+              })
+            }
+            legendLeft={getChartSettings(selectedChartInstanceId).legendLeft}
+            setLegendLeft={(value) =>
+              updateChartSettings(selectedChartInstanceId, {
+                legendLeft: value,
+              })
+            }
+            legendOrient={
+              getChartSettings(selectedChartInstanceId).legendOrient
+            }
+            setLegendOrient={(value) =>
+              updateChartSettings(selectedChartInstanceId, {
+                legendOrient: value,
+              })
+            }
             selectedChartType={
               charts.find((c) => c.instanceId === selectedChartInstanceId)
                 ?.type || ""
-            }
-            onApplyThemeColors={() =>
-              applyThemeColorsToChartSeries(selectedChartInstanceId)
             }
             dataOrientation={selectedChartDataOrientation}
             setDataOrientation={handleChangeDataOrientation}

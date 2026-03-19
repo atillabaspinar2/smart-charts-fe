@@ -33,10 +33,17 @@ interface ChartSettingsPanelProps {
   setBackgroundColor: (v: string) => void;
   title: string;
   setTitle: (v: string) => void;
+  showLegend?: boolean;
+  setShowLegend?: (v: boolean) => void;
+  legendTop?: "top" | "bottom";
+  setLegendTop?: (v: "top" | "bottom") => void;
+  legendLeft?: "left" | "right" | "center";
+  setLegendLeft?: (v: "left" | "right" | "center") => void;
+  legendOrient?: "horizontal" | "vertical";
+  setLegendOrient?: (v: "horizontal" | "vertical") => void;
   selectedChartType?: string;
   workspaceTheme?: string;
   setWorkspaceTheme?: (theme: string) => void;
-  onApplyThemeColors?: () => void;
   onApplyThemeColorsToAll?: () => void;
   dataOrientation?: DataOrientation;
   setDataOrientation?: (orientation: DataOrientation) => void;
@@ -57,10 +64,17 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
   setBackgroundColor,
   title,
   setTitle,
+  showLegend = true,
+  setShowLegend = () => {},
+  legendTop = "bottom",
+  setLegendTop = () => {},
+  legendLeft = "center",
+  setLegendLeft = () => {},
+  legendOrient = "horizontal",
+  setLegendOrient = () => {},
   selectedChartType,
   workspaceTheme,
   setWorkspaceTheme,
-  onApplyThemeColors,
   onApplyThemeColorsToAll,
   dataOrientation,
   setDataOrientation,
@@ -112,10 +126,13 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
 
   const FONT_FAMILIES = ["Noto Sans", "Georgia", "Courier New", "Trebuchet MS"];
   const DEFAULT_THEME_SELECT_VALUE = "__default_theme__";
+  const isPieChart = selectedChartType === "pie";
+  const isLineOrBarChart =
+    selectedChartType === "line" || selectedChartType === "bar";
 
   return (
     <div className="chart-options p-1">
-      {selectedChartType !== "pie" && (
+      {!isPieChart && !isLineOrBarChart && (
         <>
           <div className="mb-4">
             <Label
@@ -193,6 +210,268 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
         </>
       )}
 
+      {isLineOrBarChart && (
+        <Accordion
+          type="multiple"
+          defaultValue={[
+            `${selectedChartType}-settings`,
+            "chart-data-styles",
+            "chart-legend",
+          ]}
+          className="mb-4"
+        >
+          <AccordionItem value={`${selectedChartType}-settings`}>
+            <AccordionTrigger className="text-sm font-medium capitalize">
+              {selectedChartType} Settings
+            </AccordionTrigger>
+            <AccordionContent className="space-y-4 pb-3">
+              <div>
+                <Label
+                  htmlFor="settings-title"
+                  className="mb-1 block text-sm font-medium"
+                >
+                  Chart Title
+                </Label>
+                <Input
+                  id="settings-title"
+                  type="text"
+                  placeholder="Enter chart title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label
+                  htmlFor="settings-animation"
+                  className="mb-1 block text-sm font-medium"
+                >
+                  Animation (ms)
+                </Label>
+                <Input
+                  id="settings-animation"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={animationInput}
+                  placeholder="1000"
+                  onChange={(e) => handleAnimationChange(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label className="mb-1 block text-sm font-medium">
+                  Font Family
+                </Label>
+                <Select value={fontFamily} onValueChange={setFontFamily}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select font family" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FONT_FAMILIES.map((family) => (
+                      <SelectItem key={family} value={family}>
+                        {family}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label
+                  htmlFor="settings-font-size"
+                  className="mb-1 block text-sm font-medium"
+                >
+                  Font Size (px)
+                </Label>
+                <Input
+                  id="settings-font-size"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={fontSizeInput}
+                  placeholder="12"
+                  onChange={(e) => handleFontSizeChange(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label className="block text-sm font-medium mb-1">
+                  Background Color
+                </Label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    aria-label="Background color"
+                    title="Pick background color"
+                    className="h-10 w-10 p-1 border border-gray-300 rounded-md cursor-pointer bg-white"
+                    value={backgroundColor}
+                    onChange={(e) => setBackgroundColor(e.target.value)}
+                  />
+                  <span className="text-sm text-gray-600 uppercase">
+                    {backgroundColor}
+                  </span>
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="chart-data-styles">
+            <AccordionTrigger className="text-sm font-medium">
+              Chart Data Styles
+            </AccordionTrigger>
+            <AccordionContent className="space-y-4 pb-3">
+              {dataOrientation && setDataOrientation && (
+                <div>
+                  <p className="mb-2 text-sm font-medium">Data Orientation</p>
+                  <div className="inline-flex overflow-hidden rounded-md border border-border">
+                    <button
+                      type="button"
+                      className={`px-3 py-1.5 text-xs font-medium ${
+                        dataOrientation === "columns-as-series"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-background text-foreground hover:bg-muted"
+                      }`}
+                      onClick={() => setDataOrientation("columns-as-series")}
+                    >
+                      Columns as Series
+                    </button>
+                    <button
+                      type="button"
+                      className={`border-l border-border px-3 py-1.5 text-xs font-medium ${
+                        dataOrientation === "rows-as-series"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-background text-foreground hover:bg-muted"
+                      }`}
+                      onClick={() => setDataOrientation("rows-as-series")}
+                    >
+                      Rows as Series
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Columns mode: first column values are x-axis labels. Rows
+                    mode: first row values are x-axis labels.
+                  </p>
+                </div>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="chart-legend">
+            <AccordionTrigger className="text-sm font-medium">
+              Legend
+            </AccordionTrigger>
+            <AccordionContent className="space-y-4 pb-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Show Legend</Label>
+                <div className="inline-flex overflow-hidden rounded-md border border-border">
+                  <button
+                    type="button"
+                    className={`px-3 py-1 text-xs font-medium ${
+                      showLegend
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-foreground hover:bg-muted"
+                    }`}
+                    onClick={() => setShowLegend(true)}
+                  >
+                    True
+                  </button>
+                  <button
+                    type="button"
+                    className={`border-l border-border px-3 py-1 text-xs font-medium ${
+                      !showLegend
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-foreground hover:bg-muted"
+                    }`}
+                    onClick={() => setShowLegend(false)}
+                  >
+                    False
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Legend Position</Label>
+                <div className="inline-flex overflow-hidden rounded-md border border-border">
+                  <button
+                    type="button"
+                    className={`px-3 py-1 text-xs font-medium ${
+                      legendTop === "top"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-foreground hover:bg-muted"
+                    }`}
+                    onClick={() => setLegendTop("top")}
+                  >
+                    Top
+                  </button>
+                  <button
+                    type="button"
+                    className={`border-l border-border px-3 py-1 text-xs font-medium ${
+                      legendTop === "bottom"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-foreground hover:bg-muted"
+                    }`}
+                    onClick={() => setLegendTop("bottom")}
+                  >
+                    Bottom
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Legend Align</Label>
+                <div className="inline-flex overflow-hidden rounded-md border border-border">
+                  {(["left", "center", "right"] as const).map((val, i) => (
+                    <button
+                      key={val}
+                      type="button"
+                      className={`${
+                        i > 0 ? "border-l border-border" : ""
+                      } px-3 py-1 text-xs font-medium capitalize ${
+                        legendLeft === val
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-background text-foreground hover:bg-muted"
+                      }`}
+                      onClick={() => setLegendLeft(val)}
+                    >
+                      {val}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Legend Orient</Label>
+                <div className="inline-flex overflow-hidden rounded-md border border-border">
+                  <button
+                    type="button"
+                    className={`px-3 py-1 text-xs font-medium ${
+                      legendOrient === "horizontal"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-foreground hover:bg-muted"
+                    }`}
+                    onClick={() => setLegendOrient("horizontal")}
+                  >
+                    Horizontal
+                  </button>
+                  <button
+                    type="button"
+                    className={`border-l border-border px-3 py-1 text-xs font-medium ${
+                      legendOrient === "vertical"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-foreground hover:bg-muted"
+                    }`}
+                    onClick={() => setLegendOrient("vertical")}
+                  >
+                    Vertical
+                  </button>
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      )}
+
       {!selectedChartType && (
         <div className="mb-4">
           <Label className="mb-1 block text-sm font-medium">Media Format</Label>
@@ -207,7 +486,7 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
           </Select>
         </div>
       )}
-      {selectedChartType !== "pie" && (
+      {!isPieChart && !isLineOrBarChart && (
         <>
           <div className="mb-4">
             <Label className="block text-sm font-medium mb-1">
@@ -230,10 +509,10 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
         </>
       )}
 
-      {selectedChartType === "pie" && pieSettings && setPieSettings && (
+      {isPieChart && pieSettings && setPieSettings && (
         <Accordion
           type="multiple"
-          defaultValue={["pie-settings", "pie-data-styles"]}
+          defaultValue={["pie-settings", "pie-data-styles", "pie-legend"]}
           className="mb-4"
         >
           <AccordionItem value="pie-settings">
@@ -484,6 +763,41 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
                   </button>
                 </div>
               </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="pie-legend">
+            <AccordionTrigger className="text-sm font-medium">
+              Legend
+            </AccordionTrigger>
+            <AccordionContent className="space-y-4 pb-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Show Legend</Label>
+                <div className="inline-flex overflow-hidden rounded-md border border-border">
+                  <button
+                    type="button"
+                    className={`px-3 py-1 text-xs font-medium ${
+                      showLegend
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-foreground hover:bg-muted"
+                    }`}
+                    onClick={() => setShowLegend(true)}
+                  >
+                    True
+                  </button>
+                  <button
+                    type="button"
+                    className={`border-l border-border px-3 py-1 text-xs font-medium ${
+                      !showLegend
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-foreground hover:bg-muted"
+                    }`}
+                    onClick={() => setShowLegend(false)}
+                  >
+                    False
+                  </button>
+                </div>
+              </div>
 
               <div className="flex items-center justify-between">
                 <Label className="text-xs">Legend Position</Label>
@@ -491,22 +805,22 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
                   <button
                     type="button"
                     className={`px-3 py-1 text-xs font-medium ${
-                      pieSettings.legendTop === "top"
+                      legendTop === "top"
                         ? "bg-primary text-primary-foreground"
                         : "bg-background text-foreground hover:bg-muted"
                     }`}
-                    onClick={() => setPieSettings({ legendTop: "top" })}
+                    onClick={() => setLegendTop("top")}
                   >
                     Top
                   </button>
                   <button
                     type="button"
                     className={`border-l border-border px-3 py-1 text-xs font-medium ${
-                      pieSettings.legendTop === "bottom"
+                      legendTop === "bottom"
                         ? "bg-primary text-primary-foreground"
                         : "bg-background text-foreground hover:bg-muted"
                     }`}
-                    onClick={() => setPieSettings({ legendTop: "bottom" })}
+                    onClick={() => setLegendTop("bottom")}
                   >
                     Bottom
                   </button>
@@ -523,11 +837,11 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
                       className={`${
                         i > 0 ? "border-l border-border" : ""
                       } px-3 py-1 text-xs font-medium capitalize ${
-                        pieSettings.legendLeft === val
+                        legendLeft === val
                           ? "bg-primary text-primary-foreground"
                           : "bg-background text-foreground hover:bg-muted"
                       }`}
-                      onClick={() => setPieSettings({ legendLeft: val })}
+                      onClick={() => setLegendLeft(val)}
                     >
                       {val}
                     </button>
@@ -541,24 +855,22 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
                   <button
                     type="button"
                     className={`px-3 py-1 text-xs font-medium ${
-                      pieSettings.legendOrient === "horizontal"
+                      legendOrient === "horizontal"
                         ? "bg-primary text-primary-foreground"
                         : "bg-background text-foreground hover:bg-muted"
                     }`}
-                    onClick={() =>
-                      setPieSettings({ legendOrient: "horizontal" })
-                    }
+                    onClick={() => setLegendOrient("horizontal")}
                   >
                     Horizontal
                   </button>
                   <button
                     type="button"
                     className={`border-l border-border px-3 py-1 text-xs font-medium ${
-                      pieSettings.legendOrient === "vertical"
+                      legendOrient === "vertical"
                         ? "bg-primary text-primary-foreground"
                         : "bg-background text-foreground hover:bg-muted"
                     }`}
-                    onClick={() => setPieSettings({ legendOrient: "vertical" })}
+                    onClick={() => setLegendOrient("vertical")}
                   >
                     Vertical
                   </button>
@@ -568,58 +880,6 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
           </AccordionItem>
         </Accordion>
       )}
-
-      {(selectedChartType === "line" || selectedChartType === "bar") &&
-        dataOrientation &&
-        setDataOrientation && (
-          <div className="mb-4 rounded-md border border-border bg-background p-3">
-            <p className="mb-2 text-sm font-medium">Data Orientation</p>
-            <div className="inline-flex overflow-hidden rounded-md border border-border">
-              <button
-                type="button"
-                className={`px-3 py-1.5 text-xs font-medium ${
-                  dataOrientation === "columns-as-series"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-background text-foreground hover:bg-muted"
-                }`}
-                onClick={() => setDataOrientation("columns-as-series")}
-              >
-                Columns as Series
-              </button>
-              <button
-                type="button"
-                className={`border-l border-border px-3 py-1.5 text-xs font-medium ${
-                  dataOrientation === "rows-as-series"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-background text-foreground hover:bg-muted"
-                }`}
-                onClick={() => setDataOrientation("rows-as-series")}
-              >
-                Rows as Series
-              </button>
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Columns mode: first column values are x-axis labels. Rows mode:
-              first row values are x-axis labels.
-            </p>
-          </div>
-        )}
-
-      {(selectedChartType === "line" || selectedChartType === "bar") &&
-        onApplyThemeColors && (
-          <div className="mb-4 rounded-md border border-border bg-background p-3">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-sm font-medium">Series Colors</p>
-              <Button size="sm" onClick={onApplyThemeColors}>
-                Apply Theme Colors
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Applies current theme palette to all series in order. You can
-              still override individual series colors from the Chart Data panel.
-            </p>
-          </div>
-        )}
 
       {!selectedChartType && (
         <>
