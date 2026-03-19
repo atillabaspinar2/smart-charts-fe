@@ -1,4 +1,6 @@
 import type { FC } from "react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import type { DataOrientation } from "@/utils/spreadsheetImport";
 
 interface LineChartStylesTabContentProps {
@@ -62,61 +64,24 @@ export const LineChartStylesTabContent: FC<LineChartStylesTabContentProps> = ({
         </div>
       )}
 
-      <div>
-        <p className="mb-2 text-sm font-medium">Show Series Name / Value</p>
-        <div className="inline-flex overflow-hidden rounded-md border border-border">
-          <button
-            type="button"
-            className={`px-3 py-1.5 text-xs font-medium ${
-              lineShowLabels
-                ? "bg-primary text-primary-foreground"
-                : "bg-background text-foreground hover:bg-muted"
-            }`}
-            onClick={() => setLineShowLabels?.(true)}
-          >
-            True
-          </button>
-          <button
-            type="button"
-            className={`border-l border-border px-3 py-1.5 text-xs font-medium ${
-              !lineShowLabels
-                ? "bg-primary text-primary-foreground"
-                : "bg-background text-foreground hover:bg-muted"
-            }`}
-            onClick={() => setLineShowLabels?.(false)}
-          >
-            False
-          </button>
-        </div>
+      <div className="flex items-center justify-between">
+        <Label className="text-xs">Show Series Name / Value</Label>
+        <Switch checked={lineShowLabels} onCheckedChange={setLineShowLabels} />
       </div>
 
-      <div>
-        <p className="mb-2 text-sm font-medium">Series Style</p>
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={lineSmooth}
-              onChange={(e) => setLineSmooth?.(e.target.checked)}
-            />
-            Smooth
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={lineStep}
-              onChange={(e) => setLineStep?.(e.target.checked)}
-            />
-            Step
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={lineArea}
-              onChange={(e) => setLineArea?.(e.target.checked)}
-            />
-            Area
-          </label>
+      <div className="space-y-3">
+        <p className="text-sm font-medium">Series Style</p>
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Smooth</Label>
+          <Switch checked={lineSmooth} onCheckedChange={setLineSmooth} />
+        </div>
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Step</Label>
+          <Switch checked={lineStep} onCheckedChange={setLineStep} />
+        </div>
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Area</Label>
+          <Switch checked={lineArea} onCheckedChange={setLineArea} />
         </div>
       </div>
     </div>

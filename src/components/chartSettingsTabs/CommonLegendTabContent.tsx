@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
 interface CommonLegendTabContentProps {
@@ -26,30 +27,7 @@ export const CommonLegendTabContent: FC<CommonLegendTabContentProps> = ({
     <div className="space-y-4 pb-3">
       <div className="flex items-center justify-between">
         <Label className="text-xs">Show Legend</Label>
-        <div className="inline-flex overflow-hidden rounded-md border border-border">
-          <button
-            type="button"
-            className={`px-3 py-1 text-xs font-medium ${
-              showLegend
-                ? "bg-primary text-primary-foreground"
-                : "bg-background text-foreground hover:bg-muted"
-            }`}
-            onClick={() => setShowLegend(true)}
-          >
-            True
-          </button>
-          <button
-            type="button"
-            className={`border-l border-border px-3 py-1 text-xs font-medium ${
-              !showLegend
-                ? "bg-primary text-primary-foreground"
-                : "bg-background text-foreground hover:bg-muted"
-            }`}
-            onClick={() => setShowLegend(false)}
-          >
-            False
-          </button>
-        </div>
+        <Switch checked={showLegend} onCheckedChange={setShowLegend} />
       </div>
 
       <div className="flex items-center justify-between">

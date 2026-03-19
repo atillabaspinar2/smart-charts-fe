@@ -1645,7 +1645,9 @@ export const ChartWorkspace: React.FC<{
             }
             lineSmooth={getChartSettings(selectedChartInstanceId).lineSmooth}
             setLineSmooth={(value) =>
-              updateChartSettings(selectedChartInstanceId, { lineSmooth: value })
+              updateChartSettings(selectedChartInstanceId, {
+                lineSmooth: value,
+              })
             }
             lineStep={getChartSettings(selectedChartInstanceId).lineStep}
             setLineStep={(value) =>

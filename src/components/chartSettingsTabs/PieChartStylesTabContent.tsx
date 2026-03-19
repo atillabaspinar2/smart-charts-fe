@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import type { PieChartSettings } from "@/components/chartTypes";
@@ -136,30 +137,10 @@ export const PieChartStylesTabContent: FC<PieChartStylesTabContentProps> = ({
 
       <div className="flex items-center justify-between">
         <Label className="text-xs">Show Label</Label>
-        <div className="inline-flex overflow-hidden rounded-md border border-border">
-          <button
-            type="button"
-            className={`px-3 py-1 text-xs font-medium ${
-              pieSettings.showLabel
-                ? "bg-primary text-primary-foreground"
-                : "bg-background text-foreground hover:bg-muted"
-            }`}
-            onClick={() => setPieSettings({ showLabel: true })}
-          >
-            True
-          </button>
-          <button
-            type="button"
-            className={`border-l border-border px-3 py-1 text-xs font-medium ${
-              !pieSettings.showLabel
-                ? "bg-primary text-primary-foreground"
-                : "bg-background text-foreground hover:bg-muted"
-            }`}
-            onClick={() => setPieSettings({ showLabel: false })}
-          >
-            False
-          </button>
-        </div>
+        <Switch
+          checked={pieSettings.showLabel}
+          onCheckedChange={(checked) => setPieSettings({ showLabel: checked })}
+        />
       </div>
     </div>
   );

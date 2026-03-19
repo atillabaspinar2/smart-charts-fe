@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import type { DataOrientation } from "@/utils/spreadsheetImport";
 
@@ -31,30 +32,10 @@ export const BarChartStylesTabContent: FC<BarChartStylesTabContentProps> = ({
     <div className="space-y-4 pb-3">
       <div className="flex items-center justify-between">
         <Label className="text-xs">Show Bar Background</Label>
-        <div className="inline-flex overflow-hidden rounded-md border border-border">
-          <button
-            type="button"
-            className={`px-3 py-1 text-xs font-medium ${
-              barShowBackground
-                ? "bg-primary text-primary-foreground"
-                : "bg-background text-foreground hover:bg-muted"
-            }`}
-            onClick={() => setBarShowBackground(true)}
-          >
-            True
-          </button>
-          <button
-            type="button"
-            className={`border-l border-border px-3 py-1 text-xs font-medium ${
-              !barShowBackground
-                ? "bg-primary text-primary-foreground"
-                : "bg-background text-foreground hover:bg-muted"
-            }`}
-            onClick={() => setBarShowBackground(false)}
-          >
-            False
-          </button>
-        </div>
+        <Switch
+          checked={barShowBackground}
+          onCheckedChange={setBarShowBackground}
+        />
       </div>
 
       <div>
@@ -106,17 +87,10 @@ export const BarChartStylesTabContent: FC<BarChartStylesTabContentProps> = ({
 
       <div className="flex items-center justify-between">
         <Label className="text-xs">Stack Bars</Label>
-        <button
-          type="button"
-          className={`rounded-md border px-3 py-1 text-xs font-medium transition-colors ${
-            barStackEnabled
-              ? "border-primary bg-primary text-primary-foreground"
-              : "border-border bg-background text-foreground hover:bg-muted"
-          }`}
-          onClick={() => setBarStackEnabled(!barStackEnabled)}
-        >
-          {barStackEnabled ? "Enabled" : "Disabled"}
-        </button>
+        <Switch
+          checked={barStackEnabled}
+          onCheckedChange={setBarStackEnabled}
+        />
       </div>
 
       {dataOrientation && setDataOrientation && (
