@@ -18,6 +18,10 @@ export interface ChartSettingsData {
   legendTop: "top" | "bottom";
   legendLeft: "left" | "right" | "center";
   legendOrient: "horizontal" | "vertical";
+  barShowBackground: boolean;
+  barBackgroundColor: string;
+  barAxisOrientation: "vertical" | "horizontal";
+  barStackEnabled: boolean;
 }
 
 export type SeriesColorSource = "theme" | "custom";

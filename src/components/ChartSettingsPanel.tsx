@@ -51,6 +51,14 @@ interface ChartSettingsPanelProps {
   onApplyThemeColorsToAll?: () => void;
   dataOrientation?: DataOrientation;
   setDataOrientation?: (orientation: DataOrientation) => void;
+  barShowBackground?: boolean;
+  setBarShowBackground?: (value: boolean) => void;
+  barBackgroundColor?: string;
+  setBarBackgroundColor?: (value: string) => void;
+  barAxisOrientation?: "vertical" | "horizontal";
+  setBarAxisOrientation?: (value: "vertical" | "horizontal") => void;
+  barStackEnabled?: boolean;
+  setBarStackEnabled?: (value: boolean) => void;
   pieSettings?: PieChartSettings;
   setPieSettings?: (updates: Partial<PieChartSettings>) => void;
 }
@@ -82,6 +90,14 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
   onApplyThemeColorsToAll,
   dataOrientation,
   setDataOrientation,
+  barShowBackground = false,
+  setBarShowBackground = () => {},
+  barBackgroundColor = "#f3f4f6",
+  setBarBackgroundColor = () => {},
+  barAxisOrientation = "vertical",
+  setBarAxisOrientation = () => {},
+  barStackEnabled = false,
+  setBarStackEnabled = () => {},
   pieSettings,
   setPieSettings,
 }) => {
@@ -89,6 +105,14 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
     String(animationDuration),
   );
   const [fontSizeInput, setFontSizeInput] = useState(String(fontSize));
+  const [activeChartAccordionItem, setActiveChartAccordionItem] =
+    useState<string>("");
+
+  const FONT_FAMILIES = ["Noto Sans", "Georgia", "Courier New", "Trebuchet MS"];
+  const DEFAULT_THEME_SELECT_VALUE = "__default_theme__";
+  const isPieChart = selectedChartType === "pie";
+  const isLineOrBarChart =
+    selectedChartType === "line" || selectedChartType === "bar";
 
   useEffect(() => {
     setAnimationInput(String(animationDuration));
@@ -97,6 +121,18 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
   useEffect(() => {
     setFontSizeInput(String(fontSize));
   }, [fontSize]);
+
+  useEffect(() => {
+    if (isLineOrBarChart) {
+      setActiveChartAccordionItem("chart-data-styles");
+      return;
+    }
+    if (isPieChart) {
+      setActiveChartAccordionItem("pie-data-styles");
+      return;
+    }
+    setActiveChartAccordionItem("");
+  }, [isLineOrBarChart, isPieChart, selectedChartType]);
 
   const handleAnimationChange = (value: string = "1000") => {
     if (!/^\d*$/.test(value)) return;
@@ -127,26 +163,6 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
     }, 500);
     return () => clearTimeout(timeout);
   }, [fontSizeInput, fontSize, setFontSize]);
-
-  const FONT_FAMILIES = ["Noto Sans", "Georgia", "Courier New", "Trebuchet MS"];
-  const DEFAULT_THEME_SELECT_VALUE = "__default_theme__";
-  const isPieChart = selectedChartType === "pie";
-  const isLineOrBarChart =
-    selectedChartType === "line" || selectedChartType === "bar";
-  const [activeChartAccordionItem, setActiveChartAccordionItem] =
-    useState<string>("");
-
-  useEffect(() => {
-    if (isLineOrBarChart) {
-      setActiveChartAccordionItem("chart-data-styles");
-      return;
-    }
-    if (isPieChart) {
-      setActiveChartAccordionItem("pie-data-styles");
-      return;
-    }
-    setActiveChartAccordionItem("");
-  }, [isLineOrBarChart, isPieChart, selectedChartType]);
 
   return (
     <div className="chart-options p-1">
@@ -252,6 +268,14 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
                 <BarChartStylesTabContent
                   dataOrientation={dataOrientation}
                   setDataOrientation={setDataOrientation}
+                  barShowBackground={barShowBackground}
+                  setBarShowBackground={setBarShowBackground}
+                  barBackgroundColor={barBackgroundColor}
+                  setBarBackgroundColor={setBarBackgroundColor}
+                  barAxisOrientation={barAxisOrientation}
+                  setBarAxisOrientation={setBarAxisOrientation}
+                  barStackEnabled={barStackEnabled}
+                  setBarStackEnabled={setBarStackEnabled}
                 />
               )}
             </AccordionContent>
@@ -313,27 +337,26 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
           </Select>
         </div>
       )}
+
       {!isPieChart && !isLineOrBarChart && (
-        <>
-          <div className="mb-4">
-            <Label className="block text-sm font-medium mb-1">
-              Background Color
-            </Label>
-            <div className="flex items-center gap-3">
-              <input
-                type="color"
-                aria-label="Background color"
-                title="Pick background color"
-                className="h-10 w-10 p-1 border border-gray-300 rounded-md cursor-pointer bg-white"
-                value={backgroundColor}
-                onChange={(e) => setBackgroundColor(e.target.value)}
-              />
-              <span className="text-sm text-gray-600 uppercase">
-                {backgroundColor}
-              </span>
-            </div>
+        <div className="mb-4">
+          <Label className="mb-1 block text-sm font-medium">
+            Background Color
+          </Label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              aria-label="Background color"
+              title="Pick background color"
+              className="h-10 w-10 rounded-md border border-gray-300 bg-white p-1 cursor-pointer"
+              value={backgroundColor}
+              onChange={(e) => setBackgroundColor(e.target.value)}
+            />
+            <span className="text-sm text-gray-600 uppercase">
+              {backgroundColor}
+            </span>
           </div>
-        </>
+        </div>
       )}
 
       {isPieChart && pieSettings && setPieSettings && (
@@ -429,6 +452,7 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = ({
               </SelectContent>
             </Select>
           </div>
+
           {onApplyThemeColorsToAll && (
             <div className="mb-4 rounded-md border border-border bg-background p-3">
               <div className="mb-2 flex items-center justify-between gap-2">

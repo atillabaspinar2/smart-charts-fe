@@ -172,6 +172,10 @@ export const ChartWorkspace: React.FC<{
         legendTop: "bottom",
         legendLeft: "center",
         legendOrient: "horizontal",
+        barShowBackground: false,
+        barBackgroundColor: "#f3f4f6",
+        barAxisOrientation: "vertical",
+        barStackEnabled: false,
       },
     }));
   };
@@ -310,6 +314,10 @@ export const ChartWorkspace: React.FC<{
           legendTop: "bottom",
           legendLeft: "center",
           legendOrient: "horizontal",
+          barShowBackground: false,
+          barBackgroundColor: "#f3f4f6",
+          barAxisOrientation: "vertical",
+          barStackEnabled: false,
         } as ChartSettingsData);
       const next = { ...current, ...updates };
 
@@ -339,6 +347,18 @@ export const ChartWorkspace: React.FC<{
       const legendOrientChanged =
         typeof updates.legendOrient === "string" &&
         updates.legendOrient !== current.legendOrient;
+      const barShowBackgroundChanged =
+        typeof updates.barShowBackground === "boolean" &&
+        updates.barShowBackground !== current.barShowBackground;
+      const barBackgroundColorChanged =
+        typeof updates.barBackgroundColor === "string" &&
+        updates.barBackgroundColor !== current.barBackgroundColor;
+      const barAxisOrientationChanged =
+        typeof updates.barAxisOrientation === "string" &&
+        updates.barAxisOrientation !== current.barAxisOrientation;
+      const barStackEnabledChanged =
+        typeof updates.barStackEnabled === "boolean" &&
+        updates.barStackEnabled !== current.barStackEnabled;
 
       if (
         !animationChanged &&
@@ -349,7 +369,11 @@ export const ChartWorkspace: React.FC<{
         !showLegendChanged &&
         !legendTopChanged &&
         !legendLeftChanged &&
-        !legendOrientChanged
+        !legendOrientChanged &&
+        !barShowBackgroundChanged &&
+        !barBackgroundColorChanged &&
+        !barAxisOrientationChanged &&
+        !barStackEnabledChanged
       ) {
         return prev;
       }
@@ -377,6 +401,10 @@ export const ChartWorkspace: React.FC<{
         legendTop: "bottom",
         legendLeft: "center",
         legendOrient: "horizontal",
+        barShowBackground: false,
+        barBackgroundColor: "#f3f4f6",
+        barAxisOrientation: "vertical",
+        barStackEnabled: false,
       }
     );
   };
@@ -1568,6 +1596,38 @@ export const ChartWorkspace: React.FC<{
             setLegendOrient={(value) =>
               updateChartSettings(selectedChartInstanceId, {
                 legendOrient: value,
+              })
+            }
+            barShowBackground={
+              getChartSettings(selectedChartInstanceId).barShowBackground
+            }
+            setBarShowBackground={(value) =>
+              updateChartSettings(selectedChartInstanceId, {
+                barShowBackground: value,
+              })
+            }
+            barBackgroundColor={
+              getChartSettings(selectedChartInstanceId).barBackgroundColor
+            }
+            setBarBackgroundColor={(value) =>
+              updateChartSettings(selectedChartInstanceId, {
+                barBackgroundColor: value,
+              })
+            }
+            barAxisOrientation={
+              getChartSettings(selectedChartInstanceId).barAxisOrientation
+            }
+            setBarAxisOrientation={(value) =>
+              updateChartSettings(selectedChartInstanceId, {
+                barAxisOrientation: value,
+              })
+            }
+            barStackEnabled={
+              getChartSettings(selectedChartInstanceId).barStackEnabled
+            }
+            setBarStackEnabled={(value) =>
+              updateChartSettings(selectedChartInstanceId, {
+                barStackEnabled: value,
               })
             }
             selectedChartType={

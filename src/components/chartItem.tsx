@@ -302,6 +302,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
 
     if (type === "bar" && chartData?.type === "bar") {
       const categories = chartData.categories;
+      const isHorizontalBar = settings.barAxisOrientation === "horizontal";
       chartOption.tooltip = opts.tooltip || { trigger: "axis" };
       chartOption.legend = {
         ...baseLegend,
@@ -311,12 +312,28 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         ...legendHorizontalPosition,
         data: chartData.series.map((series) => series.name || "Series"),
       };
-      chartOption.xAxis = {
-        ...(opts.xAxis || {}),
-        type: "category",
-        data: categories,
-      };
-      chartOption.yAxis = opts.yAxis || { type: "value" };
+
+      chartOption.xAxis = isHorizontalBar
+        ? {
+            ...(opts.xAxis || {}),
+            type: "value",
+          }
+        : {
+            ...(opts.xAxis || {}),
+            type: "category",
+            data: categories,
+          };
+      chartOption.yAxis = isHorizontalBar
+        ? {
+            ...(opts.yAxis || {}),
+            type: "category",
+            data: categories,
+          }
+        : {
+            ...(opts.yAxis || {}),
+            type: "value",
+          };
+
       chartOption.series = chartData.series.map((series, index) => {
         const templateSeries = Array.isArray(opts.series)
           ? opts.series[index] || opts.series[0] || {}
@@ -334,6 +351,12 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
                 color: series.color,
               }
             : templateSeries.itemStyle,
+          showBackground: settings.barShowBackground,
+          backgroundStyle: {
+            ...(templateSeries.backgroundStyle || {}),
+            color: settings.barBackgroundColor,
+          },
+          stack: settings.barStackEnabled ? "x" : undefined,
         };
       });
     }
