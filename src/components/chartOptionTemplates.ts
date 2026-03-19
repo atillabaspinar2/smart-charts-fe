@@ -129,6 +129,53 @@ export const scatterOptions = {
   ],
 };
 
+export const mapOptions = {
+  title: {
+    text: "Map Chart",
+    left: "center",
+  },
+  tooltip: {
+    trigger: "item",
+  },
+  visualMap: {
+    min: 0,
+    max: 1000,
+    left: "left",
+    top: "bottom",
+    text: ["High", "Low"],
+    calculable: true,
+  },
+  series: [
+    {
+      name: "Germany Map",
+      type: "map",
+      map: "germany",
+      roam: true,
+      label: {
+        show: true,
+      },
+      data: [
+        { name: "Baden-Württemberg", value: 500 },
+        { name: "Bayern", value: 800 },
+        { name: "Berlin", value: 300 },
+        { name: "Brandenburg", value: 200 },
+        { name: "Bremen", value: 100 },
+        { name: "Hamburg", value: 400 },
+        { name: "Hessen", value: 600 },
+        { name: "Mecklenburg-Vorpommern", value: 150 },
+        { name: "Niedersachsen", value: 700 },
+        { name: "Nordrhein-Westfalen", value: 900 },
+        { name: "Rheinland-Pfalz", value: 350 },
+        { name: "Saarland", value: 250 },
+        { name: "Sachsen", value: 450 },
+        { name: "Sachsen-Anhalt", value: 550 },
+        { name: "Schleswig-Holstein", value: 650 },
+        { name: "Thüringen", value: 850 },
+      ],
+    },
+  ],
+};
+
 export const radarOptions = {
   animationDuration: 1000,
   title: {
@@ -177,6 +224,8 @@ export const getOptionsByType = (type: string) => {
       return scatterOptions;
     case "radar":
       return radarOptions;
+    case "map":
+      return mapOptions;
     default:
       return {};
   }

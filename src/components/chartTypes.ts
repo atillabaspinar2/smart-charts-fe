@@ -29,6 +29,12 @@ export interface LineChartSettings extends ChartSettingsBase {
   lineArea: boolean;
 }
 
+// Map charts specific settings
+export interface MapChartSettings extends ChartSettingsBase {
+  mapName: string;
+  regionColor?: string;
+}
+
 // Bar chart specific settings
 export interface BarChartSettings extends ChartSettingsBase {
   barShowBackground: boolean;

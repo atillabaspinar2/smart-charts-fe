@@ -7,6 +7,7 @@ import {
   type LineChartSettings,
   type BarChartSettings,
   type PieChartSettings,
+  type MapChartSettings,
   type ReanimateSignal,
   defaultPieChartSettings,
 } from "./chartTypes";
@@ -17,7 +18,11 @@ interface ChartItemProps {
   data: ChartItemData;
   reanimateSignal: ReanimateSignal | null;
   reanimateAllKey: number;
-  settings: LineChartSettings | BarChartSettings | PieChartSettings;
+  settings:
+    | LineChartSettings
+    | BarChartSettings
+    | PieChartSettings
+    | MapChartSettings;
   chartData?: ChartData;
   onSelectChart: (instanceId: string) => void;
   position: { x: number; y: number };
