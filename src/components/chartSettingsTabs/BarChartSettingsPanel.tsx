@@ -1,4 +1,4 @@
-import { FC } from "react";
+import type { FC } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -6,38 +6,23 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { BarChartStylesTabContent } from "./BarChartStylesTabContent";
-import { LineChartStylesTabContent } from "./LineChartStylesTabContent";
 import { CommonLegendTabContent } from "./CommonLegendTabContent";
 import { CommonChartSettingsTabContent } from "./CommonChartSettingsTabContent";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import type { DataOrientation } from "../../utils/spreadsheetImport";
 
-import type { BaseSettingsPanelProps } from "./CanvasSettingsPanel";
-
-export interface LineBarChartSettingsPanelProps extends BaseSettingsPanelProps {
-  selectedChartType: string;
+export interface BarChartSettingsPanelProps {
   activeChartAccordionItem: string;
   setActiveChartAccordionItem: (v: string) => void;
-  // Line/Bar chart specific props
   dataOrientation?: DataOrientation;
   setDataOrientation?: (orientation: DataOrientation) => void;
-  barShowBackground?: boolean;
-  setBarShowBackground?: (value: boolean) => void;
-  barBackgroundColor?: string;
-  setBarBackgroundColor?: (value: string) => void;
-  barAxisOrientation?: "vertical" | "horizontal";
-  setBarAxisOrientation?: (value: "vertical" | "horizontal") => void;
-  barStackEnabled?: boolean;
-  setBarStackEnabled?: (value: boolean) => void;
-  lineShowLabels?: boolean;
-  setLineShowLabels?: (value: boolean) => void;
-  lineSmooth?: boolean;
-  setLineSmooth?: (value: boolean) => void;
-  lineStep?: boolean;
-  setLineStep?: (value: boolean) => void;
-  lineArea?: boolean;
-  setLineArea?: (value: boolean) => void;
+  barShowBackground: boolean;
+  setBarShowBackground: (value: boolean) => void;
+  barBackgroundColor: string;
+  setBarBackgroundColor: (value: string) => void;
+  barAxisOrientation: "vertical" | "horizontal";
+  setBarAxisOrientation: (value: "vertical" | "horizontal") => void;
+  barStackEnabled: boolean;
+  setBarStackEnabled: (value: boolean) => void;
   // Legend tab
   showLegend: boolean;
   setShowLegend: (v: boolean) => void;
@@ -48,12 +33,17 @@ export interface LineBarChartSettingsPanelProps extends BaseSettingsPanelProps {
   legendOrient: "horizontal" | "vertical";
   setLegendOrient: (v: "horizontal" | "vertical") => void;
   // Common settings tab
+  title: string;
+  setTitle: (v: string) => void;
+  animationInput: string;
+  handleAnimationChange: (value: string) => void;
   fontSize: number;
   setFontSize: (v: number) => void;
+  backgroundColor: string;
+  setBackgroundColor: (v: string) => void;
 }
 
-export const LineBarChartSettingsPanel: FC<LineBarChartSettingsPanelProps> = ({
-  selectedChartType,
+export const BarChartSettingsPanel: FC<BarChartSettingsPanelProps> = ({
   activeChartAccordionItem,
   setActiveChartAccordionItem,
   dataOrientation,
@@ -66,14 +56,6 @@ export const LineBarChartSettingsPanel: FC<LineBarChartSettingsPanelProps> = ({
   setBarAxisOrientation,
   barStackEnabled,
   setBarStackEnabled,
-  lineShowLabels,
-  setLineShowLabels,
-  lineSmooth,
-  setLineSmooth,
-  lineStep,
-  setLineStep,
-  lineArea,
-  setLineArea,
   showLegend,
   setShowLegend,
   legendTop,
@@ -85,7 +67,7 @@ export const LineBarChartSettingsPanel: FC<LineBarChartSettingsPanelProps> = ({
   title,
   setTitle,
   animationInput,
-  onAnimationChange,
+  handleAnimationChange,
   fontSize,
   setFontSize,
   backgroundColor,
@@ -100,36 +82,21 @@ export const LineBarChartSettingsPanel: FC<LineBarChartSettingsPanelProps> = ({
   >
     <AccordionItem value="chart-data-styles">
       <AccordionTrigger className="text-sm font-medium">
-        {selectedChartType === "line" ? "Line Data Style" : "Bar Data Style"}
+        Bar Data Style
       </AccordionTrigger>
       <AccordionContent>
-        {selectedChartType === "line" ? (
-          <LineChartStylesTabContent
-            dataOrientation={dataOrientation}
-            setDataOrientation={setDataOrientation}
-            lineShowLabels={lineShowLabels}
-            setLineShowLabels={setLineShowLabels}
-            lineSmooth={lineSmooth}
-            setLineSmooth={setLineSmooth}
-            lineStep={lineStep}
-            setLineStep={setLineStep}
-            lineArea={lineArea}
-            setLineArea={setLineArea}
-          />
-        ) : (
-          <BarChartStylesTabContent
-            dataOrientation={dataOrientation}
-            setDataOrientation={setDataOrientation}
-            barShowBackground={barShowBackground}
-            setBarShowBackground={setBarShowBackground}
-            barBackgroundColor={barBackgroundColor}
-            setBarBackgroundColor={setBarBackgroundColor}
-            barAxisOrientation={barAxisOrientation}
-            setBarAxisOrientation={setBarAxisOrientation}
-            barStackEnabled={barStackEnabled}
-            setBarStackEnabled={setBarStackEnabled}
-          />
-        )}
+        <BarChartStylesTabContent
+          dataOrientation={dataOrientation}
+          setDataOrientation={setDataOrientation}
+          barShowBackground={barShowBackground}
+          setBarShowBackground={setBarShowBackground}
+          barBackgroundColor={barBackgroundColor}
+          setBarBackgroundColor={setBarBackgroundColor}
+          barAxisOrientation={barAxisOrientation}
+          setBarAxisOrientation={setBarAxisOrientation}
+          barStackEnabled={barStackEnabled}
+          setBarStackEnabled={setBarStackEnabled}
+        />
       </AccordionContent>
     </AccordionItem>
     <AccordionItem value="chart-legend">
@@ -149,7 +116,7 @@ export const LineBarChartSettingsPanel: FC<LineBarChartSettingsPanelProps> = ({
         />
       </AccordionContent>
     </AccordionItem>
-    <AccordionItem value={`${selectedChartType}-settings`}>
+    <AccordionItem value="bar-settings">
       <AccordionTrigger className="text-sm font-medium">
         Common Settings
       </AccordionTrigger>
@@ -159,7 +126,7 @@ export const LineBarChartSettingsPanel: FC<LineBarChartSettingsPanelProps> = ({
           title={title}
           setTitle={setTitle}
           animationInput={animationInput}
-          onAnimationChange={onAnimationChange}
+          onAnimationChange={handleAnimationChange}
           fontSizeInput={String(fontSize)}
           onFontSizeChange={(value) => setFontSize(Number(value))}
           backgroundColor={backgroundColor}

@@ -6,9 +6,13 @@ import {
   type CanvasSettingsPanelProps,
 } from "./chartSettingsTabs/CanvasSettingsPanel";
 import {
-  LineBarChartSettingsPanel,
-  type LineBarChartSettingsPanelProps,
-} from "./chartSettingsTabs/LineBarChartSettingsPanel";
+  LineChartSettingsPanel,
+  type LineChartSettingsPanelProps,
+} from "./chartSettingsTabs/LineChartSettingsPanel";
+import {
+  BarChartSettingsPanel,
+  type BarChartSettingsPanelProps,
+} from "./chartSettingsTabs/BarChartSettingsPanel";
 import {
   PieChartSettingsPanel,
   type PieChartSettingsPanelProps,
@@ -24,7 +28,8 @@ export type ChartSettingsPanelProps = {
   setWorkspaceTheme?: (theme: string) => void;
   onApplyThemeColorsToAll?: () => void;
 } & Partial<CanvasSettingsPanelProps> &
-  Partial<LineBarChartSettingsPanelProps> &
+  Partial<LineChartSettingsPanelProps> &
+  Partial<BarChartSettingsPanelProps> &
   Partial<PieChartSettingsPanelProps>;
 
 export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
@@ -84,15 +89,15 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
   const FONT_FAMILIES = ["Noto Sans", "Georgia", "Courier New", "Trebuchet MS"];
   const DEFAULT_THEME_SELECT_VALUE = "__default_theme__";
   const isPieChart = selectedChartType === "pie";
-  const isLineOrBarChart =
-    selectedChartType === "line" || selectedChartType === "bar";
+  const isLineChart = selectedChartType === "line";
+  const isBarChart = selectedChartType === "bar";
 
   useEffect(() => {
     setAnimationInput(String(animationDuration));
   }, [animationDuration]);
 
   useEffect(() => {
-    if (isLineOrBarChart) {
+    if (isLineChart || isBarChart) {
       setActiveChartAccordionItem("chart-data-styles");
       return;
     }
@@ -101,7 +106,7 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
       return;
     }
     setActiveChartAccordionItem("");
-  }, [isLineOrBarChart, isPieChart, selectedChartType]);
+  }, [isLineChart, isBarChart, isPieChart, selectedChartType]);
 
   const handleAnimationChange = (value: string = "1000") => {
     if (!/^\d*$/.test(value)) return;
@@ -119,13 +124,50 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
   }, [animationInput, animationDuration, setAnimationDuration]);
 
   if (
-    isLineOrBarChart &&
+    isLineChart &&
     typeof fontSize === "number" &&
     typeof setFontSize === "function"
   ) {
     return (
-      <LineBarChartSettingsPanel
-        selectedChartType={selectedChartType!}
+      <LineChartSettingsPanel
+        activeChartAccordionItem={activeChartAccordionItem}
+        setActiveChartAccordionItem={setActiveChartAccordionItem}
+        dataOrientation={dataOrientation}
+        setDataOrientation={setDataOrientation}
+        lineShowLabels={lineShowLabels}
+        setLineShowLabels={setLineShowLabels}
+        lineSmooth={lineSmooth}
+        setLineSmooth={setLineSmooth}
+        lineStep={lineStep}
+        setLineStep={setLineStep}
+        lineArea={lineArea}
+        setLineArea={setLineArea}
+        showLegend={showLegend}
+        setShowLegend={setShowLegend}
+        legendTop={legendTop}
+        setLegendTop={setLegendTop}
+        legendLeft={legendLeft}
+        setLegendLeft={setLegendLeft}
+        legendOrient={legendOrient}
+        setLegendOrient={setLegendOrient}
+        title={title ?? ""}
+        setTitle={setTitle ?? (() => {})}
+        animationInput={animationInput}
+        handleAnimationChange={handleAnimationChange}
+        fontSize={fontSize}
+        setFontSize={setFontSize}
+        backgroundColor={backgroundColor ?? "#fff"}
+        setBackgroundColor={setBackgroundColor ?? (() => {})}
+      />
+    );
+  }
+  if (
+    isBarChart &&
+    typeof fontSize === "number" &&
+    typeof setFontSize === "function"
+  ) {
+    return (
+      <BarChartSettingsPanel
         activeChartAccordionItem={activeChartAccordionItem}
         setActiveChartAccordionItem={setActiveChartAccordionItem}
         dataOrientation={dataOrientation}
@@ -138,14 +180,6 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
         setBarAxisOrientation={setBarAxisOrientation}
         barStackEnabled={barStackEnabled}
         setBarStackEnabled={setBarStackEnabled}
-        lineShowLabels={lineShowLabels}
-        setLineShowLabels={setLineShowLabels}
-        lineSmooth={lineSmooth}
-        setLineSmooth={setLineSmooth}
-        lineStep={lineStep}
-        setLineStep={setLineStep}
-        lineArea={lineArea}
-        setLineArea={setLineArea}
         showLegend={showLegend}
         setShowLegend={setShowLegend}
         legendTop={legendTop}

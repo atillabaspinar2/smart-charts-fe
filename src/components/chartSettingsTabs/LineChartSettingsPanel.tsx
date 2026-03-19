@@ -5,18 +5,24 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { PieChartStylesTabContent } from "./PieChartStylesTabContent";
+import { LineChartStylesTabContent } from "./LineChartStylesTabContent";
 import { CommonLegendTabContent } from "./CommonLegendTabContent";
 import { CommonChartSettingsTabContent } from "./CommonChartSettingsTabContent";
-import type { PieChartSettings } from "../chartTypes";
+import type { DataOrientation } from "../../utils/spreadsheetImport";
 
-import type { BaseSettingsPanelProps } from "./CanvasSettingsPanel";
-
-export interface PieChartSettingsPanelProps extends BaseSettingsPanelProps {
+export interface LineChartSettingsPanelProps {
   activeChartAccordionItem: string;
   setActiveChartAccordionItem: (v: string) => void;
-  pieSettings: PieChartSettings;
-  setPieSettings: (updates: Partial<PieChartSettings>) => void;
+  dataOrientation?: DataOrientation;
+  setDataOrientation?: (orientation: DataOrientation) => void;
+  lineShowLabels?: boolean;
+  setLineShowLabels?: (value: boolean) => void;
+  lineSmooth?: boolean;
+  setLineSmooth?: (value: boolean) => void;
+  lineStep?: boolean;
+  setLineStep?: (value: boolean) => void;
+  lineArea?: boolean;
+  setLineArea?: (value: boolean) => void;
   // Legend tab
   showLegend: boolean;
   setShowLegend: (v: boolean) => void;
@@ -27,16 +33,29 @@ export interface PieChartSettingsPanelProps extends BaseSettingsPanelProps {
   legendOrient: "horizontal" | "vertical";
   setLegendOrient: (v: "horizontal" | "vertical") => void;
   // Common settings tab
+  title: string;
+  setTitle: (v: string) => void;
+  animationInput: string;
+  handleAnimationChange: (value: string) => void;
   fontSize: number;
   setFontSize: (v: number) => void;
-  handleAnimationChange: (value: string) => void;
+  backgroundColor: string;
+  setBackgroundColor: (v: string) => void;
 }
 
-export const PieChartSettingsPanel: FC<PieChartSettingsPanelProps> = ({
+export const LineChartSettingsPanel: FC<LineChartSettingsPanelProps> = ({
   activeChartAccordionItem,
   setActiveChartAccordionItem,
-  pieSettings,
-  setPieSettings,
+  dataOrientation,
+  setDataOrientation,
+  lineShowLabels,
+  setLineShowLabels,
+  lineSmooth,
+  setLineSmooth,
+  lineStep,
+  setLineStep,
+  lineArea,
+  setLineArea,
   showLegend,
   setShowLegend,
   legendTop,
@@ -61,18 +80,26 @@ export const PieChartSettingsPanel: FC<PieChartSettingsPanelProps> = ({
     onValueChange={setActiveChartAccordionItem}
     className="mb-4"
   >
-    <AccordionItem value="pie-data-styles">
+    <AccordionItem value="chart-data-styles">
       <AccordionTrigger className="text-sm font-medium">
-        Pie Data Style
+        Line Data Style
       </AccordionTrigger>
       <AccordionContent>
-        <PieChartStylesTabContent
-          pieSettings={pieSettings}
-          setPieSettings={setPieSettings}
+        <LineChartStylesTabContent
+          dataOrientation={dataOrientation}
+          setDataOrientation={setDataOrientation}
+          lineShowLabels={lineShowLabels}
+          setLineShowLabels={setLineShowLabels}
+          lineSmooth={lineSmooth}
+          setLineSmooth={setLineSmooth}
+          lineStep={lineStep}
+          setLineStep={setLineStep}
+          lineArea={lineArea}
+          setLineArea={setLineArea}
         />
       </AccordionContent>
     </AccordionItem>
-    <AccordionItem value="pie-legend">
+    <AccordionItem value="chart-legend">
       <AccordionTrigger className="text-sm font-medium">
         Legend
       </AccordionTrigger>
@@ -89,7 +116,7 @@ export const PieChartSettingsPanel: FC<PieChartSettingsPanelProps> = ({
         />
       </AccordionContent>
     </AccordionItem>
-    <AccordionItem value="pie-settings">
+    <AccordionItem value="line-settings">
       <AccordionTrigger className="text-sm font-medium">
         Common Settings
       </AccordionTrigger>
