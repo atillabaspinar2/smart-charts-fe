@@ -53,12 +53,6 @@ export interface LineChartData {
   series: LineSeriesData[];
 }
 
-export type BarChartVariation =
-  | "grouped"
-  | "stacked"
-  | "stacked-100"
-  | "horizontal";
-
 export interface BarSeriesData {
   id: string;
   name: string;
@@ -70,7 +64,6 @@ export interface BarSeriesData {
 
 export interface BarChartData {
   type: "bar";
-  variation?: BarChartVariation;
   categories: string[];
   series: BarSeriesData[];
 }
