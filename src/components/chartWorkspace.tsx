@@ -1336,7 +1336,7 @@ export const ChartWorkspace: React.FC<{
         </div>
       </Modal>
 
-      <PanelView title="Settings" className="relative z-20" bodyClassName="p-2">
+      <PanelView title="Settings" className="relative z-20" bodyClassName="p-1">
         {selectedChartInstanceId ? (
           <ChartSettingsPanel
             animationDuration={
@@ -1388,7 +1388,6 @@ export const ChartWorkspace: React.FC<{
             setPieSettings={(updates) =>
               updatePieSettings(selectedChartInstanceId, updates)
             }
-            onClose={() => setSelectedChartInstanceId(null)}
           />
         ) : (
           <ChartSettingsPanel
