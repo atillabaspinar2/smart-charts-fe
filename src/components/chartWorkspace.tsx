@@ -16,6 +16,8 @@ import { getOptionsByType } from "./chartOptionTemplates";
 import { LineChartDataPanel } from "./dataUI/lineChartDataPanel";
 import { BarChartDataPanel } from "./dataUI/barChartDataPanel";
 import { PieChartDataPanel } from "./dataUI/pieChartDataPanel";
+import { MapChartDataPanel } from "./dataUI/mapChartDataPanel";
+import type { MapChartData } from "./chartTypes";
 import {
   buildChartDataFromSheetRows,
   readSheetRowsFromFile,
@@ -264,7 +266,7 @@ export const ChartWorkspace: React.FC<{
     if (type === "map") {
       const nextData: ChartData = {
         type: "map",
-        mapName: "world",
+        mapName: "iceland",
         regions: [],
       };
 
@@ -1338,6 +1340,9 @@ export const ChartWorkspace: React.FC<{
     </div>
   );
 
+  // List of available maps (from assets/maps)
+  const availableMaps = ["world", "germany", "iceland"];
+
   const dataPanelBody = (
     <>
       {!selectedChart && (
@@ -1393,10 +1398,25 @@ export const ChartWorkspace: React.FC<{
         />
       )}
 
+      {selectedChart?.type === "map" && selectedChartInstanceId && (
+        <MapChartDataPanel
+          data={
+            (chartDataDraftMap[selectedChartInstanceId] as MapChartData) ||
+            (chartDataMap[selectedChartInstanceId] as MapChartData)
+          }
+          onChange={(nextData) => {
+            // Commit immediately so the chart updates as soon as the map changes
+            commitChartData(selectedChartInstanceId, nextData);
+          }}
+          availableMaps={availableMaps}
+        />
+      )}
+
       {selectedChart &&
         selectedChart.type !== "line" &&
         selectedChart.type !== "bar" &&
-        selectedChart.type !== "pie" && (
+        selectedChart.type !== "pie" &&
+        selectedChart.type !== "map" && (
           <p className="text-sm text-gray-600">
             Data editing for {selectedChart.type} charts is not implemented yet.
           </p>

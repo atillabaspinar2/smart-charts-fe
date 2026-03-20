@@ -147,9 +147,9 @@ export const mapOptions = {
   },
   series: [
     {
-      name: "World",
+      name: "Iceland Map",
       type: "map",
-      map: "world", // Use the correct map name matching the GeoJSON file
+      map: "iceland", // Use the correct map name matching the GeoJSON file
       roam: true,
       label: {
         show: true,
