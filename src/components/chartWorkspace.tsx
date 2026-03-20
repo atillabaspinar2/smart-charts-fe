@@ -188,7 +188,8 @@ export const ChartWorkspace: React.FC<{
   };
 
   const initializeChartData = (instanceId: string, type: string) => {
-    if (type !== "line" && type !== "bar" && type !== "pie") return;
+    if (type !== "line" && type !== "bar" && type !== "pie" && type !== "map")
+      return;
 
     if (type === "pie") {
       const templateOptions: any = getOptionsByType(type);
@@ -254,6 +255,17 @@ export const ChartWorkspace: React.FC<{
                 values: [5, 20, 36, 10, 10],
               },
             ],
+      };
+
+      commitChartData(instanceId, nextData);
+      return;
+    }
+
+    if (type === "map") {
+      const nextData: ChartData = {
+        type: "map",
+        mapName: "world",
+        regions: [],
       };
 
       commitChartData(instanceId, nextData);
@@ -479,7 +491,8 @@ export const ChartWorkspace: React.FC<{
       if (
         (chart.type === "line" ||
           chart.type === "bar" ||
-          chart.type === "pie") &&
+          chart.type === "pie" ||
+          chart.type === "map") &&
         !chartDataMap[chart.instanceId]
       ) {
         initializeChartData(chart.instanceId, chart.type);

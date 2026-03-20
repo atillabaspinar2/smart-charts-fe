@@ -1,3 +1,9 @@
+// Map chart data type
+export interface MapChartData {
+  type: "map";
+  mapName: string;
+  regions: { name: string; value: number }[];
+}
 export interface ChartItemData {
   id: number;
   instanceId: string;
@@ -157,7 +163,11 @@ export const defaultPieChartSettings: PieChartSettings = {
   showLabel: false,
 };
 
-export type ChartData = LineChartData | BarChartData | PieChartData;
+export type ChartData =
+  | LineChartData
+  | BarChartData
+  | PieChartData
+  | MapChartData;
 
 export interface ReanimateSignal {
   instanceId: string;

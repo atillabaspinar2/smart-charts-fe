@@ -13,6 +13,7 @@ import {
 } from "./chartTypes";
 import { getOptionsByType } from "./chartOptionTemplates";
 import { ChartContextMenu } from "./chartContextMenu";
+import { MapChart } from "./MapChart";
 
 interface ChartItemProps {
   data: ChartItemData;
@@ -69,8 +70,8 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     pieSettings,
   }) => {
     const { id, type } = data;
-    const chartRef = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const chartRef = useRef<any>(null);
     const dragPreviewRef = useRef({ dx: 0, dy: 0 });
     const dragRafRef = useRef<number | null>(null);
     const didDragRef = useRef(false);
@@ -561,19 +562,23 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           zIndex,
         }}
       >
-        <ReactECharts
-          ref={chartRef}
-          key={`${type}-${recordKey}-${id}-${theme || "default"}`}
-          option={chartOption}
-          // @ts-ignore: preserveDrawingBuffer is valid for the underlying canvas
-          opts={{ renderer: "canvas", preserveDrawingBuffer: true }}
-          theme={theme || undefined}
-          style={{
-            width: "100%",
-            height: "100%",
-            background: effectiveBackgroundColor || "transparent",
-          }}
-        />
+        {type === "map" && chartData ? (
+          <MapChart data={chartData as any} />
+        ) : (
+          <ReactECharts
+            ref={chartRef}
+            key={`${type}-${recordKey}-${id}-${theme || "default"}`}
+            option={chartOption}
+            // @ts-ignore: preserveDrawingBuffer is valid for the underlying canvas
+            opts={{ renderer: "canvas", preserveDrawingBuffer: true }}
+            theme={theme || undefined}
+            style={{
+              width: "100%",
+              height: "100%",
+              background: effectiveBackgroundColor || "transparent",
+            }}
+          />
+        )}
         <div
           data-no-drag="true"
           className={`absolute top-2 left-2 z-40 transition-opacity ${

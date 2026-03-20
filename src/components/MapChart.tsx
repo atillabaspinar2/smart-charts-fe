@@ -1,49 +1,80 @@
 import React, { useEffect, useState } from "react";
 import ReactECharts from "echarts-for-react";
-
-interface MapChartSettings {
-  mapName: string; // e.g., "world", "usa", "china", etc.
-}
+import * as echarts from "echarts";
+// import icelandGeoJson from "../assets/maps/iceland.geo.json";
+import worldGeoJson from "../assets/maps/world.geo.json";
+import { Spinner } from "./UILibrary/Spinner";
 
 interface MapChartData {
   regions: { name: string; value: number }[];
 }
 
 interface MapChartProps {
-  settings: MapChartSettings;
   data: MapChartData;
 }
 
-export const MapChart: React.FC<MapChartProps> = ({ settings }) => {
-  const [geoJson, setGeoJson] = useState<any>(null);
+export const MapChart: React.FC<MapChartProps> = ({ data }) => {
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
-    import(`../assets/maps/${settings.mapName}.geo.json`).then((mod) => {
-      setGeoJson(mod.default || mod);
-    });
-  }, [settings.mapName]);
+    // echarts.registerMap("iceland", icelandGeoJson as any);
+    echarts.registerMap("world", worldGeoJson as any);
+    setTimeout(() => {
+      setMapReady(true);
+    }, 0); // Small delay to ensure map is registered before rendering
+  }, []);
 
-  if (!geoJson) return <div>Loading map...</div>;
+  if (!mapReady) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+        }}
+      >
+        <Spinner size={40} />
+      </div>
+    );
+  }
 
   const option = {
-    geo: {
-      map: settings.mapName,
-      roam: true,
-      itemStyle: {
-        areaColor: "#e7e8ea",
-      },
+    title: {
+      text: "World Map",
+      left: "center",
     },
-  };
-
-  const onChartReady = (echarts: any) => {
-    echarts.registerMap(settings.mapName, geoJson);
+    tooltip: {
+      trigger: "item",
+    },
+    visualMap: {
+      min: 0,
+      max: 1000,
+      left: "left",
+      top: "bottom",
+      text: ["High", "Low"],
+      calculable: true,
+    },
+    series: [
+      {
+        name: "World Map",
+        type: "map",
+        map: "world", //this name should match the one used in registerMap
+        roam: true,
+        // label: {
+        //   show: true,
+        //   color: "#555",
+        // },
+        data: data?.regions || [],
+      },
+    ],
   };
 
   return (
     <ReactECharts
       option={option}
+      echarts={echarts}
       style={{ height: "100%", width: "100%" }}
-      onChartReady={onChartReady}
     />
   );
 };
