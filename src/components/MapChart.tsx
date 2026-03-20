@@ -15,9 +15,8 @@ interface MapChartProps {
 
 export const MapChart: React.FC<MapChartProps> = ({ data }) => {
   const { mapName, regions = [] } = data;
-  // Use a unique map key per chart instance to avoid ECharts cache issues
-  const uniqueMapNameRef = useRef(`${mapName}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
-  const [currentMapName, setCurrentMapName] = useState(uniqueMapNameRef.current);
+  // Use a unique map key per chart instance to avoid ECharts cache issues, but reuse if already registered
+  const [currentMapName, setCurrentMapName] = useState(mapName);
   const [mapReady, setMapReady] = useState(false);
 
   const option = {
@@ -49,12 +48,18 @@ export const MapChart: React.FC<MapChartProps> = ({ data }) => {
 
   useEffect(() => {
     setMapReady(false);
-    // Generate a new unique map name when mapName changes
-    const newUniqueMapName = `${mapName}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    setCurrentMapName(newUniqueMapName);
+    // If the map is already registered, reuse the map name
+    const registered = echarts.getMap(mapName);
+    if (registered && registered.geoJson) {
+      setCurrentMapName(mapName);
+      setMapReady(true);
+      return;
+    }
+    // Otherwise, register with the original map name
     import(`../assets/maps/${mapName}.geo.json`)
       .then((geoJson) => {
-        echarts.registerMap(newUniqueMapName, geoJson.default || geoJson);
+        echarts.registerMap(mapName, geoJson.default || geoJson);
+        setCurrentMapName(mapName);
         setMapReady(true);
       })
       .catch(() => setMapReady(false));
