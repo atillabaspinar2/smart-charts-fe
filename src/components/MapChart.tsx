@@ -14,10 +14,11 @@ interface MapChartProps {
 }
 
 export const MapChart: React.FC<MapChartProps> = ({ data }) => {
-  const { mapName, regions = [] } = data;
+  const { mapName } = data;
   // Use a unique map key per chart instance to avoid ECharts cache issues, but reuse if already registered
   const [currentMapName, setCurrentMapName] = useState(mapName);
   const [mapReady, setMapReady] = useState(false);
+  const [mapData, setMapData] = useState({});
 
   // get regions from geomap
   const getRegionsFromGeoJson = (geoJson: any) => {
@@ -27,6 +28,11 @@ export const MapChart: React.FC<MapChartProps> = ({ data }) => {
       value: Math.round(Math.random() * 1000), // default value, can be updated with actual data later
     }));
   };
+
+  useEffect(() => {
+    const data = getRegionsFromGeoJson(echarts.getMap(currentMapName)?.geoJson);
+    setMapData(data);
+  }, [currentMapName]);
 
   const option = {
     title: {
@@ -88,17 +94,7 @@ export const MapChart: React.FC<MapChartProps> = ({ data }) => {
           shadowColor: "rgba(0,0,0,0.2)",
         },
 
-        data: getRegionsFromGeoJson(echarts.getMap(currentMapName)?.geoJson),
-
-        // data: [
-        //   { name: "Vesturland", value: 500 },
-        //   { name: "Vestfirðir", value: 300 },
-        //   { name: "Norðurland vestra", value: 200 },
-        //   { name: "Norðurland eystra", value: 400 },
-        //   { name: "Austurland", value: 600 },
-        //   { name: "Suðurland", value: 700 },
-        //   { name: "Reykjavík", value: 800 },
-        // ],
+        data: mapData,
       },
     ],
   };

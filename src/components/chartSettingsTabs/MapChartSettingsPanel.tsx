@@ -1,6 +1,10 @@
-
 import React from "react";
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion";
 import { CommonChartSettingsTabContent } from "./CommonChartSettingsTabContent";
 import { CommonLegendTabContent } from "./CommonLegendTabContent";
 
@@ -24,7 +28,6 @@ export interface MapChartSettingsPanelProps {
   backgroundColor: string;
   setBackgroundColor: (v: string) => void;
 }
-
 
 const MapChartSettingsPanel: React.FC<MapChartSettingsPanelProps> = ({
   activeChartAccordionItem,

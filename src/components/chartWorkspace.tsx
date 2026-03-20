@@ -269,10 +269,12 @@ export const ChartWorkspace: React.FC<{
     }
 
     if (type === "map") {
-      const nextData: ChartData = {
+      const nextData: MapChartData & {
+        series: { data: { name: string; value: number }[] };
+      } = {
         type: "map",
         mapName: "iceland",
-        regions: [],
+        series: { data: [] },
       };
 
       commitChartData(instanceId, nextData);
@@ -1363,7 +1365,7 @@ export const ChartWorkspace: React.FC<{
     "europe",
     "european-union",
     "southameriaca",
-  ] ;
+  ];
 
   const dataPanelBody = (
     <>

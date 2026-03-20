@@ -33,7 +33,6 @@ export type ChartSettingsPanelProps = {
   Partial<BarChartSettingsPanelProps> &
   Partial<PieChartSettingsPanelProps>;
 
-
 export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
   const {
     animationDuration,
@@ -100,9 +99,6 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
   const isLineChart = selectedChartType === "line";
   const isBarChart = selectedChartType === "bar";
   const isMapChart = selectedChartType === "map";
-  // Debug log
-  // eslint-disable-next-line no-console
-  console.log('ChartSettingsPanel selectedChartType:', selectedChartType);
 
   useEffect(() => {
     setAnimationInput(String(animationDuration));
@@ -132,116 +128,130 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
 
   return (
     <>
-      {isMapChart && typeof fontSize === "number" && typeof setFontSize === "function" && (
-        <MapChartSettingsPanel
-          activeChartAccordionItem={activeChartAccordionItem}
-          setActiveChartAccordionItem={setActiveChartAccordionItem}
-          showLegend={showLegend}
-          setShowLegend={setShowLegend}
-          legendTop={legendTop as "top" | "bottom"}
-          setLegendTop={setLegendTop as (v: "top" | "bottom") => void}
-          legendLeft={legendLeft as "left" | "right" | "center"}
-          setLegendLeft={setLegendLeft as (v: "left" | "right" | "center") => void}
-          legendOrient={legendOrient as "horizontal" | "vertical"}
-          setLegendOrient={setLegendOrient as (v: "horizontal" | "vertical") => void}
-          title={title ?? ""}
-          setTitle={setTitle ?? (() => {})}
-          animationInput={animationInput}
-          handleAnimationChange={handleAnimationChange}
-          fontSize={fontSize}
-          setFontSize={setFontSize}
-          backgroundColor={backgroundColor ?? "#fff"}
-          setBackgroundColor={setBackgroundColor ?? (() => {})}
-        />
-      )}
-      {isLineChart && typeof fontSize === "number" && typeof setFontSize === "function" && (
-        <LineChartSettingsPanel
-          activeChartAccordionItem={activeChartAccordionItem}
-          setActiveChartAccordionItem={setActiveChartAccordionItem}
-          dataOrientation={dataOrientation}
-          setDataOrientation={setDataOrientation}
-          lineShowLabels={lineShowLabels}
-          setLineShowLabels={setLineShowLabels}
-          lineSmooth={lineSmooth}
-          setLineSmooth={setLineSmooth}
-          lineStep={lineStep}
-          setLineStep={setLineStep}
-          lineArea={lineArea}
-          setLineArea={setLineArea}
-          showLegend={showLegend}
-          setShowLegend={setShowLegend}
-          legendTop={legendTop}
-          setLegendTop={setLegendTop}
-          legendLeft={legendLeft}
-          setLegendLeft={setLegendLeft}
-          legendOrient={legendOrient}
-          setLegendOrient={setLegendOrient}
-          title={title ?? ""}
-          setTitle={setTitle ?? (() => {})}
-          animationInput={animationInput}
-          handleAnimationChange={handleAnimationChange}
-          fontSize={fontSize}
-          setFontSize={setFontSize}
-          backgroundColor={backgroundColor ?? "#fff"}
-          setBackgroundColor={setBackgroundColor ?? (() => {})}
-        />
-      )}
-      {isBarChart && typeof fontSize === "number" && typeof setFontSize === "function" && (
-        <BarChartSettingsPanel
-          activeChartAccordionItem={activeChartAccordionItem}
-          setActiveChartAccordionItem={setActiveChartAccordionItem}
-          dataOrientation={dataOrientation}
-          setDataOrientation={setDataOrientation}
-          barShowBackground={barShowBackground}
-          setBarShowBackground={setBarShowBackground}
-          barBackgroundColor={barBackgroundColor}
-          setBarBackgroundColor={setBarBackgroundColor}
-          barAxisOrientation={barAxisOrientation}
-          setBarAxisOrientation={setBarAxisOrientation}
-          barStackEnabled={barStackEnabled}
-          setBarStackEnabled={setBarStackEnabled}
-          showLegend={showLegend}
-          setShowLegend={setShowLegend}
-          legendTop={legendTop}
-          setLegendTop={setLegendTop}
-          legendLeft={legendLeft}
-          setLegendLeft={setLegendLeft}
-          legendOrient={legendOrient}
-          setLegendOrient={setLegendOrient}
-          title={title ?? ""}
-          setTitle={setTitle ?? (() => {})}
-          animationInput={animationInput}
-          handleAnimationChange={handleAnimationChange}
-          fontSize={fontSize}
-          setFontSize={setFontSize}
-          backgroundColor={backgroundColor ?? "#fff"}
-          setBackgroundColor={setBackgroundColor ?? (() => {})}
-        />
-      )}
-      {isPieChart && pieSettings && setPieSettings && typeof fontSize === "number" && typeof setFontSize === "function" && (
-        <PieChartSettingsPanel
-          activeChartAccordionItem={activeChartAccordionItem}
-          setActiveChartAccordionItem={setActiveChartAccordionItem}
-          pieSettings={pieSettings}
-          setPieSettings={setPieSettings}
-          showLegend={showLegend}
-          setShowLegend={setShowLegend}
-          legendTop={legendTop}
-          setLegendTop={setLegendTop}
-          legendLeft={legendLeft}
-          setLegendLeft={setLegendLeft}
-          legendOrient={legendOrient}
-          setLegendOrient={setLegendOrient}
-          title={title ?? ""}
-          setTitle={setTitle ?? (() => {})}
-          animationInput={animationInput}
-          handleAnimationChange={handleAnimationChange}
-          fontSize={fontSize}
-          setFontSize={setFontSize}
-          backgroundColor={backgroundColor ?? "#fff"}
-          setBackgroundColor={setBackgroundColor ?? (() => {})}
-        />
-      )}
+      {isMapChart &&
+        typeof fontSize === "number" &&
+        typeof setFontSize === "function" && (
+          <MapChartSettingsPanel
+            activeChartAccordionItem={activeChartAccordionItem}
+            setActiveChartAccordionItem={setActiveChartAccordionItem}
+            showLegend={showLegend}
+            setShowLegend={setShowLegend}
+            legendTop={legendTop as "top" | "bottom"}
+            setLegendTop={setLegendTop as (v: "top" | "bottom") => void}
+            legendLeft={legendLeft as "left" | "right" | "center"}
+            setLegendLeft={
+              setLegendLeft as (v: "left" | "right" | "center") => void
+            }
+            legendOrient={legendOrient as "horizontal" | "vertical"}
+            setLegendOrient={
+              setLegendOrient as (v: "horizontal" | "vertical") => void
+            }
+            title={title ?? ""}
+            setTitle={setTitle ?? (() => {})}
+            animationInput={animationInput}
+            handleAnimationChange={handleAnimationChange}
+            fontSize={fontSize}
+            setFontSize={setFontSize}
+            backgroundColor={backgroundColor ?? "#fff"}
+            setBackgroundColor={setBackgroundColor ?? (() => {})}
+          />
+        )}
+      {isLineChart &&
+        typeof fontSize === "number" &&
+        typeof setFontSize === "function" && (
+          <LineChartSettingsPanel
+            activeChartAccordionItem={activeChartAccordionItem}
+            setActiveChartAccordionItem={setActiveChartAccordionItem}
+            dataOrientation={dataOrientation}
+            setDataOrientation={setDataOrientation}
+            lineShowLabels={lineShowLabels}
+            setLineShowLabels={setLineShowLabels}
+            lineSmooth={lineSmooth}
+            setLineSmooth={setLineSmooth}
+            lineStep={lineStep}
+            setLineStep={setLineStep}
+            lineArea={lineArea}
+            setLineArea={setLineArea}
+            showLegend={showLegend}
+            setShowLegend={setShowLegend}
+            legendTop={legendTop}
+            setLegendTop={setLegendTop}
+            legendLeft={legendLeft}
+            setLegendLeft={setLegendLeft}
+            legendOrient={legendOrient}
+            setLegendOrient={setLegendOrient}
+            title={title ?? ""}
+            setTitle={setTitle ?? (() => {})}
+            animationInput={animationInput}
+            handleAnimationChange={handleAnimationChange}
+            fontSize={fontSize}
+            setFontSize={setFontSize}
+            backgroundColor={backgroundColor ?? "#fff"}
+            setBackgroundColor={setBackgroundColor ?? (() => {})}
+          />
+        )}
+      {isBarChart &&
+        typeof fontSize === "number" &&
+        typeof setFontSize === "function" && (
+          <BarChartSettingsPanel
+            activeChartAccordionItem={activeChartAccordionItem}
+            setActiveChartAccordionItem={setActiveChartAccordionItem}
+            dataOrientation={dataOrientation}
+            setDataOrientation={setDataOrientation}
+            barShowBackground={barShowBackground}
+            setBarShowBackground={setBarShowBackground}
+            barBackgroundColor={barBackgroundColor}
+            setBarBackgroundColor={setBarBackgroundColor}
+            barAxisOrientation={barAxisOrientation}
+            setBarAxisOrientation={setBarAxisOrientation}
+            barStackEnabled={barStackEnabled}
+            setBarStackEnabled={setBarStackEnabled}
+            showLegend={showLegend}
+            setShowLegend={setShowLegend}
+            legendTop={legendTop}
+            setLegendTop={setLegendTop}
+            legendLeft={legendLeft}
+            setLegendLeft={setLegendLeft}
+            legendOrient={legendOrient}
+            setLegendOrient={setLegendOrient}
+            title={title ?? ""}
+            setTitle={setTitle ?? (() => {})}
+            animationInput={animationInput}
+            handleAnimationChange={handleAnimationChange}
+            fontSize={fontSize}
+            setFontSize={setFontSize}
+            backgroundColor={backgroundColor ?? "#fff"}
+            setBackgroundColor={setBackgroundColor ?? (() => {})}
+          />
+        )}
+      {isPieChart &&
+        pieSettings &&
+        setPieSettings &&
+        typeof fontSize === "number" &&
+        typeof setFontSize === "function" && (
+          <PieChartSettingsPanel
+            activeChartAccordionItem={activeChartAccordionItem}
+            setActiveChartAccordionItem={setActiveChartAccordionItem}
+            pieSettings={pieSettings}
+            setPieSettings={setPieSettings}
+            showLegend={showLegend}
+            setShowLegend={setShowLegend}
+            legendTop={legendTop}
+            setLegendTop={setLegendTop}
+            legendLeft={legendLeft}
+            setLegendLeft={setLegendLeft}
+            legendOrient={legendOrient}
+            setLegendOrient={setLegendOrient}
+            title={title ?? ""}
+            setTitle={setTitle ?? (() => {})}
+            animationInput={animationInput}
+            handleAnimationChange={handleAnimationChange}
+            fontSize={fontSize}
+            setFontSize={setFontSize}
+            backgroundColor={backgroundColor ?? "#fff"}
+            setBackgroundColor={setBackgroundColor ?? (() => {})}
+          />
+        )}
       {!isMapChart && !isLineChart && !isBarChart && !isPieChart && (
         <div className="chart-options p-1">
           <CanvasSettingsPanel

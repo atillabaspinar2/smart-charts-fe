@@ -2,7 +2,9 @@
 export interface MapChartData {
   type: "map";
   mapName: string;
-  regions: { name: string; value: number }[];
+  series: {
+    data: { name: string; value: number }[];
+  };
 }
 export interface ChartItemData {
   id: number;
