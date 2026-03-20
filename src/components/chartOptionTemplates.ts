@@ -144,9 +144,23 @@ export const mapOptions = {
     top: "bottom",
     text: ["High", "Low"],
     calculable: true,
+    inRange: {
+      color: ["#e0f2fe", "#0369a1"], // Light blue to Dark blue
+    },
   },
   series: [
     {
+      visualMap: {
+        min: 0,
+        max: 1000,
+        left: "left",
+        top: "bottom",
+        text: ["High", "Low"],
+        calculable: true,
+        inRange: {
+          color: ["#e0f2fe", "#0369a1"], // Light blue to Dark blue
+        },
+      },
       name: "Iceland Map",
       type: "map",
       map: "iceland", // Use the correct map name matching the GeoJSON file
@@ -154,24 +168,12 @@ export const mapOptions = {
       label: {
         show: true,
       },
-      data: [
-        { name: "Baden-Württemberg", value: 500 },
-        { name: "Bayern", value: 800 },
-        { name: "Berlin", value: 300 },
-        { name: "Brandenburg", value: 200 },
-        { name: "Bremen", value: 100 },
-        { name: "Hamburg", value: 400 },
-        { name: "Hessen", value: 600 },
-        { name: "Mecklenburg-Vorpommern", value: 150 },
-        { name: "Niedersachsen", value: 700 },
-        { name: "Nordrhein-Westfalen", value: 900 },
-        { name: "Rheinland-Pfalz", value: 350 },
-        { name: "Saarland", value: 250 },
-        { name: "Sachsen", value: 450 },
-        { name: "Sachsen-Anhalt", value: 550 },
-        { name: "Schleswig-Holstein", value: 650 },
-        { name: "Thüringen", value: 850 },
-      ],
+      itemStyle: {
+        borderRadius: 10,
+        borderColor: "yellow",
+        borderWidth: 2,
+      },
+      data: [],
     },
   ],
 };

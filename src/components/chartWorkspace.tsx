@@ -32,10 +32,12 @@ import {
   type PieChartSettings,
   type LineChartSettings,
   type BarChartSettings,
+  type MapChartSettings,
   type ReanimateSignal,
   defaultPieChartSettings,
   defaultLineChartSettings,
   defaultBarChartSettings,
+  defaultMapChartSettings,
 } from "./chartTypes";
 
 const defaultChartSize = {
@@ -93,7 +95,10 @@ export const ChartWorkspace: React.FC<{
     Record<string, boolean>
   >({});
   const [chartSettingsMap, setChartSettingsMap] = useState<
-    Record<string, LineChartSettings | BarChartSettings | PieChartSettings>
+    Record<
+      string,
+      LineChartSettings | BarChartSettings | PieChartSettings | MapChartSettings
+    >
   >({});
   const [mediaType, setMediaType] = useState<string>("webm");
   const [reanimateSignal, setReanimateSignal] =
@@ -414,12 +419,17 @@ export const ChartWorkspace: React.FC<{
   const getChartSettings = (
     instanceId: string,
     type?: string,
-  ): LineChartSettings | BarChartSettings | PieChartSettings => {
+  ):
+    | LineChartSettings
+    | BarChartSettings
+    | PieChartSettings
+    | MapChartSettings => {
     const settings = chartSettingsMap[instanceId];
     if (settings) return settings;
     if (type === "pie") return defaultPieChartSettings;
     if (type === "bar") return defaultBarChartSettings;
     if (type === "line") return defaultLineChartSettings;
+    if (type === "map") return defaultMapChartSettings;
     return defaultLineChartSettings; // fallback
   };
 
@@ -1341,7 +1351,19 @@ export const ChartWorkspace: React.FC<{
   );
 
   // List of available maps (from assets/maps)
-  const availableMaps = ["world", "germany", "iceland"];
+  const availableMaps = [
+    "germany",
+    "iceland",
+    "usa",
+    "turkiye",
+    "africa",
+    "contitents",
+    "countries",
+    "russia",
+    "europe",
+    "european-union",
+    "southameriaca",
+  ] ;
 
   const dataPanelBody = (
     <>
@@ -1707,8 +1729,7 @@ export const ChartWorkspace: React.FC<{
               updateChartSettings(selectedChartInstanceId, { lineArea: value })
             }
             selectedChartType={
-              charts.find((c) => c.instanceId === selectedChartInstanceId)
-                ?.type || ""
+              charts.find((c) => c.instanceId === selectedChartInstanceId)?.type
             }
             dataOrientation={selectedChartDataOrientation}
             setDataOrientation={handleChangeDataOrientation}
@@ -1732,7 +1753,10 @@ export const ChartWorkspace: React.FC<{
               setChartSettingsMap((prev) => {
                 const next: Record<
                   string,
-                  LineChartSettings | BarChartSettings | PieChartSettings
+                  | LineChartSettings
+                  | BarChartSettings
+                  | PieChartSettings
+                  | MapChartSettings
                 > = {};
                 Object.entries(prev).forEach(([instanceId, settings]) => {
                   next[instanceId] = { ...settings, fontFamily: value };
@@ -1746,7 +1770,10 @@ export const ChartWorkspace: React.FC<{
               setChartSettingsMap((prev) => {
                 const next: Record<
                   string,
-                  LineChartSettings | BarChartSettings | PieChartSettings
+                  | LineChartSettings
+                  | BarChartSettings
+                  | PieChartSettings
+                  | MapChartSettings
                 > = {};
                 Object.entries(prev).forEach(([instanceId, settings]) => {
                   next[instanceId] = { ...settings, fontSize: value };

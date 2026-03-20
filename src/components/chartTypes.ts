@@ -163,6 +163,20 @@ export const defaultPieChartSettings: PieChartSettings = {
   showLabel: false,
 };
 
+export const defaultMapChartSettings: MapChartSettings = {
+  animationDuration: 1000,
+  backgroundColor: "#ffffff",
+  title: "",
+  fontFamily: "Inter, sans-serif",
+  fontSize: 14,
+  showLegend: true,
+  legendTop: "top",
+  legendLeft: "center",
+  legendOrient: "horizontal",
+  mapName: "world",
+  regionColor: undefined,
+};
+
 export type ChartData =
   | LineChartData
   | BarChartData
