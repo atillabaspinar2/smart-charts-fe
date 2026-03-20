@@ -4,39 +4,44 @@ import * as echarts from "echarts";
 // import icelandGeoJson from "../assets/maps/iceland.geo.json";
 import { Spinner } from "./UILibrary/Spinner";
 
-interface MapChartData {
-  mapName: string;
-  regions: { name: string; value: number }[];
-}
-
 interface MapChartProps {
-  data: MapChartData;
+  mapName: string;
+  mapDataGenerated?: (data: { name: string; value: number }[]) => void;
 }
 
-export const MapChart: React.FC<MapChartProps> = ({ data }) => {
-  const { mapName } = data;
+export const MapChart: React.FC<MapChartProps> = ({
+  mapName,
+  mapDataGenerated,
+}) => {
+  // default map, can be made dynamic later
   // Use a unique map key per chart instance to avoid ECharts cache issues, but reuse if already registered
   const [currentMapName, setCurrentMapName] = useState(mapName);
   const [mapReady, setMapReady] = useState(false);
-  const [mapData, setMapData] = useState({});
+  const [mapData, setMapData] = useState<{ name: string; value: number }[]>([]);
 
   // get regions from geomap
-  const getRegionsFromGeoJson = (geoJson: any) => {
-    if (!geoJson || !geoJson.features) return [];
-    return geoJson.features.map((feature: any) => ({
-      name: feature.properties.name,
-      value: Math.round(Math.random() * 1000), // default value, can be updated with actual data later
-    }));
-  };
 
   useEffect(() => {
-    const data = getRegionsFromGeoJson(echarts.getMap(currentMapName)?.geoJson);
-    setMapData(data);
-  }, [currentMapName]);
+    const getRegionsFromGeoJson = (geoJson: any) => {
+      if (!geoJson || !geoJson.features) return [];
+      return geoJson.features.map((feature: any) => ({
+        name: feature.properties.name,
+        value: 0, // default value, can be updated with actual data later
+      }));
+    };
+
+    const regions = getRegionsFromGeoJson(
+      echarts.getMap(currentMapName || "countries")?.geoJson,
+    );
+    setMapData(regions);
+    if (mapDataGenerated) {
+      mapDataGenerated(regions);
+    }
+  }, [currentMapName, mapDataGenerated]);
 
   const option = {
     title: {
-      text: `${mapName.charAt(0).toUpperCase() + mapName.slice(1)} Map`,
+      text: `${mapName.charAt(0).toUpperCase() + mapName?.slice(1) || "Map"} Map`,
       left: "center",
     },
     tooltip: {

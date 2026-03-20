@@ -1367,6 +1367,31 @@ export const ChartWorkspace: React.FC<{
     "southameriaca",
   ];
 
+  // Store generated map region data by chart instance
+  const [mapRegionDataByInstance, setMapRegionDataByInstance] = useState<
+    Record<string, { name: string; value: number }[]>
+  >({});
+
+  // Handler to receive region data from MapChart via ChartItem
+  const handleMapDataGenerated = (
+    instanceId: string,
+    regions: { name: string; value: number }[],
+  ) => {
+    setMapRegionDataByInstance((prev) => {
+      const prevRegions = prev[instanceId] || [];
+      // Compare previous and new regions shallowly
+      if (
+        prevRegions.length === regions.length &&
+        prevRegions.every(
+          (r, i) => r.name === regions[i].name && r.value === regions[i].value,
+        )
+      ) {
+        return prev; // No change, do not update state
+      }
+      return { ...prev, [instanceId]: regions };
+    });
+  };
+
   const dataPanelBody = (
     <>
       {!selectedChart && (
@@ -1424,12 +1449,17 @@ export const ChartWorkspace: React.FC<{
 
       {selectedChart?.type === "map" && selectedChartInstanceId && (
         <MapChartDataPanel
-          data={
-            (chartDataDraftMap[selectedChartInstanceId] as MapChartData) ||
-            (chartDataMap[selectedChartInstanceId] as MapChartData)
-          }
+          data={{
+            type: "map",
+            mapName:
+              (chartDataMap[selectedChartInstanceId] as MapChartData)
+                ?.mapName || availableMaps[0],
+            series: {
+              data: mapRegionDataByInstance[selectedChartInstanceId] || [],
+            },
+          }}
           onChange={(nextData) => {
-            // Commit immediately so the chart updates as soon as the map changes
+            // If you want to update the chart, you can call commitChartData here
             commitChartData(selectedChartInstanceId, nextData);
           }}
           availableMaps={availableMaps}
@@ -1556,6 +1586,7 @@ export const ChartWorkspace: React.FC<{
               mediaType={mediaType}
               theme={workspaceTheme || undefined}
               pieSettings={getPieSettings(c.instanceId)}
+              onMapDataGenerated={handleMapDataGenerated}
             />
           ))}
         </div>
