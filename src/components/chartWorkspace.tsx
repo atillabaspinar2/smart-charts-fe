@@ -1379,16 +1379,71 @@ export const ChartWorkspace: React.FC<{
   ) => {
     setMapRegionDataByInstance((prev) => {
       const prevRegions = prev[instanceId] || [];
-      // Compare previous and new regions shallowly
       if (
         prevRegions.length === regions.length &&
         prevRegions.every(
           (r, i) => r.name === regions[i].name && r.value === regions[i].value,
         )
       ) {
-        return prev; // No change, do not update state
+        return prev;
       }
       return { ...prev, [instanceId]: regions };
+    });
+
+    // Merge geoJson region names into chart data for this instance
+    setChartDataMap((prev) => {
+      const chartData = prev[instanceId] as MapChartData | undefined;
+      if (!chartData || chartData.type !== "map") return prev;
+      // Merge: for each geoJson region, use value from chartData if present, else 0
+      const mergedRegions = regions.map((region) => {
+        const found = chartData.series.data.find((r) => r.name === region.name);
+        return found
+          ? { ...region, value: found.value }
+          : { ...region, value: 0 };
+      });
+      // Only update if changed
+      const isSame =
+        chartData.series.data.length === mergedRegions.length &&
+        chartData.series.data.every(
+          (r, i) =>
+            r.name === mergedRegions[i].name &&
+            r.value === mergedRegions[i].value,
+        );
+      if (isSame) return prev;
+      return {
+        ...prev,
+        [instanceId]: {
+          ...chartData,
+          series: { data: mergedRegions },
+        },
+      };
+    });
+
+    // Also update chartDataDraftMap for map charts to keep draft in sync
+    setChartDataDraftMap((prev) => {
+      const chartData = prev[instanceId] as MapChartData | undefined;
+      if (!chartData || chartData.type !== "map") return prev;
+      const mergedRegions = regions.map((region) => {
+        const found = chartData.series.data.find((r) => r.name === region.name);
+        return found
+          ? { ...region, value: found.value }
+          : { ...region, value: 0 };
+      });
+      const isSame =
+        chartData.series.data.length === mergedRegions.length &&
+        chartData.series.data.every(
+          (r, i) =>
+            r.name === mergedRegions[i].name &&
+            r.value === mergedRegions[i].value,
+        );
+      if (isSame) return prev;
+      return {
+        ...prev,
+        [instanceId]: {
+          ...chartData,
+          series: { data: mergedRegions },
+        },
+      };
     });
   };
 
@@ -1409,9 +1464,6 @@ export const ChartWorkspace: React.FC<{
           onChange={(nextData) =>
             updateChartDataDraft(selectedChartInstanceId, nextData)
           }
-          registerApplyHandler={(handler) => {
-            dataPanelApplyHandlerRef.current = handler;
-          }}
           themeColors={activeThemeColors}
         />
       )}
@@ -1449,18 +1501,21 @@ export const ChartWorkspace: React.FC<{
 
       {selectedChart?.type === "map" && selectedChartInstanceId && (
         <MapChartDataPanel
-          data={{
-            type: "map",
-            mapName:
-              (chartDataMap[selectedChartInstanceId] as MapChartData)
-                ?.mapName || availableMaps[0],
-            series: {
-              data: mapRegionDataByInstance[selectedChartInstanceId] || [],
-            },
-          }}
+          data={
+            (chartDataDraftMap[selectedChartInstanceId] as MapChartData) ||
+            (chartDataMap[selectedChartInstanceId] as MapChartData) || {
+              type: "map",
+              mapName: availableMaps[0],
+              series: {
+                data: mapRegionDataByInstance[selectedChartInstanceId] || [],
+              },
+            }
+          }
           onChange={(nextData) => {
-            // If you want to update the chart, you can call commitChartData here
-            commitChartData(selectedChartInstanceId, nextData);
+            updateChartDataDraft(selectedChartInstanceId, nextData);
+          }}
+          registerApplyHandler={(handler) => {
+            dataPanelApplyHandlerRef.current = handler;
           }}
           availableMaps={availableMaps}
         />

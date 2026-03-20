@@ -6,11 +6,13 @@ import { Spinner } from "./UILibrary/Spinner";
 
 interface MapChartProps {
   mapName: string;
+  regionData?: { name: string; value: number }[];
   mapDataGenerated?: (data: { name: string; value: number }[]) => void;
 }
 
 export const MapChart: React.FC<MapChartProps> = ({
   mapName,
+  regionData,
   mapDataGenerated,
 }) => {
   // default map, can be made dynamic later
@@ -21,6 +23,7 @@ export const MapChart: React.FC<MapChartProps> = ({
 
   // get regions from geomap
 
+  // Always use geoJson for region names, but preserve values from regionData if available
   useEffect(() => {
     const getRegionsFromGeoJson = (geoJson: any) => {
       if (!geoJson || !geoJson.features) return [];
@@ -29,15 +32,19 @@ export const MapChart: React.FC<MapChartProps> = ({
         value: 0, // default value, can be updated with actual data later
       }));
     };
-
-    const regions = getRegionsFromGeoJson(
+    const geoRegions = getRegionsFromGeoJson(
       echarts.getMap(currentMapName || "countries")?.geoJson,
     );
-    setMapData(regions);
+    // Merge values from regionData if present
+    const merged = geoRegions.map((region: { name: string }) => {
+      const found = regionData?.find((r) => r.name === region.name);
+      return found ? { ...region, value: found.value } : region;
+    });
+    setMapData(merged);
     if (mapDataGenerated) {
-      mapDataGenerated(regions);
+      mapDataGenerated(merged);
     }
-  }, [currentMapName, mapDataGenerated]);
+  }, [currentMapName, mapDataGenerated, regionData]);
 
   const option = {
     title: {

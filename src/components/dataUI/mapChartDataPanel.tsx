@@ -13,23 +13,40 @@ type Props = {
   data: MapChartData & { series: { data: { name: string; value: number }[] } };
   onChange: (data: MapChartData) => void;
   availableMaps: string[];
+  registerApplyHandler?: (handler: (() => MapChartData) | null) => void;
 };
+
 
 export const MapChartDataPanel: React.FC<Props> = ({
   data,
   onChange,
   availableMaps,
+  registerApplyHandler,
 }) => {
-  const regionRows = data.series?.data || [];
-  const gridRows = regionRows.map((region) => ({
-    id: region.name,
+  // Always one category: "Value"
+  const categories = ["Value"];
+  // Build series array for DataGrid
+  const series = (data.series?.data || []).map((region, idx) => ({
+    id: region.name || `region-${idx}`,
     name: region.name,
     color: "#ccc",
     values: [region.value],
   }));
 
+
+  // Map DataGrid rows back to MapChartData
+  const mapRowsToMapChartData = (rows: typeof series) => ({
+    ...data,
+    series: {
+      data: rows.map((row) => ({
+        name: row.name,
+        value: row.values[0],
+      })),
+    },
+  });
+
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="space-y-3 p-4">
       <div>
         <label className="block mb-1 text-sm font-medium">Map:</label>
         <Select
@@ -51,20 +68,30 @@ export const MapChartDataPanel: React.FC<Props> = ({
       <div>
         <label className="block mb-1 text-sm font-medium">Region Data:</label>
         <DataGrid
-          categories={["Value"]}
-          series={gridRows}
+          categories={categories}
+          series={series}
           onCategoriesChange={() => {}}
           onSeriesChange={(rows) => {
-            const newSeriesData = rows.map((row) => ({
-              name: row.name,
-              value: row.values[0],
-            }));
-            onChange({
-              ...data,
-              series: { ...data.series, data: newSeriesData },
-            });
+            onChange(mapRowsToMapChartData(rows));
           }}
-          minSeries={gridRows.length}
+          onDataChange={(_cats, rows) => {
+            onChange(mapRowsToMapChartData(rows));
+          }}
+          minSeries={series.length}
+          registerApplyHandler={
+            registerApplyHandler
+              ? (handler) => {
+                  registerApplyHandler(
+                    handler
+                      ? () => {
+                          const snapshot = handler();
+                          return mapRowsToMapChartData(snapshot.series);
+                        }
+                      : null,
+                  );
+                }
+              : undefined
+          }
         />
       </div>
     </div>
