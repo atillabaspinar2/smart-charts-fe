@@ -1395,11 +1395,13 @@ export const ChartWorkspace: React.FC<{
       const chartData = prev[instanceId] as MapChartData | undefined;
       if (!chartData || chartData.type !== "map") return prev;
       // Merge: for each geoJson region, use value from chartData if present, else 0
+      let initVal = 50;
       const mergedRegions = regions.map((region) => {
         const found = chartData.series.data.find((r) => r.name === region.name);
+        initVal = initVal + 20;
         return found
           ? { ...region, value: found.value }
-          : { ...region, value: 0 };
+          : { ...region, value: initVal };
       });
       // Only update if changed
       const isSame =

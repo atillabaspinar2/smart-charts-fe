@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import * as echarts from "echarts";
 // import icelandGeoJson from "../assets/maps/iceland.geo.json";
@@ -20,6 +20,8 @@ export const MapChart: React.FC<MapChartProps> = ({
   const [currentMapName, setCurrentMapName] = useState(mapName);
   const [mapReady, setMapReady] = useState(false);
   const [mapData, setMapData] = useState<{ name: string; value: number }[]>([]);
+  const [opacity, setOpacity] = useState(0); // controls the map opacity in option
+  const chartRef = React.useRef<ReactECharts>(null);
 
   // get regions from geomap
 
@@ -54,7 +56,6 @@ export const MapChart: React.FC<MapChartProps> = ({
     tooltip: {
       trigger: "item",
     },
-    animationDurationUpdate: 5000,
     // visualMap: {
     //   min: 0,
     //   zoom: 1.5,
@@ -79,6 +80,9 @@ export const MapChart: React.FC<MapChartProps> = ({
       //   { lte: 100, label: "Low" },
       // ],
     },
+    animationDelayUpdate: function (idx: number) {
+      return idx * 100;
+    },
     series: [
       {
         name: `${mapName.charAt(0).toUpperCase() + mapName.slice(1)} Map`,
@@ -88,8 +92,7 @@ export const MapChart: React.FC<MapChartProps> = ({
         label: {
           textStyle: {
             // dark red color for better contrast on light blue map
-            color: "#b91c1c",
-
+            color: "black",
             fontSize: 16,
           },
           show: true,
@@ -97,20 +100,20 @@ export const MapChart: React.FC<MapChartProps> = ({
           // formatter: "{b}: {c}",
           formatter: "{c}",
         },
+        universalTransition: true,
         itemStyle: {
-          areaColor: "#ffffff", // Fill color of the region
           borderColor: "blue", // Border color (e.g., Slate 300)
           borderWidth: 1, // Border thickness
           borderType: "solid", // 'solid', 'dashed', or 'dotted'
           shadowBlur: 4, // Glow/Shadow effect
           shadowColor: "rgba(0,0,0,0.2)",
+          opacity: 0, // Control opacity for animation
         },
 
         data: mapData,
       },
     ],
   };
-  console.log("MapChart option:", option);
 
   useEffect(() => {
     setMapReady(false);
@@ -132,6 +135,31 @@ export const MapChart: React.FC<MapChartProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapName]);
 
+  const triggerAnimate = () => {
+    // First, set opacity to 0 (forces rerender with transparent map)
+    const echartsInstance = chartRef?.current?.getEchartsInstance();
+
+    setTimeout(() => {
+      if (chartRef?.current) {
+        echartsInstance?.setOption(
+          {
+            series: [
+              {
+                itemStyle: { opacity: 1 },
+              },
+            ],
+          },
+          false,
+        );
+      }
+      setOpacity(0);
+    }, 50); // delay to ensure the first update with opacity 0 is applied
+  };
+
+  // Call triggerAnimate on every render of the current map
+
+  triggerAnimate();
+
   if (!mapReady) {
     return (
       <div
@@ -149,6 +177,7 @@ export const MapChart: React.FC<MapChartProps> = ({
 
   return (
     <ReactECharts
+      ref={chartRef}
       option={option}
       echarts={echarts}
       style={{ height: "100%", width: "100%" }}
