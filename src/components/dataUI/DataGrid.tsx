@@ -327,7 +327,7 @@ export const DataGrid: FC<DataGridProps> = ({
       className="overflow-x-auto rounded-md border border-border bg-card shadow-sm"
     >
       <Table
-        className="w-full"
+        className=""
         style={{ minWidth: `${260 + categories.length * 100}px` }}
       >
         <TableHeader>

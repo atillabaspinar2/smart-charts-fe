@@ -16,7 +16,6 @@ type Props = {
   registerApplyHandler?: (handler: (() => MapChartData) | null) => void;
 };
 
-
 export const MapChartDataPanel: React.FC<Props> = ({
   data,
   onChange,
@@ -32,7 +31,6 @@ export const MapChartDataPanel: React.FC<Props> = ({
     color: "#ccc",
     values: [region.value],
   }));
-
 
   // Map DataGrid rows back to MapChartData
   const mapRowsToMapChartData = (rows: typeof series) => ({
@@ -56,7 +54,7 @@ export const MapChartDataPanel: React.FC<Props> = ({
           <SelectTrigger className="min-w-40">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="z-9002">
             {availableMaps.map((map: string) => (
               <SelectItem key={map} value={map}>
                 {map}
