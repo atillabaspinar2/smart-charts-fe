@@ -24,7 +24,6 @@ export const MapChart: React.FC<MapChartProps> = ({
   const [currentMapName, setCurrentMapName] = useState(mapName);
   const [mapReady, setMapReady] = useState(false);
   const [mapData, setMapData] = useState<{ name: string; value: number }[]>([]);
-  const [opacity, setOpacity] = useState(0); // controls the map opacity in option
   const chartRef = React.useRef<ReactECharts>(null);
 
   const min =
@@ -163,7 +162,6 @@ export const MapChart: React.FC<MapChartProps> = ({
           false,
         );
       }
-      setOpacity(0);
     }, 50); // delay to ensure the first update with opacity 0 is applied
   };
 

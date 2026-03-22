@@ -1142,7 +1142,7 @@ export const ChartWorkspace: React.FC<{
     targetChartInstanceId: string | null,
   ) => {
     if (!targetChartInstanceId) {
-      window.alert("Select a line, bar, or pie chart first.");
+      window.alert("Select a chart first.");
       return;
     }
 
@@ -1153,10 +1153,11 @@ export const ChartWorkspace: React.FC<{
       !selected ||
       (selected.type !== "line" &&
         selected.type !== "bar" &&
-        selected.type !== "pie")
+        selected.type !== "pie" &&
+        selected.type !== "map")
     ) {
       window.alert(
-        "Import is currently available only for line, bar, and pie charts.",
+        "Import is currently available only for line, bar, pie, and map charts.",
       );
       return;
     }
@@ -1164,26 +1165,59 @@ export const ChartWorkspace: React.FC<{
     try {
       const rows = await readSheetRowsFromFile(file);
 
-      const nextData = buildChartDataFromSheetRows(
-        rows,
-        selected.type,
-        selected.instanceId,
-        getThemeColor,
-        chartDataOrientationMap[selected.instanceId] || "columns-as-series",
-      );
+      let nextData;
+      if (selected.type === "map") {
+        // Extract map name from file name (remove extension)
+        let mapName = file.name.split(".")[0];
+        // fallback to settings if file name is empty
+        if (!mapName) {
+          const mapSettings = chartSettingsMap[selected.instanceId] as
+            | MapChartSettings
+            | undefined;
+          mapName = mapSettings?.mapName || "world";
+        }
+        nextData = buildChartDataFromSheetRows(
+          rows,
+          "map",
+          selected.instanceId,
+          getThemeColor,
+          undefined,
+          mapName,
+        );
+      } else {
+        nextData = buildChartDataFromSheetRows(
+          rows,
+          selected.type,
+          selected.instanceId,
+          getThemeColor,
+          chartDataOrientationMap[selected.instanceId] || "columns-as-series",
+        );
+      }
 
-      const hasImportedData =
-        nextData?.type === "pie"
-          ? nextData.data.length > 0
-          : Boolean(nextData && nextData.series.length > 0);
+      let hasImportedData = false;
+      if (nextData?.type === "pie") {
+        hasImportedData = nextData.data.length > 0;
+      } else if (nextData?.type === "map") {
+        hasImportedData =
+          Array.isArray(nextData.series?.data) &&
+          nextData.series.data.length > 0;
+      } else {
+        hasImportedData = Boolean(nextData && nextData.series.length > 0);
+      }
 
       if (!nextData || !hasImportedData) {
-        const isPie = selected.type === "pie";
-        window.alert(
-          isPie
-            ? "Could not map this file. For pie charts, expected header row + at least one data row with label in the first column and numeric value in the second column."
-            : "Could not map this file. Expected header row + at least one data row with one x-axis column and one or more numeric series columns.",
-        );
+        let message = "Could not map this file.";
+        if (selected.type === "pie") {
+          message =
+            "Could not map this file. For pie charts, expected header row + at least one data row with label in the first column and numeric value in the second column.";
+        } else if (selected.type === "map") {
+          message =
+            "Could not map this file. For map charts, expected header row + at least one data row with region name in the first column and numeric value in the second column.";
+        } else {
+          message =
+            "Could not map this file. Expected header row + at least one data row with one x-axis column and one or more numeric series columns.";
+        }
+        window.alert(message);
         return;
       }
 
