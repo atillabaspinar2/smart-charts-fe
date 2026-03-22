@@ -13,6 +13,7 @@ import {
   type MapChartData,
 } from "./chartTypes";
 import { getOptionsByType } from "./chartOptionTemplates";
+import { getMapData } from "./mapChartOptions";
 import { ChartContextMenu } from "./chartContextMenu";
 import { MapChart } from "./MapChart";
 
@@ -196,6 +197,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         ? undefined
         : settings.backgroundColor;
 
+    const [seriesData, setSeriesData] = useState<any[]>([]);
     const chartOption = {
       ...opts,
       title: {
@@ -219,6 +221,13 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         : 0,
       animationDurationUpdate: 0,
     };
+
+    // Fetch map series data async when type is map
+    useEffect(() => {
+      if (type === "map" && chartData) {
+        getMapData((chartData as MapChartData).mapName || "iceland").then(setSeriesData);
+      }
+    }, [type, chartData]);
 
     const {
       left: _legendLeft,
@@ -573,12 +582,9 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           <MapChart
             keyMap={`${type}-${recordKey}-${id}-${theme || "default"}`}
             mapName={(chartData as MapChartData).mapName}
-            regionData={(chartData as MapChartData).series?.data}
+            option={chartOption}
+            seriesData={seriesData}
             theme={theme || undefined}
-            mapDataGenerated={(regions) => {
-              onMapDataGenerated &&
-                onMapDataGenerated(data.instanceId, regions);
-            }}
           />
         ) : (
           <ReactECharts

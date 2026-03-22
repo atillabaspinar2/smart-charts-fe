@@ -1,3 +1,5 @@
+import { defaultMapOptions } from "./mapChartOptions";
+
 export const lineOptions = {
   animationDuration: 1000,
   xAxis: {
@@ -83,52 +85,6 @@ export const pieOptions = {
         { value: 484, name: "Union Ads" },
         { value: 300, name: "Video Ads" },
       ],
-    },
-  ],
-};
-
-export const mapOptions = {
-  title: {
-    text: "Map Chart",
-    left: "center",
-  },
-
-  tooltip: {
-    trigger: "item",
-  },
-  visualMap: {
-    left: "left",
-    top: "bottom",
-    text: ["High", "Low"],
-    calculable: true,
-    inRange: {
-      color: ["#e0f2fe", "#0369a1"], // Light blue to Dark blue
-    },
-  },
-  series: [
-    {
-      visualMap: {
-        left: "left",
-        top: "bottom",
-        text: ["High", "Low"],
-        calculable: true,
-        inRange: {
-          color: ["#e0f2fe", "#0369a1"], // Light blue to Dark blue
-        },
-      },
-      name: "Iceland Map",
-      type: "map",
-      map: "iceland", // Use the correct map name matching the GeoJSON file
-      roam: true,
-      label: {
-        show: true,
-      },
-      itemStyle: {
-        borderRadius: 10,
-        borderColor: "yellow",
-        borderWidth: 2,
-      },
-      data: [],
     },
   ],
 };
@@ -220,7 +176,7 @@ export const getOptionsByType = (type: string) => {
     case "pie":
       return pieOptions;
     case "map":
-      return mapOptions;
+      return defaultMapOptions();
     case "scatter":
     //   return scatterOptions;
     // case "radar":
