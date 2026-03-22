@@ -50,9 +50,9 @@ export const defaultMapOptions = (mapName?: string) => {
         color: ["#e0f2fe", "#0369a1"], // Light blue to Dark blue
       },
     },
-    animationDelayUpdate: function (idx: number) {
-      return idx * 10;
-    },
+    animation: true,
+
+    universalTransition: true,
     series: [
       {
         // geoIndex: 0,
@@ -71,6 +71,7 @@ export const defaultMapOptions = (mapName?: string) => {
           // formatter: "{b}: {c}",
           formatter: "{c}",
         },
+
         universalTransition: true,
         itemStyle: {
           borderColor: "blue", // Border color (e.g., Slate 300)

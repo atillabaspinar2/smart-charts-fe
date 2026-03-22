@@ -1401,88 +1401,6 @@ export const ChartWorkspace: React.FC<{
     "southameriaca",
   ];
 
-  // Store generated map region data by chart instance
-  const [mapRegionDataByInstance, setMapRegionDataByInstance] = useState<
-    Record<string, { name: string; value: number }[]>
-  >({});
-
-  // Handler to receive region data from MapChart via ChartItem
-  const handleMapDataGenerated = (
-    instanceId: string,
-    regions: { name: string; value: number }[],
-  ) => {
-    setMapRegionDataByInstance((prev) => {
-      const prevRegions = prev[instanceId] || [];
-      if (
-        prevRegions.length === regions.length &&
-        prevRegions.every(
-          (r, i) => r.name === regions[i].name && r.value === regions[i].value,
-        )
-      ) {
-        return prev;
-      }
-      return { ...prev, [instanceId]: regions };
-    });
-
-    // Merge geoJson region names into chart data for this instance
-    setChartDataMap((prev) => {
-      const chartData = prev[instanceId] as MapChartData | undefined;
-      if (!chartData || chartData.type !== "map") return prev;
-      // Merge: for each geoJson region, use value from chartData if present, else 0
-      let initVal = 50;
-      const mergedRegions = regions.map((region) => {
-        const found = chartData.series.data.find((r) => r.name === region.name);
-        initVal = initVal + 20;
-        return found
-          ? { ...region, value: found.value }
-          : { ...region, value: initVal };
-      });
-      // Only update if changed
-      const isSame =
-        chartData.series.data.length === mergedRegions.length &&
-        chartData.series.data.every(
-          (r, i) =>
-            r.name === mergedRegions[i].name &&
-            r.value === mergedRegions[i].value,
-        );
-      if (isSame) return prev;
-      return {
-        ...prev,
-        [instanceId]: {
-          ...chartData,
-          series: { data: mergedRegions },
-        },
-      };
-    });
-
-    // Also update chartDataDraftMap for map charts to keep draft in sync
-    setChartDataDraftMap((prev) => {
-      const chartData = prev[instanceId] as MapChartData | undefined;
-      if (!chartData || chartData.type !== "map") return prev;
-      const mergedRegions = regions.map((region) => {
-        const found = chartData.series.data.find((r) => r.name === region.name);
-        return found
-          ? { ...region, value: found.value }
-          : { ...region, value: 0 };
-      });
-      const isSame =
-        chartData.series.data.length === mergedRegions.length &&
-        chartData.series.data.every(
-          (r, i) =>
-            r.name === mergedRegions[i].name &&
-            r.value === mergedRegions[i].value,
-        );
-      if (isSame) return prev;
-      return {
-        ...prev,
-        [instanceId]: {
-          ...chartData,
-          series: { data: mergedRegions },
-        },
-      };
-    });
-  };
-
   const dataPanelBody = (
     <>
       {!selectedChart && (
@@ -1539,16 +1457,19 @@ export const ChartWorkspace: React.FC<{
         <MapChartDataPanel
           data={
             (chartDataDraftMap[selectedChartInstanceId] as MapChartData) ||
-            (chartDataMap[selectedChartInstanceId] as MapChartData) || {
-              type: "map",
-              mapName: availableMaps[0],
-              series: {
-                data: mapRegionDataByInstance[selectedChartInstanceId] || [],
-              },
-            }
+            (chartDataMap[selectedChartInstanceId] as MapChartData)
           }
           onChange={(nextData) => {
             updateChartDataDraft(selectedChartInstanceId, nextData);
+          }}
+          onMapNameChange={(mapName) => {
+            // Update the committed data immediately when map changes
+            const current =
+              (chartDataDraftMap[selectedChartInstanceId] as MapChartData) ||
+              (chartDataMap[selectedChartInstanceId] as MapChartData);
+            if (current && current.mapName !== mapName) {
+              updateChartData(selectedChartInstanceId, { ...current, mapName }, { reanimate: true });
+            }
           }}
           registerApplyHandler={(handler) => {
             dataPanelApplyHandlerRef.current = handler;
@@ -1677,7 +1598,7 @@ export const ChartWorkspace: React.FC<{
               mediaType={mediaType}
               theme={workspaceTheme || undefined}
               pieSettings={getPieSettings(c.instanceId)}
-              onMapDataGenerated={handleMapDataGenerated}
+              // onMapDataGenerated removed: map data is now fully managed in workspace
             />
           ))}
         </div>

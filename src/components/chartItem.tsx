@@ -10,10 +10,8 @@ import {
   type MapChartSettings,
   type ReanimateSignal,
   defaultPieChartSettings,
-  type MapChartData,
 } from "./chartTypes";
 import { getOptionsByType } from "./chartOptionTemplates";
-import { getMapData } from "./mapChartOptions";
 import { ChartContextMenu } from "./chartContextMenu";
 import { MapChart } from "./MapChart";
 
@@ -74,7 +72,6 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     mediaType,
     theme,
     pieSettings,
-    onMapDataGenerated,
   }) => {
     const { id, type } = data;
     const containerRef = useRef<HTMLDivElement>(null);
@@ -197,8 +194,8 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         ? undefined
         : settings.backgroundColor;
 
-    const [seriesData, setSeriesData] = useState<any[]>([]);
-    const chartOption = {
+    // For map charts, ensure option.series[0].map is set to chartData.mapName
+    let chartOption = {
       ...opts,
       title: {
         ...(opts.title || {}),
@@ -215,19 +212,20 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         // fontSize intentionally omitted from global textStyle
       },
       backgroundColor: effectiveBackgroundColor,
-      animation: animateOnNextMount,
-      animationDuration: animateOnNextMount
-        ? (settings.animationDuration ?? opts.animationDuration)
-        : 0,
-      animationDurationUpdate: 0,
     };
-
-    // Fetch map series data async when type is map
-    useEffect(() => {
-      if (type === "map" && chartData) {
-        getMapData((chartData as MapChartData).mapName || "iceland").then(setSeriesData);
+    if (type === "map" && chartData && chartData.type === "map") {
+      if (chartOption.series && chartOption.series[0]) {
+        chartOption = {
+          ...chartOption,
+          series: [
+            {
+              ...chartOption.series[0],
+              map: chartData.mapName,
+            },
+          ],
+        };
       }
-    }, [type, chartData]);
+    }
 
     const {
       left: _legendLeft,
@@ -578,12 +576,12 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           zIndex,
         }}
       >
-        {type === "map" && chartData ? (
+        {type === "map" && chartData && chartData.type === "map" ? (
           <MapChart
             keyMap={`${type}-${recordKey}-${id}-${theme || "default"}`}
-            mapName={(chartData as MapChartData).mapName}
+            mapName={chartData.mapName}
             option={chartOption}
-            seriesData={seriesData}
+            seriesData={chartData.series.data || []}
             theme={theme || undefined}
           />
         ) : (

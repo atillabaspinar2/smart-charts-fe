@@ -12,6 +12,7 @@ import { DataGrid } from "./DataGrid";
 type Props = {
   data: MapChartData & { series: { data: { name: string; value: number }[] } };
   onChange: (data: MapChartData) => void;
+  onMapNameChange?: (mapName: string) => void;
   availableMaps: string[];
   registerApplyHandler?: (handler: (() => MapChartData) | null) => void;
 };
@@ -20,6 +21,7 @@ export const MapChartDataPanel: React.FC<Props> = ({
   data,
   onChange,
   availableMaps,
+  onMapNameChange,
   registerApplyHandler,
 }) => {
   // Always one category: "Value"
@@ -49,7 +51,13 @@ export const MapChartDataPanel: React.FC<Props> = ({
         <label className="block mb-1 text-sm font-medium">Map:</label>
         <Select
           value={data.mapName}
-          onValueChange={(value) => onChange({ ...data, mapName: value })}
+          onValueChange={(value) => {
+            if (onMapNameChange) {
+              onMapNameChange(value);
+            } else {
+              onChange({ ...data, mapName: value });
+            }
+          }}
         >
           <SelectTrigger className="min-w-40">
             <SelectValue />
