@@ -571,8 +571,10 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       >
         {type === "map" && chartData ? (
           <MapChart
+            keyMap={`${type}-${recordKey}-${id}-${theme || "default"}`}
             mapName={(chartData as MapChartData).mapName}
             regionData={(chartData as MapChartData).series?.data}
+            theme={theme || undefined}
             mapDataGenerated={(regions) => {
               onMapDataGenerated &&
                 onMapDataGenerated(data.instanceId, regions);

@@ -92,15 +92,11 @@ export const mapOptions = {
     text: "Map Chart",
     left: "center",
   },
-  animationDelayUpdate: function (idx: number) {
-    return idx * 100;
-  },
+
   tooltip: {
     trigger: "item",
   },
   visualMap: {
-    min: 0,
-    max: 1000,
     left: "left",
     top: "bottom",
     text: ["High", "Low"],
@@ -112,8 +108,6 @@ export const mapOptions = {
   series: [
     {
       visualMap: {
-        min: 0,
-        max: 1000,
         left: "left",
         top: "bottom",
         text: ["High", "Low"],

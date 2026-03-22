@@ -1,16 +1,20 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import * as echarts from "echarts";
 // import icelandGeoJson from "../assets/maps/iceland.geo.json";
 import { Spinner } from "./UILibrary/Spinner";
 
 interface MapChartProps {
+  keyMap: string;
+  theme?: string;
   mapName: string;
   regionData?: { name: string; value: number }[];
   mapDataGenerated?: (data: { name: string; value: number }[]) => void;
 }
 
 export const MapChart: React.FC<MapChartProps> = ({
+  keyMap,
+  theme,
   mapName,
   regionData,
   mapDataGenerated,
@@ -22,6 +26,15 @@ export const MapChart: React.FC<MapChartProps> = ({
   const [mapData, setMapData] = useState<{ name: string; value: number }[]>([]);
   const [opacity, setOpacity] = useState(0); // controls the map opacity in option
   const chartRef = React.useRef<ReactECharts>(null);
+
+  const min =
+    mapData && mapData.length > 0
+      ? Math.min(...mapData.map((d) => d.value))
+      : 0;
+  const max =
+    mapData && mapData.length > 0
+      ? Math.max(...mapData.map((d) => d.value))
+      : 1000;
 
   // get regions from geomap
 
@@ -56,23 +69,16 @@ export const MapChart: React.FC<MapChartProps> = ({
     tooltip: {
       trigger: "item",
     },
-    // visualMap: {
-    //   min: 0,
-    //   zoom: 1.5,
-    //   max: 1000,
-    //   left: "left",
-    //   top: "bottom",
-    //   text: ["High", "Low"],
-    //   calculable: true,
-    //   inRange: {
-    //     color: ["#e0f2fe", "#0369a1"], // Light blue to Dark blue
-    //   },
-    // },
+    aspectScale: 1.0,
 
     visualMap: {
       type: "piecewise",
+      left: "right",
+
       inRange: {
         color: ["#e0f2fe", "#0369a1"], // Light blue to Dark blue
+        //color light green to dark green
+        // color: ["#d1fae5", "#065f46"],
       },
       // pieces: [
       //   { gt: 600, label: "High Performance" },
@@ -81,10 +87,11 @@ export const MapChart: React.FC<MapChartProps> = ({
       // ],
     },
     animationDelayUpdate: function (idx: number) {
-      return idx * 100;
+      return idx * 10;
     },
     series: [
       {
+        // geoIndex: 0,
         name: `${mapName.charAt(0).toUpperCase() + mapName.slice(1)} Map`,
         type: "map",
         map: currentMapName,
@@ -143,6 +150,10 @@ export const MapChart: React.FC<MapChartProps> = ({
       if (chartRef?.current) {
         echartsInstance?.setOption(
           {
+            visualMap: {
+              min,
+              max,
+            },
             series: [
               {
                 itemStyle: { opacity: 1 },
@@ -176,11 +187,15 @@ export const MapChart: React.FC<MapChartProps> = ({
   }
 
   return (
-    <ReactECharts
-      ref={chartRef}
-      option={option}
-      echarts={echarts}
-      style={{ height: "100%", width: "100%" }}
-    />
+    <div style={{ height: "100%", width: "100%" }}>
+      <ReactECharts
+        key={keyMap}
+        ref={chartRef}
+        theme={theme}
+        option={option}
+        echarts={echarts}
+        style={{ height: "100%", width: "100%" }}
+      />
+    </div>
   );
 };
