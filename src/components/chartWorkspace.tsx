@@ -1401,6 +1401,31 @@ export const ChartWorkspace: React.FC<{
     "southameriaca",
   ];
 
+  const handleMapNameChange = async (mapName: string) => {
+    // When map changes, update draft data with new regions, but do not commit until Apply is clicked
+
+    if (!selectedChartInstanceId) return;
+    const current =
+      (chartDataDraftMap[selectedChartInstanceId] as MapChartData) ||
+      (chartDataMap[selectedChartInstanceId] as MapChartData);
+    if (current && current.mapName !== mapName) {
+      // Dynamically import getMapData
+      const { getMapData } = await import("./mapChartOptions");
+      const regions = await getMapData(mapName);
+      // Optionally, preserve values for matching regions
+      const prevData = current.series?.data || [];
+      const mergedRegions = regions.map((region) => {
+        const prev = prevData.find((r) => r.name === region.name);
+        return prev ? { ...region, value: prev.value } : region;
+      });
+      updateChartDataDraft(selectedChartInstanceId, {
+        ...current,
+        mapName,
+        series: { data: mergedRegions },
+      });
+    }
+  };
+
   const dataPanelBody = (
     <>
       {!selectedChart && (
@@ -1462,15 +1487,7 @@ export const ChartWorkspace: React.FC<{
           onChange={(nextData) => {
             updateChartDataDraft(selectedChartInstanceId, nextData);
           }}
-          onMapNameChange={(mapName) => {
-            // Update the committed data immediately when map changes
-            const current =
-              (chartDataDraftMap[selectedChartInstanceId] as MapChartData) ||
-              (chartDataMap[selectedChartInstanceId] as MapChartData);
-            if (current && current.mapName !== mapName) {
-              updateChartData(selectedChartInstanceId, { ...current, mapName }, { reanimate: true });
-            }
-          }}
+          onMapNameChange={handleMapNameChange}
           registerApplyHandler={(handler) => {
             dataPanelApplyHandlerRef.current = handler;
           }}

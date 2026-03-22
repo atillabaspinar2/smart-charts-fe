@@ -91,7 +91,10 @@ export const DataGrid: FC<DataGridProps> = ({
         const valueInput = gridElement.querySelector<HTMLInputElement>(
           `[data-grid-kind="value"][data-row-index="${rowIndex}"][data-col-index="${colIndex}"]`,
         );
-        const parsed = Number.parseFloat(valueInput?.value ?? "0");
+        let raw = valueInput?.value ?? "0";
+        // Remove commas and spaces, handle empty string as 0
+        raw = raw.replace(/,/g, "").trim();
+        const parsed = Number.parseFloat(raw);
         return Number.isFinite(parsed) ? parsed : 0;
       });
 
