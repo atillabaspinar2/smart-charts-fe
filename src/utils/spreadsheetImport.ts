@@ -26,13 +26,17 @@ export const readSheetRowsFromFile = async (
   }) as unknown[][];
 };
 
+import type { MapChartData } from "../components/chartTypes";
+
+
 export const buildChartDataFromSheetRows = (
   rows: unknown[][],
-  chartType: "line" | "bar" | "pie",
+  chartType: "line" | "bar" | "pie" | "map",
   instanceId: string,
   getThemeColor: (index: number) => string,
   orientation: DataOrientation = "columns-as-series",
-): LineChartData | BarChartData | PieChartData | null => {
+  _mapName?: string,
+): LineChartData | BarChartData | PieChartData | MapChartData | null => {
   if (rows.length < 2) return null;
 
   const normalizedRows = rows
@@ -42,6 +46,7 @@ export const buildChartDataFromSheetRows = (
   if (normalizedRows.length < 2) return null;
 
   const headers = normalizedRows[0].map((cell) => String(cell ?? "").trim());
+
   if (headers.length < 2) return null;
 
   const toNumber = (value: unknown): number => {
@@ -101,6 +106,26 @@ export const buildChartDataFromSheetRows = (
       data,
     } satisfies PieChartData;
   };
+
+  if (chartType === "map") {
+    // Use first cell of first row as map name, second as map title (optional)
+    const mapName = headers[0] || "world";
+    // const mapTitle = headers[1] || ""; // Not used, but available
+    const items = bodyRows
+      .map((row) => ({
+        name: String(row[0] ?? "").trim(),
+        value: toNumber(row[1]),
+      }))
+      .filter((item) => item.name !== "");
+    if (items.length === 0) return null;
+    return {
+      type: "map",
+      mapName,
+      series: {
+        data: items,
+      },
+    } satisfies MapChartData;
+  }
 
   if (chartType === "pie") {
     if (orientation === "rows-as-series") {

@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ColorPicker } from "../ui/ColorPicker";
 
 // Base type for all settings panels
 export interface BaseSettingsPanelProps {
@@ -102,14 +103,7 @@ export const CanvasSettingsPanel: FC<CanvasSettingsPanelProps> = ({
     <div className="mb-4">
       <Label className="mb-1 block text-sm font-medium">Background Color</Label>
       <div className="flex items-center gap-3">
-        <input
-          type="color"
-          aria-label="Background color"
-          title="Pick background color"
-          className="h-10 w-10 rounded-md border border-gray-300 bg-white p-1 cursor-pointer"
-          value={backgroundColor}
-          onChange={(e) => setBackgroundColor(e.target.value)}
-        />
+        <ColorPicker color={backgroundColor} onChange={setBackgroundColor} />
         <span className="text-sm text-gray-600 uppercase">
           {backgroundColor}
         </span>

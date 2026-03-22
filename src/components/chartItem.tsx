@@ -7,17 +7,23 @@ import {
   type LineChartSettings,
   type BarChartSettings,
   type PieChartSettings,
+  type MapChartSettings,
   type ReanimateSignal,
   defaultPieChartSettings,
 } from "./chartTypes";
 import { getOptionsByType } from "./chartOptionTemplates";
 import { ChartContextMenu } from "./chartContextMenu";
+import { MapChart } from "./MapChart";
 
 interface ChartItemProps {
   data: ChartItemData;
   reanimateSignal: ReanimateSignal | null;
   reanimateAllKey: number;
-  settings: LineChartSettings | BarChartSettings | PieChartSettings;
+  settings:
+    | LineChartSettings
+    | BarChartSettings
+    | PieChartSettings
+    | MapChartSettings;
   chartData?: ChartData;
   onSelectChart: (instanceId: string) => void;
   position: { x: number; y: number };
@@ -36,6 +42,10 @@ interface ChartItemProps {
   mediaType: string;
   theme?: string;
   pieSettings?: PieChartSettings;
+  onMapDataGenerated?: (
+    instanceId: string,
+    regions: { name: string; value: number }[],
+  ) => void;
 }
 
 export const ChartItem: React.FC<ChartItemProps> = React.memo(
@@ -64,8 +74,9 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     pieSettings,
   }) => {
     const { id, type } = data;
-    const chartRef = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const chartRef = useRef<any>(null);
+    const mapChartRef = useRef<any>(null);
     const dragPreviewRef = useRef({ dx: 0, dy: 0 });
     const dragRafRef = useRef<number | null>(null);
     const didDragRef = useRef(false);
@@ -135,8 +146,10 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         requestAnimationFrame(() => requestAnimationFrame(r)),
       );
 
-      const echartsInstance: any =
-        chartRef.current && chartRef.current.getEchartsInstance();
+      let echartsInstance: any = chartRef.current?.getEchartsInstance?.();
+      if (!echartsInstance && mapChartRef.current?.getEchartsInstance) {
+        echartsInstance = mapChartRef.current.getEchartsInstance();
+      }
       const canvas = echartsInstance?.getDom()?.querySelector("canvas");
 
       if (canvas) {
@@ -154,8 +167,10 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     };
 
     const captureImage = () => {
-      const echartsInstance: any =
-        chartRef.current && chartRef.current.getEchartsInstance();
+      let echartsInstance: any = chartRef.current?.getEchartsInstance?.();
+      if (!echartsInstance && mapChartRef.current?.getEchartsInstance) {
+        echartsInstance = mapChartRef.current.getEchartsInstance();
+      }
       const canvas: HTMLCanvasElement | null = echartsInstance
         ?.getDom()
         ?.querySelector("canvas");
@@ -183,7 +198,9 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       hasTheme && settings.backgroundColor === "#ffffff"
         ? undefined
         : settings.backgroundColor;
-    const chartOption = {
+
+    // For map charts, ensure option.series[0].map is set to chartData.mapName
+    let chartOption = {
       ...opts,
       title: {
         ...(opts.title || {}),
@@ -200,12 +217,20 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         // fontSize intentionally omitted from global textStyle
       },
       backgroundColor: effectiveBackgroundColor,
-      animation: animateOnNextMount,
-      animationDuration: animateOnNextMount
-        ? (settings.animationDuration ?? opts.animationDuration)
-        : 0,
-      animationDurationUpdate: 0,
     };
+    if (type === "map" && chartData && chartData.type === "map") {
+      if (chartOption.series && chartOption.series[0]) {
+        chartOption = {
+          ...chartOption,
+          series: [
+            {
+              ...chartOption.series[0],
+              map: chartData.mapName,
+            },
+          ],
+        };
+      }
+    }
 
     const {
       left: _legendLeft,
@@ -556,19 +581,30 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           zIndex,
         }}
       >
-        <ReactECharts
-          ref={chartRef}
-          key={`${type}-${recordKey}-${id}-${theme || "default"}`}
-          option={chartOption}
-          // @ts-ignore: preserveDrawingBuffer is valid for the underlying canvas
-          opts={{ renderer: "canvas", preserveDrawingBuffer: true }}
-          theme={theme || undefined}
-          style={{
-            width: "100%",
-            height: "100%",
-            background: effectiveBackgroundColor || "transparent",
-          }}
-        />
+        {type === "map" && chartData && chartData.type === "map" ? (
+          <MapChart
+            ref={mapChartRef}
+            keyMap={`${type}-${recordKey}-${id}-${theme || "default"}`}
+            mapName={chartData.mapName}
+            option={chartOption}
+            seriesData={chartData.series.data || []}
+            theme={theme || undefined}
+          />
+        ) : (
+          <ReactECharts
+            ref={chartRef}
+            key={`${type}-${recordKey}-${id}-${theme || "default"}`}
+            option={chartOption}
+            // @ts-ignore: preserveDrawingBuffer is valid for the underlying canvas
+            opts={{ renderer: "canvas", preserveDrawingBuffer: true }}
+            theme={theme || undefined}
+            style={{
+              width: "100%",
+              height: "100%",
+              background: effectiveBackgroundColor || "transparent",
+            }}
+          />
+        )}
         <div
           data-no-drag="true"
           className={`absolute top-2 left-2 z-40 transition-opacity ${

@@ -16,6 +16,8 @@ import { getOptionsByType } from "./chartOptionTemplates";
 import { LineChartDataPanel } from "./dataUI/lineChartDataPanel";
 import { BarChartDataPanel } from "./dataUI/barChartDataPanel";
 import { PieChartDataPanel } from "./dataUI/pieChartDataPanel";
+import { MapChartDataPanel } from "./dataUI/mapChartDataPanel";
+import type { MapChartData } from "./chartTypes";
 import {
   buildChartDataFromSheetRows,
   readSheetRowsFromFile,
@@ -30,10 +32,12 @@ import {
   type PieChartSettings,
   type LineChartSettings,
   type BarChartSettings,
+  type MapChartSettings,
   type ReanimateSignal,
   defaultPieChartSettings,
   defaultLineChartSettings,
   defaultBarChartSettings,
+  defaultMapChartSettings,
 } from "./chartTypes";
 
 const defaultChartSize = {
@@ -91,7 +95,10 @@ export const ChartWorkspace: React.FC<{
     Record<string, boolean>
   >({});
   const [chartSettingsMap, setChartSettingsMap] = useState<
-    Record<string, LineChartSettings | BarChartSettings | PieChartSettings>
+    Record<
+      string,
+      LineChartSettings | BarChartSettings | PieChartSettings | MapChartSettings
+    >
   >({});
   const [mediaType, setMediaType] = useState<string>("webm");
   const [reanimateSignal, setReanimateSignal] =
@@ -188,7 +195,8 @@ export const ChartWorkspace: React.FC<{
   };
 
   const initializeChartData = (instanceId: string, type: string) => {
-    if (type !== "line" && type !== "bar" && type !== "pie") return;
+    if (type !== "line" && type !== "bar" && type !== "pie" && type !== "map")
+      return;
 
     if (type === "pie") {
       const templateOptions: any = getOptionsByType(type);
@@ -254,6 +262,19 @@ export const ChartWorkspace: React.FC<{
                 values: [5, 20, 36, 10, 10],
               },
             ],
+      };
+
+      commitChartData(instanceId, nextData);
+      return;
+    }
+
+    if (type === "map") {
+      const nextData: MapChartData & {
+        series: { data: { name: string; value: number }[] };
+      } = {
+        type: "map",
+        mapName: "iceland",
+        series: { data: [] },
       };
 
       commitChartData(instanceId, nextData);
@@ -400,12 +421,17 @@ export const ChartWorkspace: React.FC<{
   const getChartSettings = (
     instanceId: string,
     type?: string,
-  ): LineChartSettings | BarChartSettings | PieChartSettings => {
+  ):
+    | LineChartSettings
+    | BarChartSettings
+    | PieChartSettings
+    | MapChartSettings => {
     const settings = chartSettingsMap[instanceId];
     if (settings) return settings;
     if (type === "pie") return defaultPieChartSettings;
     if (type === "bar") return defaultBarChartSettings;
     if (type === "line") return defaultLineChartSettings;
+    if (type === "map") return defaultMapChartSettings;
     return defaultLineChartSettings; // fallback
   };
 
@@ -479,7 +505,8 @@ export const ChartWorkspace: React.FC<{
       if (
         (chart.type === "line" ||
           chart.type === "bar" ||
-          chart.type === "pie") &&
+          chart.type === "pie" ||
+          chart.type === "map") &&
         !chartDataMap[chart.instanceId]
       ) {
         initializeChartData(chart.instanceId, chart.type);
@@ -1115,7 +1142,7 @@ export const ChartWorkspace: React.FC<{
     targetChartInstanceId: string | null,
   ) => {
     if (!targetChartInstanceId) {
-      window.alert("Select a line, bar, or pie chart first.");
+      window.alert("Select a chart first.");
       return;
     }
 
@@ -1126,10 +1153,11 @@ export const ChartWorkspace: React.FC<{
       !selected ||
       (selected.type !== "line" &&
         selected.type !== "bar" &&
-        selected.type !== "pie")
+        selected.type !== "pie" &&
+        selected.type !== "map")
     ) {
       window.alert(
-        "Import is currently available only for line, bar, and pie charts.",
+        "Import is currently available only for line, bar, pie, and map charts.",
       );
       return;
     }
@@ -1137,26 +1165,59 @@ export const ChartWorkspace: React.FC<{
     try {
       const rows = await readSheetRowsFromFile(file);
 
-      const nextData = buildChartDataFromSheetRows(
-        rows,
-        selected.type,
-        selected.instanceId,
-        getThemeColor,
-        chartDataOrientationMap[selected.instanceId] || "columns-as-series",
-      );
+      let nextData;
+      if (selected.type === "map") {
+        // Extract map name from file name (remove extension)
+        let mapName = file.name.split(".")[0];
+        // fallback to settings if file name is empty
+        if (!mapName) {
+          const mapSettings = chartSettingsMap[selected.instanceId] as
+            | MapChartSettings
+            | undefined;
+          mapName = mapSettings?.mapName || "world";
+        }
+        nextData = buildChartDataFromSheetRows(
+          rows,
+          "map",
+          selected.instanceId,
+          getThemeColor,
+          undefined,
+          mapName,
+        );
+      } else {
+        nextData = buildChartDataFromSheetRows(
+          rows,
+          selected.type,
+          selected.instanceId,
+          getThemeColor,
+          chartDataOrientationMap[selected.instanceId] || "columns-as-series",
+        );
+      }
 
-      const hasImportedData =
-        nextData?.type === "pie"
-          ? nextData.data.length > 0
-          : Boolean(nextData && nextData.series.length > 0);
+      let hasImportedData = false;
+      if (nextData?.type === "pie") {
+        hasImportedData = nextData.data.length > 0;
+      } else if (nextData?.type === "map") {
+        hasImportedData =
+          Array.isArray(nextData.series?.data) &&
+          nextData.series.data.length > 0;
+      } else {
+        hasImportedData = Boolean(nextData && nextData.series.length > 0);
+      }
 
       if (!nextData || !hasImportedData) {
-        const isPie = selected.type === "pie";
-        window.alert(
-          isPie
-            ? "Could not map this file. For pie charts, expected header row + at least one data row with label in the first column and numeric value in the second column."
-            : "Could not map this file. Expected header row + at least one data row with one x-axis column and one or more numeric series columns.",
-        );
+        let message = "Could not map this file.";
+        if (selected.type === "pie") {
+          message =
+            "Could not map this file. For pie charts, expected header row + at least one data row with label in the first column and numeric value in the second column.";
+        } else if (selected.type === "map") {
+          message =
+            "Could not map this file. For map charts, expected header row + at least one data row with region name in the first column and numeric value in the second column.";
+        } else {
+          message =
+            "Could not map this file. Expected header row + at least one data row with one x-axis column and one or more numeric series columns.";
+        }
+        window.alert(message);
         return;
       }
 
@@ -1325,6 +1386,46 @@ export const ChartWorkspace: React.FC<{
     </div>
   );
 
+  // List of available maps (from assets/maps)
+  const availableMaps = [
+    "germany",
+    "iceland",
+    "usa",
+    "turkiye",
+    "africa",
+    "contitents",
+    "countries",
+    "russia",
+    "europe",
+    "european-union",
+    "southameriaca",
+  ];
+
+  const handleMapNameChange = async (mapName: string) => {
+    // When map changes, update draft data with new regions, but do not commit until Apply is clicked
+
+    if (!selectedChartInstanceId) return;
+    const current =
+      (chartDataDraftMap[selectedChartInstanceId] as MapChartData) ||
+      (chartDataMap[selectedChartInstanceId] as MapChartData);
+    if (current && current.mapName !== mapName) {
+      // Dynamically import getMapData
+      const { getMapData } = await import("./mapChartOptions");
+      const regions = await getMapData(mapName);
+      // Optionally, preserve values for matching regions
+      const prevData = current.series?.data || [];
+      const mergedRegions = regions.map((region) => {
+        const prev = prevData.find((r) => r.name === region.name);
+        return prev ? { ...region, value: prev.value } : region;
+      });
+      updateChartDataDraft(selectedChartInstanceId, {
+        ...current,
+        mapName,
+        series: { data: mergedRegions },
+      });
+    }
+  };
+
   const dataPanelBody = (
     <>
       {!selectedChart && (
@@ -1342,9 +1443,6 @@ export const ChartWorkspace: React.FC<{
           onChange={(nextData) =>
             updateChartDataDraft(selectedChartInstanceId, nextData)
           }
-          registerApplyHandler={(handler) => {
-            dataPanelApplyHandlerRef.current = handler;
-          }}
           themeColors={activeThemeColors}
         />
       )}
@@ -1380,10 +1478,28 @@ export const ChartWorkspace: React.FC<{
         />
       )}
 
+      {selectedChart?.type === "map" && selectedChartInstanceId && (
+        <MapChartDataPanel
+          data={
+            (chartDataDraftMap[selectedChartInstanceId] as MapChartData) ||
+            (chartDataMap[selectedChartInstanceId] as MapChartData)
+          }
+          onChange={(nextData) => {
+            updateChartDataDraft(selectedChartInstanceId, nextData);
+          }}
+          onMapNameChange={handleMapNameChange}
+          registerApplyHandler={(handler) => {
+            dataPanelApplyHandlerRef.current = handler;
+          }}
+          availableMaps={availableMaps}
+        />
+      )}
+
       {selectedChart &&
         selectedChart.type !== "line" &&
         selectedChart.type !== "bar" &&
-        selectedChart.type !== "pie" && (
+        selectedChart.type !== "pie" &&
+        selectedChart.type !== "map" && (
           <p className="text-sm text-gray-600">
             Data editing for {selectedChart.type} charts is not implemented yet.
           </p>
@@ -1499,6 +1615,7 @@ export const ChartWorkspace: React.FC<{
               mediaType={mediaType}
               theme={workspaceTheme || undefined}
               pieSettings={getPieSettings(c.instanceId)}
+              // onMapDataGenerated removed: map data is now fully managed in workspace
             />
           ))}
         </div>
@@ -1674,8 +1791,7 @@ export const ChartWorkspace: React.FC<{
               updateChartSettings(selectedChartInstanceId, { lineArea: value })
             }
             selectedChartType={
-              charts.find((c) => c.instanceId === selectedChartInstanceId)
-                ?.type || ""
+              charts.find((c) => c.instanceId === selectedChartInstanceId)?.type
             }
             dataOrientation={selectedChartDataOrientation}
             setDataOrientation={handleChangeDataOrientation}
@@ -1699,7 +1815,10 @@ export const ChartWorkspace: React.FC<{
               setChartSettingsMap((prev) => {
                 const next: Record<
                   string,
-                  LineChartSettings | BarChartSettings | PieChartSettings
+                  | LineChartSettings
+                  | BarChartSettings
+                  | PieChartSettings
+                  | MapChartSettings
                 > = {};
                 Object.entries(prev).forEach(([instanceId, settings]) => {
                   next[instanceId] = { ...settings, fontFamily: value };
@@ -1713,7 +1832,10 @@ export const ChartWorkspace: React.FC<{
               setChartSettingsMap((prev) => {
                 const next: Record<
                   string,
-                  LineChartSettings | BarChartSettings | PieChartSettings
+                  | LineChartSettings
+                  | BarChartSettings
+                  | PieChartSettings
+                  | MapChartSettings
                 > = {};
                 Object.entries(prev).forEach(([instanceId, settings]) => {
                   next[instanceId] = { ...settings, fontSize: value };

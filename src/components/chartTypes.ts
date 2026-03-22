@@ -1,3 +1,11 @@
+// Map chart data type
+export interface MapChartData {
+  type: "map";
+  mapName: string;
+  series: {
+    data: { name: string; value: number }[];
+  };
+}
 export interface ChartItemData {
   id: number;
   instanceId: string;
@@ -27,6 +35,12 @@ export interface LineChartSettings extends ChartSettingsBase {
   lineSmooth: boolean;
   lineStep: boolean;
   lineArea: boolean;
+}
+
+// Map charts specific settings
+export interface MapChartSettings extends ChartSettingsBase {
+  mapName: string;
+  regionColor?: string;
 }
 
 // Bar chart specific settings
@@ -151,7 +165,25 @@ export const defaultPieChartSettings: PieChartSettings = {
   showLabel: false,
 };
 
-export type ChartData = LineChartData | BarChartData | PieChartData;
+export const defaultMapChartSettings: MapChartSettings = {
+  animationDuration: 1000,
+  backgroundColor: "#ffffff",
+  title: "",
+  fontFamily: "Inter, sans-serif",
+  fontSize: 14,
+  showLegend: true,
+  legendTop: "top",
+  legendLeft: "center",
+  legendOrient: "horizontal",
+  mapName: "world",
+  regionColor: undefined,
+};
+
+export type ChartData =
+  | LineChartData
+  | BarChartData
+  | PieChartData
+  | MapChartData;
 
 export interface ReanimateSignal {
   instanceId: string;

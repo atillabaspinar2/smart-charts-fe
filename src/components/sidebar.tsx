@@ -1,9 +1,8 @@
 import {
   BarChart,
   PieChart,
-  ChartScatterIcon,
   LineChart,
-  ChartRadarIcon,
+  GlobalSearchIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Tooltip } from "./UILibrary/Tooltip";
@@ -65,6 +64,18 @@ export const Sidebar: React.FC<{
         </Tooltip>
       </li>
       <li>
+        <Tooltip content="Map chart">
+          <div
+            draggable
+            onDragStart={(e) => e.dataTransfer.setData("chartType", "map")}
+            onClick={() => onSelectForMobilePlacement("map")}
+            className={getItemClassName("map")}
+          >
+            <HugeiconsIcon icon={GlobalSearchIcon} />
+          </div>
+        </Tooltip>
+      </li>
+      {/* <li>
         <Tooltip content="Scatter chart">
           <div
             draggable
@@ -75,8 +86,8 @@ export const Sidebar: React.FC<{
             <HugeiconsIcon icon={ChartScatterIcon} />
           </div>
         </Tooltip>
-      </li>
-      <li>
+      </li> */}
+      {/* <li>
         <Tooltip content="Radar chart">
           <div
             draggable
@@ -87,7 +98,7 @@ export const Sidebar: React.FC<{
             <HugeiconsIcon icon={ChartRadarIcon} />
           </div>
         </Tooltip>
-      </li>
+      </li> */}
     </ul>
   );
 };
