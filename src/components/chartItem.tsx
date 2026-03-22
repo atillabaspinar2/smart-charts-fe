@@ -583,7 +583,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       >
         {type === "map" && chartData && chartData.type === "map" ? (
           <MapChart
-            ref={mapChartRef}
+            chartRef={mapChartRef}
             keyMap={`${type}-${recordKey}-${id}-${theme || "default"}`}
             mapName={chartData.mapName}
             option={chartOption}

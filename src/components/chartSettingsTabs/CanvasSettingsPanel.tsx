@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ColorPicker } from "../ui/ColorPicker";
+import { ColorPicker } from "../ui/colorpicker";
 
 // Base type for all settings panels
 export interface BaseSettingsPanelProps {

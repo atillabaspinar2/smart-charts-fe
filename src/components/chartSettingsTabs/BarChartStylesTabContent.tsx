@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import type { DataOrientation } from "@/utils/spreadsheetImport";
-import { ColorPicker } from "../ui/ColorPicker";
+import { ColorPicker } from "../ui/colorpicker";
 
 export interface BarChartStylesTabContentProps {
   dataOrientation?: DataOrientation;
