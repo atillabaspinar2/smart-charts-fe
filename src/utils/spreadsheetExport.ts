@@ -3,7 +3,7 @@ import type { MapChartData } from "../components/chartTypes";
 // Utility to convert MapChartData to CSV string
 export function mapChartDataToCSV(data: MapChartData): string {
   const rows = ["Region,Value"];
-  (data.series?.data || []).forEach(region => {
+  (data.series?.data || []).forEach((region) => {
     rows.push(`"${region.name}",${region.value}`);
   });
   return rows.join("\n");
@@ -23,7 +23,10 @@ export function downloadCSVFile(csv: string, filename: string) {
 }
 
 // Main export function for MapChartData
-export function exportMapChartDataToCSV(data: MapChartData, filename = "map-data.csv") {
+export function exportMapChartDataToCSV(
+  data: MapChartData,
+  filename = "map-data.csv",
+) {
   const csv = mapChartDataToCSV(data);
   downloadCSVFile(csv, filename);
 }

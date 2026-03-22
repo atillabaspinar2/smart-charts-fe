@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { forwardRef, useEffect, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import * as echarts from "echarts";
 import { cloneDeep } from "lodash";
@@ -13,142 +13,144 @@ interface MapChartProps {
   seriesData: any;
 }
 
-export const MapChart: React.FC<MapChartProps> = ({
-  keyMap,
-  theme,
-  option,
-  seriesData,
-}) => {
-  const [mapReady, setMapReady] = useState(false);
-  const [registeredMapName, setRegisteredMapName] = useState<string | null>(
-    null,
-  );
-  const [readyForAnimate, setReadyForAnimate] = useState(false);
-  const [finalOption, setFinalOption] = useState(option);
-  const chartRef = React.useRef<ReactECharts>(null);
+export const MapChart = forwardRef<ReactECharts, MapChartProps>(
+  (props, ref) => {
+    const { keyMap, theme, option, seriesData } = props;
+    const [mapReady, setMapReady] = useState(false);
+    const [registeredMapName, setRegisteredMapName] = useState<string | null>(
+      null,
+    );
+    const [readyForAnimate, setReadyForAnimate] = useState(false);
+    const [finalOption, setFinalOption] = useState(option);
 
-  const mapName = option.series[0].map;
-  const mapData = seriesData || [];
+    const mapName = option.series[0].map;
+    const mapData = seriesData || [];
 
-  useEffect(() => {
-    setMapReady(false);
-    setReadyForAnimate(false);
+    useEffect(() => {
+      setMapReady(false);
+      setReadyForAnimate(false);
 
-    let isMounted = true;
-    const registered = echarts.getMap(mapName);
-    if (registered && registered.geoJson) {
-      if (isMounted) {
-        setMapReady(true);
-        setRegisteredMapName(mapName);
-      }
-      return;
-    }
-    import(`../assets/maps/${mapName}.geo.json`)
-      .then((geoJson) => {
-        echarts.registerMap(mapName, geoJson.default || geoJson);
+      let isMounted = true;
+      const registered = echarts.getMap(mapName);
+      if (registered && registered.geoJson) {
         if (isMounted) {
           setMapReady(true);
           setRegisteredMapName(mapName);
         }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setMapReady(false);
-          setReadyForAnimate(false);
-        }
-        console.error(`Map ${mapName} not found`);
-      });
-    return () => {
-      isMounted = false;
-    };
-  }, [mapName]);
+        return;
+      }
+      import(`../assets/maps/${mapName}.geo.json`)
+        .then((geoJson) => {
+          echarts.registerMap(mapName, geoJson.default || geoJson);
+          if (isMounted) {
+            setMapReady(true);
+            setRegisteredMapName(mapName);
+          }
+        })
+        .catch(() => {
+          if (isMounted) {
+            setMapReady(false);
+            setReadyForAnimate(false);
+          }
+          console.error(`Map ${mapName} not found`);
+        });
+      return () => {
+        isMounted = false;
+      };
+    }, [mapName]);
 
-  useEffect(() => {
-    if (!mapReady || registeredMapName !== mapName) return;
-    // Deep clone the option to avoid mutating props and preserve functions
-    const newOption = cloneDeep(option);
-    if (mapData.length === 0) {
+    useEffect(() => {
+      if (!mapReady || registeredMapName !== mapName) return;
+      // Deep clone the option to avoid mutating props and preserve functions
+      const newOption = cloneDeep(option);
       const registered = echarts.getMap(mapName);
       const regions =
         registered && registered.geoJson
           ? registered.geoJson.features.map((f: any) => f.properties.name)
           : [];
-      newOption.series[0].data = regions.map((name: string) => ({
-        name,
-        value: 0,
-      }));
-    } else {
-      newOption.series[0].data = mapData;
-    }
-    const min =
-      mapData && mapData.length > 0
-        ? Math.min(...mapData.map((d) => d.value))
-        : 0;
-    const max =
-      mapData && mapData.length > 0
-        ? Math.max(...mapData.map((d) => d.value))
-        : 1000;
-    newOption.visualMap.min = min;
-    newOption.visualMap.max = max;
-    newOption.series[0].itemStyle.opacity = 0;
-    setFinalOption(newOption);
-    setReadyForAnimate(true);
-  }, [option, mapReady, mapData, mapName, registeredMapName]);
 
-  const triggerAnimate = () => {
-    // First, set opacity to 0 (forces rerender with transparent map)
-    const echartsInstance = chartRef?.current?.getEchartsInstance();
-    setTimeout(() => {
-      if (chartRef?.current) {
-        echartsInstance?.setOption(
-          {
-            series: [
-              {
-                itemStyle: { opacity: 1 },
-                animationDelayUpdate: (idx: number) => idx * 100,
-              },
-            ],
-          },
-          false,
+      if (mapData.length === 0) {
+        newOption.series[0].data = regions.map((name: string) => ({
+          name,
+          value: 0,
+        }));
+      } else {
+        newOption.series[0].data = mapData.filter((region: any) =>
+          regions.includes(region.name),
         );
       }
-    }, 50); // delay to ensure the first update with opacity 0 is applied
-  };
+      const min =
+        mapData && mapData.length > 0
+          ? Math.min(...mapData.map((d) => d.value))
+          : 0;
+      const max =
+        mapData && mapData.length > 0
+          ? Math.max(...mapData.map((d) => d.value))
+          : 1000;
+      newOption.visualMap.min = min;
+      newOption.visualMap.max = max;
+      newOption.series[0].itemStyle.opacity = 0;
+      setFinalOption(newOption);
+      setReadyForAnimate(true);
+    }, [option, mapReady, mapData, mapName, registeredMapName]);
 
-  useEffect(() => {
-    if (!readyForAnimate) return;
+    const triggerAnimate = () => {
+      // First, set opacity to 0 (forces rerender with transparent map)
+      const echartsInstance = ref?.current?.getEchartsInstance();
+      setTimeout(() => {
+        if (ref?.current) {
+          echartsInstance?.setOption(
+            {
+              series: [
+                {
+                  itemStyle: { opacity: 1 },
+                  animationDelayUpdate: (idx: number) => idx * 100,
+                },
+              ],
+            },
+            false,
+          );
+        }
+      }, 50); // delay to ensure the first update with opacity 0 is applied
+    };
 
-    // Try again after a short delay
-    setTimeout(triggerAnimate, 50);
+    useEffect(() => {
+      if (!readyForAnimate) return;
 
-    return;
-  }, [option, readyForAnimate]);
+      // Try again after a short delay
+      setTimeout(triggerAnimate, 50);
 
-  if (!mapReady || registeredMapName !== mapName) {
+      return;
+    }, [option, readyForAnimate]);
+
+    if (!mapReady || registeredMapName !== mapName) {
+      return (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+          }}
+        >
+          <Spinner size={40} />
+        </div>
+      );
+    }
+
     return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "100%",
-        }}
-      >
-        <Spinner size={40} />
+      <div style={{ height: "100%", width: "100%" }}>
+        <ReactECharts
+          key={keyMap}
+          ref={ref}
+          theme={theme}
+          option={finalOption}
+          echarts={echarts}
+          style={{ height: "100%", width: "100%" }}
+        />
       </div>
     );
-  }
+  },
+);
 
-  return (
-    <div style={{ height: "100%", width: "100%" }}>
-      <ReactECharts
-        key={keyMap}
-        ref={chartRef}
-        theme={theme}
-        option={finalOption}
-        echarts={echarts}
-        style={{ height: "100%", width: "100%" }}
-      />
-    </div>
-  );
-};
+export default MapChart;

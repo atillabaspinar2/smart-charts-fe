@@ -52,7 +52,12 @@ export const MapChartDataPanel: React.FC<Props> = ({
         <button
           type="button"
           className="rounded bg-blue-500 text-white px-3 py-1 text-xs font-medium hover:bg-blue-600"
-          onClick={() => exportMapChartDataToCSV(mapRowsToMapChartData(series), `${data.mapName || "map"}-data.csv`)}
+          onClick={() =>
+            exportMapChartDataToCSV(
+              mapRowsToMapChartData(series),
+              `${data.mapName || "map"}-data.csv`,
+            )
+          }
         >
           Export
         </button>

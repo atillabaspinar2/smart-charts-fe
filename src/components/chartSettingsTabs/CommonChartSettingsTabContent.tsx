@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ColorPicker } from "../ui/ColorPicker";
 
 export interface CommonChartSettingsTabContentProps {
   chartLabel: string;
@@ -83,13 +84,9 @@ export const CommonChartSettingsTabContent: FC<
           Background Color
         </Label>
         <div className="flex items-center gap-3">
-          <input
-            type="color"
-            aria-label="Background color"
-            title="Pick background color"
-            className="h-10 w-10 rounded-md border border-gray-300 bg-white p-1 cursor-pointer"
-            value={backgroundColor}
-            onChange={(e) => setBackgroundColor(e.target.value)}
+          <ColorPicker
+            color={backgroundColor}
+            onChange={(color) => setBackgroundColor(color)}
           />
           <span className="text-sm text-gray-600 uppercase">
             {backgroundColor}

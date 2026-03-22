@@ -2,6 +2,7 @@ import type { FC } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import type { DataOrientation } from "@/utils/spreadsheetImport";
+import { ColorPicker } from "../ui/ColorPicker";
 
 export interface BarChartStylesTabContentProps {
   dataOrientation?: DataOrientation;
@@ -43,14 +44,11 @@ export const BarChartStylesTabContent: FC<BarChartStylesTabContentProps> = ({
           Bar Background Color
         </Label>
         <div className="flex items-center gap-3">
-          <input
-            type="color"
-            aria-label="Bar background color"
-            title="Pick bar background color"
-            className="h-10 w-10 rounded-md border border-gray-300 bg-white p-1 cursor-pointer"
-            value={barBackgroundColor}
-            onChange={(e) => setBarBackgroundColor(e.target.value)}
+          <ColorPicker
+            color={barBackgroundColor}
+            onChange={(color) => setBarBackgroundColor(color)}
           />
+
           <span className="text-sm text-gray-600 uppercase">
             {barBackgroundColor}
           </span>

@@ -76,6 +76,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     const { id, type } = data;
     const containerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<any>(null);
+    const mapChartRef = useRef<any>(null);
     const dragPreviewRef = useRef({ dx: 0, dy: 0 });
     const dragRafRef = useRef<number | null>(null);
     const didDragRef = useRef(false);
@@ -145,8 +146,10 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         requestAnimationFrame(() => requestAnimationFrame(r)),
       );
 
-      const echartsInstance: any =
-        chartRef.current && chartRef.current.getEchartsInstance();
+      let echartsInstance: any = chartRef.current?.getEchartsInstance?.();
+      if (!echartsInstance && mapChartRef.current?.getEchartsInstance) {
+        echartsInstance = mapChartRef.current.getEchartsInstance();
+      }
       const canvas = echartsInstance?.getDom()?.querySelector("canvas");
 
       if (canvas) {
@@ -164,8 +167,10 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     };
 
     const captureImage = () => {
-      const echartsInstance: any =
-        chartRef.current && chartRef.current.getEchartsInstance();
+      let echartsInstance: any = chartRef.current?.getEchartsInstance?.();
+      if (!echartsInstance && mapChartRef.current?.getEchartsInstance) {
+        echartsInstance = mapChartRef.current.getEchartsInstance();
+      }
       const canvas: HTMLCanvasElement | null = echartsInstance
         ?.getDom()
         ?.querySelector("canvas");
@@ -578,6 +583,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       >
         {type === "map" && chartData && chartData.type === "map" ? (
           <MapChart
+            ref={mapChartRef}
             keyMap={`${type}-${recordKey}-${id}-${theme || "default"}`}
             mapName={chartData.mapName}
             option={chartOption}
