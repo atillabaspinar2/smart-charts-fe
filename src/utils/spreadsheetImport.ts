@@ -28,7 +28,6 @@ export const readSheetRowsFromFile = async (
 
 import type { MapChartData } from "../components/chartTypes";
 
-
 export const buildChartDataFromSheetRows = (
   rows: unknown[][],
   chartType: "line" | "bar" | "pie" | "map",
@@ -109,7 +108,7 @@ export const buildChartDataFromSheetRows = (
 
   if (chartType === "map") {
     // Use first cell of first row as map name, second as map title (optional)
-    const mapName = headers[0] || "world";
+    const mapName = headers[0] || "countries";
     // const mapTitle = headers[1] || ""; // Not used, but available
     const items = bodyRows
       .map((row) => ({

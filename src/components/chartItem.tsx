@@ -11,6 +11,7 @@ import {
   type ReanimateSignal,
   defaultPieChartSettings,
   defaultMapChartSettings,
+  type MapChartData,
 } from "./chartTypes";
 import { getOptionsByType } from "./chartOptionTemplates";
 import { ChartContextMenu } from "./chartContextMenu";
@@ -221,8 +222,10 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     if (type === "map" && chartData && chartData.type === "map") {
       const updatedMapSettings = mapSettings ?? defaultMapChartSettings;
 
-      if (chartOption.series && chartOption.series[0]) {
+      const mapChartData = chartData as MapChartData;
+      if (mapChartData.series && mapChartData.series.data) {
         chartOption = {
+          mapName: chartData.mapName, // Ensure mapName is set in option for MapChart
           ...chartOption,
           visualMap: {
             ...chartOption.visualMap,
@@ -237,6 +240,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           series: [
             {
               ...chartOption.series[0],
+              map: chartData.mapName,
               animationDelayUpdate: (idx: number) =>
                 idx * (updatedMapSettings?.animationDelayUpdateValue || 100),
 
@@ -249,6 +253,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
                   updatedMapSettings.labelFontSize ||
                   chartOption.series[0].label?.fontSize,
               },
+              data: chartData.series.data,
             },
           ],
         };

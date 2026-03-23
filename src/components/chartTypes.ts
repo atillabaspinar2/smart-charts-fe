@@ -175,12 +175,12 @@ export const defaultPieChartSettings: PieChartSettings = {
 };
 
 export const defaultMapChartSettings: MapChartSettings = {
-  mapName: "iceland",
+  mapName: "countries",
   regionColor: "#c23531",
-  animationDelayUpdateValue: 100,
-  showLabel: true,
-  labelFontColor: "#ccc",
-  labelFontSize: 16,
+  animationDelayUpdateValue: 50,
+  showLabel: false,
+  labelFontColor: "#000",
+  labelFontSize: 10,
   animationDuration: 0,
   backgroundColor: "",
   title: "",

@@ -37,8 +37,8 @@ export const colorRanges: { [key: string]: string[] } = {
 };
 
 export const defaultMapOptions = (mapName?: string) => {
-  // Default to 'iceland' if not provided
-  const effectiveMapName = mapName || "iceland";
+  // Default to 'countries' if not provided
+  const effectiveMapName = mapName || "countries";
 
   return {
     title: {
@@ -68,9 +68,9 @@ export const defaultMapOptions = (mapName?: string) => {
         map: effectiveMapName,
         roam: true,
         label: {
-          color: "red",
-          fontSize: 25,
-          show: true,
+          color: "black",
+          fontSize: 10,
+          show: false,
           // show val in tooltip instead of label
           // formatter: "{b}: {c}",
           formatter: "{c}",

@@ -278,7 +278,7 @@ export const ChartWorkspace: React.FC<{
         series: { data: { name: string; value: number }[] };
       } = {
         type: "map",
-        mapName: "iceland",
+        mapName: "countries",
         series: { data: [] },
       };
 
@@ -1195,7 +1195,7 @@ export const ChartWorkspace: React.FC<{
           const mapSettings = chartSettingsMap[selected.instanceId] as
             | MapChartSettings
             | undefined;
-          mapName = mapSettings?.mapName || "world";
+          mapName = mapSettings?.mapName || "countries";
         }
         nextData = buildChartDataFromSheetRows(
           rows,
