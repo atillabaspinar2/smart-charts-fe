@@ -10,6 +10,7 @@ import {
   type MapChartSettings,
   type ReanimateSignal,
   defaultPieChartSettings,
+  defaultMapChartSettings,
 } from "./chartTypes";
 import { getOptionsByType } from "./chartOptionTemplates";
 import { ChartContextMenu } from "./chartContextMenu";
@@ -42,10 +43,7 @@ interface ChartItemProps {
   mediaType: string;
   theme?: string;
   pieSettings?: PieChartSettings;
-  onMapDataGenerated?: (
-    instanceId: string,
-    regions: { name: string; value: number }[],
-  ) => void;
+  mapSettings?: MapChartSettings;
 }
 
 export const ChartItem: React.FC<ChartItemProps> = React.memo(
@@ -72,6 +70,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     mediaType,
     theme,
     pieSettings,
+    mapSettings,
   }) => {
     const { id, type } = data;
     const containerRef = useRef<HTMLDivElement>(null);
@@ -498,6 +497,11 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             : 0,
         },
       ];
+    }
+
+    if (type === "map") {
+      // set map settings here
+      const ms = mapSettings ?? defaultMapChartSettings;
     }
 
     const chartHighlighted = isSelected

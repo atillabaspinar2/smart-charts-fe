@@ -1636,7 +1636,7 @@ export const ChartWorkspace: React.FC<{
               mediaType={mediaType}
               theme={workspaceTheme || undefined}
               pieSettings={getPieSettings(c.instanceId)}
-              // onMapDataGenerated removed: map data is now fully managed in workspace
+              mapSettings={getMapSettings(c.instanceId)}
             />
           ))}
         </div>

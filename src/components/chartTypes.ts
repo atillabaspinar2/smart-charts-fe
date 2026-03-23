@@ -170,17 +170,21 @@ export const defaultPieChartSettings: PieChartSettings = {
 };
 
 export const defaultMapChartSettings: MapChartSettings = {
-  animationDuration: 1000,
-  backgroundColor: "#ffffff",
+  mapName: "iceland",
+  regionColor: "#c23531",
+  animationDelayUpdateValue: 100,
+  showLabel: true,
+  labelFontColor: "#ccc",
+  labelFontSize: 16,
+  animationDuration: 0,
+  backgroundColor: "",
   title: "",
-  fontFamily: "Inter, sans-serif",
-  fontSize: 14,
-  showLegend: true,
-  legendTop: "top",
-  legendLeft: "center",
-  legendOrient: "horizontal",
-  mapName: "world",
-  regionColor: undefined,
+  fontFamily: "",
+  fontSize: 0,
+  showLegend: false,
+  legendTop: "bottom",
+  legendLeft: "left",
+  legendOrient: "vertical",
 };
 
 export type ChartData =
