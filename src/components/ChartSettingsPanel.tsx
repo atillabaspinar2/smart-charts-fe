@@ -17,7 +17,9 @@ import {
   PieChartSettingsPanel,
   type PieChartSettingsPanelProps,
 } from "./chartSettingsTabs/PieChartSettingsPanel";
-import MapChartSettingsPanel from "./chartSettingsTabs/MapChartSettingsPanel";
+import MapChartSettingsPanel, {
+  type MapChartSettingsPanelProps,
+} from "./chartSettingsTabs/MapChartSettingsPanel";
 
 // Compose the main ChartSettingsPanelProps from all relevant panel/tab types
 export type ChartSettingsPanelProps = {
@@ -31,7 +33,8 @@ export type ChartSettingsPanelProps = {
 } & Partial<CanvasSettingsPanelProps> &
   Partial<LineChartSettingsPanelProps> &
   Partial<BarChartSettingsPanelProps> &
-  Partial<PieChartSettingsPanelProps>;
+  Partial<PieChartSettingsPanelProps> &
+  Partial<MapChartSettingsPanelProps>;
 
 export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
   const {
@@ -77,6 +80,8 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
     setLineArea = () => {},
     pieSettings,
     setPieSettings,
+    mapSettings,
+    setMapSettings,
     fontSize,
     setFontSize,
   } = props;
@@ -129,23 +134,13 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
   return (
     <>
       {isMapChart &&
+        mapSettings &&
+        setMapSettings &&
         typeof fontSize === "number" &&
         typeof setFontSize === "function" && (
           <MapChartSettingsPanel
             activeChartAccordionItem={activeChartAccordionItem}
             setActiveChartAccordionItem={setActiveChartAccordionItem}
-            showLegend={showLegend}
-            setShowLegend={setShowLegend}
-            legendTop={legendTop as "top" | "bottom"}
-            setLegendTop={setLegendTop as (v: "top" | "bottom") => void}
-            legendLeft={legendLeft as "left" | "right" | "center"}
-            setLegendLeft={
-              setLegendLeft as (v: "left" | "right" | "center") => void
-            }
-            legendOrient={legendOrient as "horizontal" | "vertical"}
-            setLegendOrient={
-              setLegendOrient as (v: "horizontal" | "vertical") => void
-            }
             title={title ?? ""}
             setTitle={setTitle ?? (() => {})}
             animationInput={animationInput}
@@ -154,6 +149,8 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
             setFontSize={setFontSize}
             backgroundColor={backgroundColor ?? "#fff"}
             setBackgroundColor={setBackgroundColor ?? (() => {})}
+            mapSettings={mapSettings}
+            setMapSettings={setMapSettings}
           />
         )}
       {isLineChart &&

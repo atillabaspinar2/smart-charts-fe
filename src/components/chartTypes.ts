@@ -41,6 +41,10 @@ export interface LineChartSettings extends ChartSettingsBase {
 export interface MapChartSettings extends ChartSettingsBase {
   mapName: string;
   regionColor?: string;
+  animationDelayUpdateValue?: number;
+  showLabel?: boolean;
+  labelFontColor?: string;
+  labelFontSize?: number;
 }
 
 // Bar chart specific settings

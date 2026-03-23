@@ -199,7 +199,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         ? undefined
         : settings.backgroundColor;
 
-    // For map charts, ensure option.series[0].map is set to chartData.mapName
+    // For map charts, ensure option.series[0].map is set to chartData.mapName and inject style panel settings
     let chartOption = {
       ...opts,
       title: {
@@ -219,6 +219,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       backgroundColor: effectiveBackgroundColor,
     };
     if (type === "map" && chartData && chartData.type === "map") {
+      const mapSettings = settings as MapChartSettings;
       if (chartOption.series && chartOption.series[0]) {
         chartOption = {
           ...chartOption,
@@ -226,6 +227,25 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             {
               ...chartOption.series[0],
               map: chartData.mapName,
+              // Inject animationDelayUpdate and label settings from MapChartSettings
+              animationDelayUpdate:
+                typeof mapSettings.animationDelayUpdateValue === "number"
+                  ? (idx: number) =>
+                      idx * (mapSettings?.animationDelayUpdateValue || 100)
+                  : chartOption.series[0].animationDelayUpdate,
+              label: {
+                ...(chartOption.series[0].label || {}),
+                show:
+                  typeof mapSettings.showLabel === "boolean"
+                    ? mapSettings.showLabel
+                    : chartOption.series[0].label?.show,
+                color:
+                  mapSettings.labelFontColor ||
+                  chartOption.series[0].label?.color,
+                fontSize:
+                  mapSettings.labelFontSize ||
+                  chartOption.series[0].label?.fontSize,
+              },
             },
           ],
         };

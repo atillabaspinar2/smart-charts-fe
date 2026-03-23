@@ -61,17 +61,14 @@ export const defaultMapOptions = (mapName?: string) => {
         map: effectiveMapName,
         roam: true,
         label: {
-          textStyle: {
-            // dark red color for better contrast on light blue map
-            color: "black",
-            fontSize: 16,
-          },
+          color: "red",
+          fontSize: 25,
           show: true,
           // show val in tooltip instead of label
           // formatter: "{b}: {c}",
           formatter: "{c}",
         },
-
+        animationDelayUpdate: (idx: number) => idx * 100,
         universalTransition: true,
         itemStyle: {
           borderColor: "blue", // Border color (e.g., Slate 300)

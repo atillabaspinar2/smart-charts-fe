@@ -132,6 +132,11 @@ export const ChartWorkspace: React.FC<{
   const [pieSettingsMap, setPieSettingsMap] = useState<
     Record<string, PieChartSettings>
   >({});
+
+  const [mapSettingsMap, setMapSettingsMap] = useState<
+    Record<string, MapChartSettings>
+  >({});
+
   const [pendingImportChartInstanceId, setPendingImportChartInstanceId] =
     useState<string | null>(null);
   const dataPanelApplyHandlerRef = useRef<(() => ChartData) | null>(null);
@@ -446,6 +451,22 @@ export const ChartWorkspace: React.FC<{
       ...prev,
       [instanceId]: {
         ...(prev[instanceId] ?? defaultPieChartSettings),
+        ...updates,
+      },
+    }));
+  };
+
+  const getMapSettings = (instanceId: string): MapChartSettings =>
+    mapSettingsMap[instanceId] ?? defaultMapChartSettings;
+
+  const updateMapSettings = (
+    instanceId: string,
+    updates: Partial<MapChartSettings>,
+  ) => {
+    setMapSettingsMap((prev) => ({
+      ...prev,
+      [instanceId]: {
+        ...(prev[instanceId] ?? defaultMapChartSettings),
         ...updates,
       },
     }));
@@ -1798,6 +1819,10 @@ export const ChartWorkspace: React.FC<{
             pieSettings={getPieSettings(selectedChartInstanceId)}
             setPieSettings={(updates) =>
               updatePieSettings(selectedChartInstanceId, updates)
+            }
+            mapSettings={getMapSettings(selectedChartInstanceId)}
+            setMapSettings={(updates) =>
+              updateMapSettings(selectedChartInstanceId, updates)
             }
           />
         ) : (
