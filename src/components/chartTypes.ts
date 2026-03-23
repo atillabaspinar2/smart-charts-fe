@@ -45,6 +45,11 @@ export interface MapChartSettings extends ChartSettingsBase {
   showLabel?: boolean;
   labelFontColor?: string;
   labelFontSize?: number;
+  visualMapColorRange?: string; // Optional custom color range for visualMap
+  visualMapPosition?: {
+    left: string;
+    top: string;
+  };
 }
 
 // Bar chart specific settings

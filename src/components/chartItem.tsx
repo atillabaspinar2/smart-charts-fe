@@ -15,6 +15,7 @@ import {
 import { getOptionsByType } from "./chartOptionTemplates";
 import { ChartContextMenu } from "./chartContextMenu";
 import { MapChart } from "./MapChart";
+import { colorRanges } from "./mapChartOptions";
 
 interface ChartItemProps {
   data: ChartItemData;
@@ -218,31 +219,34 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       backgroundColor: effectiveBackgroundColor,
     };
     if (type === "map" && chartData && chartData.type === "map") {
-      const mapSettings = settings as MapChartSettings;
+      const updatedMapSettings = mapSettings ?? defaultMapChartSettings;
+
       if (chartOption.series && chartOption.series[0]) {
         chartOption = {
           ...chartOption,
+          visualMap: {
+            ...chartOption.visualMap,
+
+            inRange: {
+              color:
+                colorRanges[
+                  updatedMapSettings.visualMapColorRange || "Indigo"
+                ] || colorRanges.Indigo,
+            },
+          },
           series: [
             {
               ...chartOption.series[0],
-              map: chartData.mapName,
-              // Inject animationDelayUpdate and label settings from MapChartSettings
-              animationDelayUpdate:
-                typeof mapSettings.animationDelayUpdateValue === "number"
-                  ? (idx: number) =>
-                      idx * (mapSettings?.animationDelayUpdateValue || 100)
-                  : chartOption.series[0].animationDelayUpdate,
+              animationDelayUpdate: (idx: number) =>
+                idx * (updatedMapSettings?.animationDelayUpdateValue || 100),
+
               label: {
-                ...(chartOption.series[0].label || {}),
-                show:
-                  typeof mapSettings.showLabel === "boolean"
-                    ? mapSettings.showLabel
-                    : chartOption.series[0].label?.show,
+                show: updatedMapSettings.showLabel,
                 color:
-                  mapSettings.labelFontColor ||
+                  updatedMapSettings.labelFontColor ||
                   chartOption.series[0].label?.color,
                 fontSize:
-                  mapSettings.labelFontSize ||
+                  updatedMapSettings.labelFontSize ||
                   chartOption.series[0].label?.fontSize,
               },
             },
@@ -497,11 +501,6 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             : 0,
         },
       ];
-    }
-
-    if (type === "map") {
-      // set map settings here
-      const ms = mapSettings ?? defaultMapChartSettings;
     }
 
     const chartHighlighted = isSelected

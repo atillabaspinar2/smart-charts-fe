@@ -28,6 +28,14 @@ export const getMapData = async (
   }
 };
 
+export const colorRanges: { [key: string]: string[] } = {
+  Blue: ["#e0f2fe", "#0369a1"],
+  Yellow: ["#fef3c7", "#b45309"],
+  Indigo: ["#dbeafe", "#1e40af"],
+  Green: ["#f0fdf4", "#166534"],
+  Red: ["#fef2f2", "#991b1b"],
+};
+
 export const defaultMapOptions = (mapName?: string) => {
   // Default to 'iceland' if not provided
   const effectiveMapName = mapName || "iceland";
@@ -45,9 +53,8 @@ export const defaultMapOptions = (mapName?: string) => {
     visualMap: {
       type: "piecewise",
       left: "right",
-
       inRange: {
-        color: ["#e0f2fe", "#0369a1"], // Light blue to Dark blue
+        color: colorRanges.Indigo, // Default color range
       },
     },
     animation: true,
@@ -71,7 +78,7 @@ export const defaultMapOptions = (mapName?: string) => {
         animationDelayUpdate: (idx: number) => idx * 100,
         universalTransition: true,
         itemStyle: {
-          borderColor: "blue", // Border color (e.g., Slate 300)
+          borderColor: "#4B5563", // dark grey border
           borderWidth: 1, // Border thickness
           borderType: "solid", // 'solid', 'dashed', or 'dotted'
           shadowBlur: 4, // Glow/Shadow effect

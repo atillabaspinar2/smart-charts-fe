@@ -75,7 +75,7 @@ function App() {
                 className="h-13.5 w-13.5 cursor-pointer"
                 onClick={() => window.location.reload()}
               />
-              <span>smart charts</span>
+              <span>Chart Studio</span>
             </h1>
             {isCoarsePointer ? (
               <div className="relative">

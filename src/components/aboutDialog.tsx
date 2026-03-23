@@ -1,13 +1,7 @@
 // show about dialog with info about the project and links to github, etc.
 
 import React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 
 export const AboutDialog: React.FC<{
   isOpen: boolean;
