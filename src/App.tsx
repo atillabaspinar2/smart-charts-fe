@@ -8,6 +8,7 @@ import { UserMenu } from "./components/userMenu";
 import { Sidebar } from "./components/sidebar";
 import { AuthProvider } from "./context/AuthContext";
 import logo from "./assets/logo.svg";
+import { AboutDialog } from "./components/aboutDialog";
 
 function App() {
   const [charts, setCharts] = useState<
@@ -18,6 +19,8 @@ function App() {
       initialPosition?: { x: number; y: number };
     }>
   >([]);
+
+  const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
 
   const addChart = (
     chartType: string,
@@ -69,7 +72,8 @@ function App() {
               <img
                 src={logo}
                 alt="smart-charts logo"
-                className="h-13.5 w-13.5"
+                className="h-13.5 w-13.5 cursor-pointer"
+                onClick={() => window.location.reload()}
               />
               <span>smart charts</span>
             </h1>
@@ -111,11 +115,19 @@ function App() {
           </Modal>
         )}
 
+        {aboutDialogOpen && (
+          <AboutDialog
+            isOpen={aboutDialogOpen}
+            onClose={() => setAboutDialogOpen(false)}
+          />
+        )}
+
         {/* Sidebar */}
-        <aside className="shadow-md overflow-y-auto bg-zinc-900 text-zinc-100">
-          <nav className="p-4">
+        <aside className="shadow-md bg-zinc-900 text-zinc-100 h-full row-span-2 flex flex-col">
+          <nav className="flex-1 flex flex-col p-2 h-full">
             <Sidebar
               isMobileMode={isCoarsePointer}
+              setAboutOpen={setAboutDialogOpen}
               pendingMobileChartType={pendingMobileChartType}
               onSelectMobileChartType={setPendingMobileChartType}
             />

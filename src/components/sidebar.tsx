@@ -1,8 +1,10 @@
+import React, { useState } from "react";
 import {
   BarChart,
   PieChart,
   LineChart,
   GlobalSearchIcon,
+  QuestionIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Tooltip } from "./UILibrary/Tooltip";
@@ -10,11 +12,17 @@ import { Tooltip } from "./UILibrary/Tooltip";
 export const Sidebar: React.FC<{
   isMobileMode: boolean;
   pendingMobileChartType: string | null;
+  setAboutOpen: React.Dispatch<React.SetStateAction<boolean>>;
   onSelectMobileChartType: (chartType: string | null) => void;
-}> = ({ isMobileMode, pendingMobileChartType, onSelectMobileChartType }) => {
+}> = ({
+  isMobileMode,
+  pendingMobileChartType,
+  setAboutOpen,
+  onSelectMobileChartType,
+}) => {
   const getItemClassName = (chartType: string) => {
     const isActive = isMobileMode && pendingMobileChartType === chartType;
-    return `flex items-center p-2 rounded transition-colors ${
+    return `flex justify-center items-center p-2 rounded transition-colors ${
       isActive ? "bg-slate-600 ring-2 ring-white/70" : "hover:bg-slate-700"
     }`;
   };
@@ -25,7 +33,7 @@ export const Sidebar: React.FC<{
   };
 
   return (
-    <ul className="space-y-2 col-1">
+    <ul className="flex flex-col h-full space-y-2 col-1 relative">
       <li>
         <Tooltip content="Line chart">
           <div
@@ -76,14 +84,23 @@ export const Sidebar: React.FC<{
         </Tooltip>
       </li>
       {/* <li>
-        <Tooltip content="Scatter chart">
-          <div
-            draggable
-            onDragStart={(e) => e.dataTransfer.setData("chartType", "scatter")}
-            onClick={() => onSelectForMobilePlacement("scatter")}
-            className={getItemClassName("scatter")}
-          >
-            <HugeiconsIcon icon={ChartScatterIcon} />
+          <Dialog>
+            <Tooltip content="Help / About">
+              <DialogTrigger asChild>
+                <div
+                  className="flex justify-center items-center p-2 rounded transition-colors cursor-pointer"
+                >
+                  <HugeiconsIcon icon={QuestionIcon} />
+                </div>
+              </DialogTrigger>
+            </Tooltip>
+            <DialogContent>
+              <DialogTitle>Help</DialogTitle>
+              <DialogDescription>
+                How can we help you?
+              </DialogDescription>
+            </DialogContent>
+          </Dialog>
           </div>
         </Tooltip>
       </li> */}
@@ -99,6 +116,16 @@ export const Sidebar: React.FC<{
           </div>
         </Tooltip>
       </li> */}
+      <li className="mt-auto">
+        <Tooltip content="Help / About">
+          <div
+            className={getItemClassName("help")}
+            onClick={() => setAboutOpen(true)}
+          >
+            <HugeiconsIcon icon={QuestionIcon} />
+          </div>
+        </Tooltip>
+      </li>
     </ul>
   );
 };
