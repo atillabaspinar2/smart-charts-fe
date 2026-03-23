@@ -2,6 +2,7 @@
 export interface MapChartData {
   type: "map";
   mapName: string;
+  mapDisplayName?: string; // Optional display name for UI
   series: {
     data: { name: string; value: number }[];
   };

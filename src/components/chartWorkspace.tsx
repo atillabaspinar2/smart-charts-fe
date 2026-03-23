@@ -1408,18 +1408,17 @@ export const ChartWorkspace: React.FC<{
   );
 
   // List of available maps (from assets/maps)
-  const availableMaps = [
-    "germany",
-    "iceland",
-    "usa",
-    "turkiye",
-    "africa",
-    "contitents",
-    "countries",
-    "russia",
-    "europe",
-    "european-union",
-    "southameriaca",
+  const availableMaps: Record<string, string>[] = [
+    { name: "Iceland", value: "iceland" },
+    { name: "USA", value: "usa" },
+    { name: "Turkiye", value: "turkiye" },
+    { name: "Africa", value: "africa" },
+    // { name: "Continents", value: "contitents" },
+    { name: "Countries", value: "countries" },
+    // { name: "Russia", value: "russia" },
+    { name: "Europe", value: "europe" },
+    { name: "European Union", value: "european-union" },
+    // { name: "South America", value: "southameriaca" },
   ];
 
   const handleMapNameChange = async (mapName: string) => {

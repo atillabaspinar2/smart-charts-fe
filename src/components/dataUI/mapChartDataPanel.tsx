@@ -14,7 +14,7 @@ type Props = {
   data: MapChartData & { series: { data: { name: string; value: number }[] } };
   onChange: (data: MapChartData) => void;
   onMapNameChange?: (mapName: string) => void;
-  availableMaps: string[];
+  availableMaps: { name: string; value: string }[];
   registerApplyHandler?: (handler: (() => MapChartData) | null) => void;
 };
 
@@ -76,9 +76,9 @@ export const MapChartDataPanel: React.FC<Props> = ({
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="z-9002">
-            {availableMaps.map((map: string) => (
-              <SelectItem key={map} value={map}>
-                {map}
+            {availableMaps.map((map: { name: string; value: string }) => (
+              <SelectItem key={map.value} value={map.value}>
+                {map.name}
               </SelectItem>
             ))}
           </SelectContent>
