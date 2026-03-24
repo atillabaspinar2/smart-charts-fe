@@ -10,6 +10,7 @@ import { authApi, type AuthUser } from "../services/authApi";
 
 interface AuthContextValue {
   user: AuthUser | null;
+  isAuthenticated: boolean;
   signup: (fullName: string, email: string, password: string) => Promise<void>;
   signin: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -67,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const value = useMemo(
-    () => ({ user, signup, signin, logout }),
+    () => ({ user, isAuthenticated: !!user, signup, signin, logout }),
     [user, signup, signin, logout],
   );
 
@@ -77,5 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = (): AuthContextValue => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
+  // create isAuthenticated
+  const isAuthenticated = !!ctx.user;
+  return { ...ctx, isAuthenticated };
 };
