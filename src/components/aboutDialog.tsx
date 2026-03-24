@@ -11,14 +11,14 @@ export const AboutDialog: React.FC<{
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="p-0 min-h-55 ">
         <DialogHeader className="rounded-t-xl px-4 py-3 border-b border-accent flex justify-center bg-zinc-700 text-zinc-100">
-          <DialogTitle>About SmartCharts</DialogTitle>
+          <DialogTitle>About</DialogTitle>
         </DialogHeader>
         {/* <div className="rounded-t-xl px-4 py-3 text-base font-semibold tracking-tight border">
-          About SmartCharts
+          About Chart Studio
         </div> */}
         <div className="px-4  min-h-35 rounded-b-xl flex flex-col">
           <div className="text-sm">
-            SmartCharts is a project that provides interactive and customizable
+            ChartStudio is a project that provides interactive and customizable
             charts for data visualization.
           </div>
           <div className="text-sm mt-2">

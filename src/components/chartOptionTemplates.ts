@@ -1,6 +1,9 @@
 import { defaultMapOptions } from "./mapChartOptions";
 
 export const lineOptions = {
+  title: {
+    text: "Line Chart Example",
+  },
   animationDuration: 1000,
   xAxis: {
     data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
@@ -20,7 +23,7 @@ export const lineOptions = {
 export const barOptions = {
   animationDuration: 1000,
   title: {
-    text: "ECharts Example",
+    text: "Bar Chart Example",
   },
   tooltip: {},
   xAxis: {
@@ -39,7 +42,7 @@ export const barOptions = {
 export const pieOptions = {
   animationDuration: 1200,
   title: {
-    text: "Referer of a Website",
+    text: "Pie Chart Example",
     left: "center",
   },
   tooltip: {
@@ -53,7 +56,7 @@ export const pieOptions = {
   },
   series: [
     {
-      name: "Access From",
+      name: "Pie Chart Example",
       type: "pie",
       radius: ["40%", "70%"],
       padAngle: 10,

@@ -17,8 +17,8 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const TOKEN_KEY = "smartcharts_token";
-const USER_KEY = "smartcharts_user";
+const TOKEN_KEY = "chartstudio_token";
+const USER_KEY = "chartstudio_user";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(() => {
