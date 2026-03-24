@@ -1588,9 +1588,9 @@ export const ChartWorkspace: React.FC<{
         }
       >
         <div
-          id="chart-container"
+          id="chart-canvas"
           ref={containerRef}
-          className="relative resize overflow-auto p-1 border border-border rounded-md bg-white/50 shadow-lg"
+          className="relative resize overflow-auto p-1 border border-border rounded-md bg-white/50 shadow-lg canvas-grid"
           style={{
             width: `${containerSize.width}px`,
             height: `${containerSize.height}px`,
