@@ -39,6 +39,7 @@ import {
   defaultBarChartSettings,
   defaultMapChartSettings,
 } from "./chartTypes";
+import { useAuth } from "@/context/AuthContext";
 
 const defaultChartSize = {
   width: 400,
@@ -61,6 +62,9 @@ export const ChartWorkspace: React.FC<{
   removeChart: (id: number) => void;
   isMobileMode: boolean;
   pendingMobileChartType: string | null;
+  setAuthModal: React.Dispatch<
+    React.SetStateAction<"signup" | "signin" | null>
+  >;
   onPlaceMobileChartType: (
     type: string,
     position: { x: number; y: number },
@@ -74,7 +78,9 @@ export const ChartWorkspace: React.FC<{
   pendingMobileChartType,
   onPlaceMobileChartType,
   onCancelMobileChartPlacement,
+  setAuthModal,
 }) => {
+  const { isAuthenticated } = useAuth();
   const [pendingRemoval, setPendingRemoval] = useState<
     { mode: "single"; chartId: number } | { mode: "all" } | null
   >(null);
@@ -909,6 +915,10 @@ export const ChartWorkspace: React.FC<{
   };
 
   const handleCaptureAll = async () => {
+    if (!isAuthenticated) {
+      setAuthModal("signin");
+      return;
+    }
     if (charts.length === 0 || isCapturingAll) return;
 
     setIsCapturingAll(true);
@@ -981,6 +991,10 @@ export const ChartWorkspace: React.FC<{
   };
 
   const handleDownloadAll = () => {
+    if (!isAuthenticated) {
+      setAuthModal("signin");
+      return;
+    }
     const snapshotCanvas = buildCanvasSnapshot();
     if (!snapshotCanvas) return;
 
@@ -992,6 +1006,10 @@ export const ChartWorkspace: React.FC<{
   };
 
   const handleExpandContainerToPanel = useCallback(() => {
+    if (!isAuthenticated) {
+      // open auth modal or show message
+      return;
+    }
     const container = containerRef.current;
     if (!container) return;
 

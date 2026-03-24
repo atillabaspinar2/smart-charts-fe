@@ -141,6 +141,7 @@ function App() {
             addChart={addChart}
             removeChart={removeChart}
             isMobileMode={isCoarsePointer}
+            setAuthModal={setAuthModal}
             pendingMobileChartType={pendingMobileChartType}
             onPlaceMobileChartType={(type, position) => {
               addChart(type, position);
