@@ -5,9 +5,11 @@ import {
   LineChart,
   GlobalSearchIcon,
   QuestionIcon,
+  LinerIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Tooltip } from "./UILibrary/Tooltip";
+import { Separator } from "./ui/separator";
 
 export const Sidebar: React.FC<{
   isMobileMode: boolean;
@@ -80,6 +82,23 @@ export const Sidebar: React.FC<{
             className={getItemClassName("map")}
           >
             <HugeiconsIcon icon={GlobalSearchIcon} />
+          </div>
+        </Tooltip>
+      </li>
+      <li>
+        <Separator></Separator>
+      </li>
+      <li>
+        <Tooltip content="Add line">
+          <div
+            draggable
+            onDragStart={(e) =>
+              e.dataTransfer.setData("annotationType", "line")
+            }
+            onClick={() => onSelectForMobilePlacement("lineAnnotation")}
+            className={getItemClassName("lineAnnotation")}
+          >
+            <HugeiconsIcon icon={LinerIcon} />
           </div>
         </Tooltip>
       </li>

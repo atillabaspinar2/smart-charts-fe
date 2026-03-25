@@ -765,10 +765,18 @@ export const ChartWorkspace: React.FC<{
     return () => observer.disconnect();
   }, []);
 
-  const onDragOver = (e: React.DragEvent) => e.preventDefault();
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const type = e.dataTransfer.getData("chartType");
+    // if type is a chart type, add a new chart at the drop position
+    // else bubble the event to allow dropping into chart items for annotation placement
+    if (type && !["line", "bar", "pie", "map"].includes(type)) return;
+    e.stopPropagation();
+
     const container = containerRef.current;
 
     if (type && container) {
