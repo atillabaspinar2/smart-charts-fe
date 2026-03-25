@@ -30,6 +30,7 @@ export const barOptions = {
     data: ["A", "B", "C", "D", "E"],
   },
   yAxis: {},
+
   series: [
     {
       name: "Example Series",
@@ -37,6 +38,7 @@ export const barOptions = {
       data: [5, 20, 36, 10, 10],
     },
   ],
+  graphic: [],
 };
 
 export const pieOptions = {
