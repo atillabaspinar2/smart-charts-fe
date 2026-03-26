@@ -6,6 +6,9 @@ import {
   GlobalSearchIcon,
   QuestionIcon,
   LinerIcon,
+  CircleIcon,
+  TextIcon,
+  Image02Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Tooltip } from "./UILibrary/Tooltip";
@@ -99,6 +102,48 @@ export const Sidebar: React.FC<{
             className={getItemClassName("lineAnnotation")}
           >
             <HugeiconsIcon icon={LinerIcon} />
+          </div>
+        </Tooltip>
+      </li>
+      <li>
+        <Tooltip content="Add circle">
+          <div
+            draggable
+            onDragStart={(e) =>
+              e.dataTransfer.setData("annotationType", "circle")
+            }
+            onClick={() => onSelectForMobilePlacement("circleAnnotation")}
+            className={getItemClassName("circleAnnotation")}
+          >
+            <HugeiconsIcon icon={CircleIcon} className="rotate-45" />
+          </div>
+        </Tooltip>
+      </li>
+      <li>
+        <Tooltip content="Add text">
+          <div
+            draggable
+            onDragStart={(e) =>
+              e.dataTransfer.setData("annotationType", "text")
+            }
+            onClick={() => onSelectForMobilePlacement("textAnnotation")}
+            className={getItemClassName("textAnnotation")}
+          >
+            <HugeiconsIcon icon={TextIcon} />
+          </div>
+        </Tooltip>
+      </li>
+      <li>
+        <Tooltip content="Add image">
+          <div
+            draggable
+            onDragStart={(e) =>
+              e.dataTransfer.setData("annotationType", "image")
+            }
+            onClick={() => onSelectForMobilePlacement("imageAnnotation")}
+            className={getItemClassName("imageAnnotation")}
+          >
+            <HugeiconsIcon icon={Image02Icon} />
           </div>
         </Tooltip>
       </li>

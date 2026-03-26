@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,6 @@ import type { AnyAnnotation } from "@/hooks/useAnnotation";
 
 type Props = {
   annotation: AnyAnnotation;
-  anchorRect: DOMRect | null;
   onDelete: () => void;
   onStyleChange: (styleUpdate: Record<string, unknown>) => void;
   onShapeChange: (shapeUpdate: Record<string, unknown>) => void;
@@ -41,24 +40,10 @@ function Row({
 
 export function AnnotationStylePanel({
   annotation,
-  anchorRect,
   onDelete,
   onStyleChange,
   onShapeChange,
 }: Props) {
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-
-  useEffect(() => {
-    if (!anchorRect) return;
-    const margin = 10;
-    const width = 280;
-    const top = Math.max(10, anchorRect.top + margin);
-    const left = Math.max(10, anchorRect.right - width - margin);
-    setPos({ top, left });
-  }, [anchorRect]);
-
-  if (!pos) return null;
-
   const title = annotation.type[0].toUpperCase() + annotation.type.slice(1);
 
   const onImageFileChange = (file?: File) => {
@@ -75,9 +60,9 @@ export function AnnotationStylePanel({
     <div
       data-no-drag="true"
       style={{
-        position: "fixed",
-        top: pos.top,
-        left: pos.left,
+        position: "absolute",
+        top: 10,
+        right: 10,
         width: 280,
         zIndex: 9999,
         opacity: 0.92,
