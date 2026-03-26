@@ -172,6 +172,18 @@ export function useAnnotations() {
         const { x1, y1, x2, y2 } = ann.shape;
         const accentColor = selected ? "#ffffff" : ann.style.stroke;
         const handleFill = selected ? ann.style.stroke : "#1e293b";
+        const arrowSize = Math.max(12, ann.style.lineWidth * 4 + 8);
+        const hasArrow = Boolean(ann.style.arrowEnd);
+
+        const dxLine = x2 - x1;
+        const dyLine = y2 - y1;
+        const lineLen = Math.hypot(dxLine, dyLine);
+        const ux = lineLen > 0 ? dxLine / lineLen : 1;
+        const uy = lineLen > 0 ? dyLine / lineLen : 0;
+        const trimmedLineEndX =
+          hasArrow && lineLen > 0 ? x2 - ux * (arrowSize * 0.85) : x2;
+        const trimmedLineEndY =
+          hasArrow && lineLen > 0 ? y2 - uy * (arrowSize * 0.85) : y2;
 
         const stopDomEvent = (params: any) => {
           const evt = params?.event;
@@ -259,7 +271,7 @@ export function useAnnotations() {
         const visibleLine = {
           type: "line",
           id: `${ann.id}_line`,
-          shape: { x1, y1, x2, y2 },
+          shape: { x1, y1, x2: trimmedLineEndX, y2: trimmedLineEndY },
           style: {
             stroke: ann.style.stroke,
             lineWidth: ann.style.lineWidth,
@@ -351,13 +363,12 @@ export function useAnnotations() {
                   x2,
                   y2,
                   color: ann.style.stroke,
-                  size: Math.max(10, ann.style.lineWidth * 3 + 8),
+                  size: arrowSize,
                 }),
                 id: `${ann.id}_arrowEnd`,
-                // keep arrow visible even when deselected; add a subtle dim.
                 style: {
                   fill: ann.style.stroke,
-                  opacity: selected ? 1 : Math.min(0.9, ann.style.opacity),
+                  opacity: ann.style.opacity,
                 },
               },
             ]
