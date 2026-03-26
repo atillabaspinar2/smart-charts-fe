@@ -1,98 +1,30 @@
 import { useCallback, useMemo, useState } from "react";
+import { buildCircleGraphic } from "./annotations/builders/circleBuilder";
+import { buildImageGraphic } from "./annotations/builders/imageBuilder";
+import { buildLineGraphic } from "./annotations/builders/lineBuilder";
+import { buildTextGraphic } from "./annotations/builders/textBuilder";
+import type { AnnotationCallbacks } from "./annotations/interaction";
+import {
+  createAnnotation,
+  type AnyAnnotation,
+  type AnnotationType,
+  type CircleAnnotation,
+  type ImageAnnotation,
+  type LineAnnotation,
+  type TextAnnotation,
+} from "./annotations/types";
 
-type LineAnnotationStyle = {
-  stroke: string;
-  lineWidth: number;
-  lineDash: number[]; // [] solid, [6,3] dashed, [2,2] dotted
-  opacity: number;
-  arrowEnd?: boolean;
-};
-
-type LineAnnotationShape = {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-};
-
-export type LineAnnotation = {
-  id: string;
-  type: "line";
-  shape: LineAnnotationShape;
-  style: LineAnnotationStyle;
-};
-
-const createAnnotationId = () =>
-  `ann_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-
-const defaultLineStyle: LineAnnotationStyle = {
-  stroke: "#f97316",
-  lineWidth: 2,
-  lineDash: [],
-  opacity: 1,
-  arrowEnd: false,
-};
-
-const HANDLE_RADIUS = 6;
-const HIT_ZONE_WIDTH = 12;
-
-function buildArrowHead({
-  x1,
-  y1,
-  x2,
-  y2,
-  color,
-  size,
-}: {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  color: string;
-  size: number;
-}) {
-  const angle = Math.atan2(y2 - y1, x2 - x1);
-  const tipX = x2;
-  const tipY = y2;
-  const backX = tipX - size * Math.cos(angle);
-  const backY = tipY - size * Math.sin(angle);
-  const perpAngle = angle + Math.PI / 2;
-  const halfWidth = size * 0.55;
-  const leftX = backX + halfWidth * Math.cos(perpAngle);
-  const leftY = backY + halfWidth * Math.sin(perpAngle);
-  const rightX = backX - halfWidth * Math.cos(perpAngle);
-  const rightY = backY - halfWidth * Math.sin(perpAngle);
-
-  return {
-    type: "polygon",
-    id: "arrow",
-    shape: { points: [[tipX, tipY], [leftX, leftY], [rightX, rightY]] },
-    style: { fill: color, opacity: 1 },
-    silent: true,
-    z: 102,
-  };
-}
+export type { AnyAnnotation, LineAnnotation, CircleAnnotation, TextAnnotation, ImageAnnotation };
 
 export function useAnnotations() {
-  const [annotations, setAnnotations] = useState<LineAnnotation[]>([]);
+  const [annotations, setAnnotations] = useState<AnyAnnotation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const addLine = useCallback((dropPos: { x: number; y: number }) => {
-    const id = createAnnotationId();
-    const newAnn: LineAnnotation = {
-      id,
-      type: "line",
-      shape: {
-        x1: dropPos.x - 60,
-        y1: dropPos.y,
-        x2: dropPos.x + 60,
-        y2: dropPos.y,
-      },
-      style: { ...defaultLineStyle },
-    };
+  const addAnnotation = useCallback((type: AnnotationType, dropPos: { x: number; y: number }) => {
+    const newAnn = createAnnotation(type, dropPos.x, dropPos.y);
     setAnnotations((prev) => [...prev, newAnn]);
-    setSelectedId(id);
-    return id;
+    setSelectedId(newAnn.id);
+    return newAnn.id;
   }, []);
 
   const selectAnnotation = useCallback((id: string) => {
@@ -106,15 +38,21 @@ export function useAnnotations() {
       prev.map((a) =>
         a.id !== id
           ? a
-          : {
-              ...a,
-              shape: {
-                x1: a.shape.x1 + dx,
-                y1: a.shape.y1 + dy,
-                x2: a.shape.x2 + dx,
-                y2: a.shape.y2 + dy,
-              },
-            },
+          : a.type === "line"
+            ? {
+                ...a,
+                shape: {
+                  x1: a.shape.x1 + dx,
+                  y1: a.shape.y1 + dy,
+                  x2: a.shape.x2 + dx,
+                  y2: a.shape.y2 + dy,
+                },
+              }
+            : a.type === "circle"
+              ? { ...a, shape: { ...a.shape, cx: a.shape.cx + dx, cy: a.shape.cy + dy } }
+              : a.type === "text"
+                ? { ...a, shape: { ...a.shape, x: a.shape.x + dx, y: a.shape.y + dy } }
+                : { ...a, shape: { ...a.shape, x: a.shape.x + dx, y: a.shape.y + dy } },
       ),
     );
   }, []);
@@ -122,7 +60,7 @@ export function useAnnotations() {
   const moveHandle1 = useCallback((id: string, dx: number, dy: number) => {
     setAnnotations((prev) =>
       prev.map((a) =>
-        a.id !== id
+        a.id !== id || a.type !== "line"
           ? a
           : { ...a, shape: { ...a.shape, x1: a.shape.x1 + dx, y1: a.shape.y1 + dy } },
       ),
@@ -132,7 +70,7 @@ export function useAnnotations() {
   const moveHandle2 = useCallback((id: string, dx: number, dy: number) => {
     setAnnotations((prev) =>
       prev.map((a) =>
-        a.id !== id
+        a.id !== id || a.type !== "line"
           ? a
           : { ...a, shape: { ...a.shape, x2: a.shape.x2 + dx, y2: a.shape.y2 + dy } },
       ),
@@ -140,10 +78,31 @@ export function useAnnotations() {
   }, []);
 
   const updateAnnotationStyle = useCallback(
-    (id: string, styleUpdate: Partial<LineAnnotationStyle>) => {
+    (id: string, styleUpdate: Record<string, unknown>) => {
       setAnnotations((prev) =>
         prev.map((a) =>
-          a.id !== id ? a : { ...a, style: { ...a.style, ...styleUpdate } },
+          a.id !== id
+            ? a
+            : ({
+                ...a,
+                style: { ...(a as any).style, ...styleUpdate },
+              } as AnyAnnotation),
+        ),
+      );
+    },
+    [],
+  );
+
+  const updateAnnotationShape = useCallback(
+    (id: string, shapeUpdate: Record<string, unknown>) => {
+      setAnnotations((prev) =>
+        prev.map((a) =>
+          a.id !== id
+            ? a
+            : ({
+                ...a,
+                shape: { ...(a as any).shape, ...shapeUpdate },
+              } as AnyAnnotation),
         ),
       );
     },
@@ -161,226 +120,13 @@ export function useAnnotations() {
   );
 
   const buildGraphicElements = useCallback(
-    (callbacks: {
-      onSelect: (id: string) => void;
-      onLineDrag: (id: string, dx: number, dy: number) => void;
-      onHandle1Drag: (id: string, dx: number, dy: number) => void;
-      onHandle2Drag: (id: string, dx: number, dy: number) => void;
-    }) => {
+    (callbacks: AnnotationCallbacks) => {
       return annotations.map((ann) => {
         const selected = ann.id === selectedId;
-        const { x1, y1, x2, y2 } = ann.shape;
-        const accentColor = selected ? "#ffffff" : ann.style.stroke;
-        const handleFill = selected ? ann.style.stroke : "#1e293b";
-        const arrowSize = Math.max(12, ann.style.lineWidth * 4 + 8);
-        const hasArrow = Boolean(ann.style.arrowEnd);
-
-        const dxLine = x2 - x1;
-        const dyLine = y2 - y1;
-        const lineLen = Math.hypot(dxLine, dyLine);
-        const ux = lineLen > 0 ? dxLine / lineLen : 1;
-        const uy = lineLen > 0 ? dyLine / lineLen : 0;
-        const trimmedLineEndX =
-          hasArrow && lineLen > 0 ? x2 - ux * (arrowSize * 0.85) : x2;
-        const trimmedLineEndY =
-          hasArrow && lineLen > 0 ? y2 - uy * (arrowSize * 0.85) : y2;
-
-        const stopDomEvent = (params: any) => {
-          const evt = params?.event;
-          // ZRender wraps the native event under `event`
-          const domEvt = evt?.event ?? evt;
-          domEvt?.stopPropagation?.();
-          domEvt?.preventDefault?.();
-          if (evt) evt.cancelBubble = true;
-          if (params) params.cancelBubble = true;
-        };
-
-        const getDragDelta = (params: any): { dx: number; dy: number } => {
-          if (typeof params?.dx === "number" && typeof params?.dy === "number") {
-            return { dx: params.dx, dy: params.dy };
-          }
-
-          const evt = params?.event;
-          const domEvt = evt?.event ?? evt;
-          const mx =
-            domEvt?.movementX ??
-            domEvt?.webkitMovementX ??
-            domEvt?.mozMovementX ??
-            domEvt?.msMovementX;
-          const my =
-            domEvt?.movementY ??
-            domEvt?.webkitMovementY ??
-            domEvt?.mozMovementY ??
-            domEvt?.msMovementY;
-          if (typeof mx === "number" && typeof my === "number") {
-            return { dx: mx, dy: my };
-          }
-
-          const ox = evt?.offsetX ?? evt?.zrX;
-          const oy = evt?.offsetY ?? evt?.zrY;
-          const target = params?.target as any;
-          if (typeof ox === "number" && typeof oy === "number" && target) {
-            const prev = target.__annPrevOffset;
-            target.__annPrevOffset = { x: ox, y: oy };
-            if (prev && typeof prev.x === "number" && typeof prev.y === "number") {
-              return { dx: ox - prev.x, dy: oy - prev.y };
-            }
-          }
-
-          return { dx: 0, dy: 0 };
-        };
-
-        const clearPrevOffset = (params: any) => {
-          const target = params?.target as any;
-          if (target && target.__annPrevOffset) {
-            delete target.__annPrevOffset;
-          }
-        };
-
-        const hitZone = {
-          type: "line",
-          id: `${ann.id}__hit`,
-          shape: { x1, y1, x2, y2 },
-          style: { stroke: "transparent", lineWidth: HIT_ZONE_WIDTH },
-          draggable: true,
-          cursor: "move",
-          z: 100,
-          onmousedown: (params: any) => {
-            callbacks.onSelect(ann.id);
-            stopDomEvent(params);
-          },
-          ondragstart: (params: any) => {
-            callbacks.onSelect(ann.id);
-            clearPrevOffset(params);
-            stopDomEvent(params);
-          },
-          ondrag: (params: any) => {
-            const { dx, dy } = getDragDelta(params);
-            // Cancel ECharts internal dragging transform; we render from state.
-            params?.target?.drift?.(-dx, -dy);
-            callbacks.onLineDrag(ann.id, dx, dy);
-            stopDomEvent(params);
-          },
-          ondragend: (params: any) => {
-            clearPrevOffset(params);
-            stopDomEvent(params);
-          },
-          onclick: (params: any) => stopDomEvent(params),
-        };
-
-        const visibleLine = {
-          type: "line",
-          id: `${ann.id}__line`,
-          shape: { x1, y1, x2: trimmedLineEndX, y2: trimmedLineEndY },
-          style: {
-            stroke: ann.style.stroke,
-            lineWidth: ann.style.lineWidth,
-            lineDash: ann.style.lineDash,
-            opacity: ann.style.opacity,
-            shadowBlur: selected ? 8 : 0,
-            shadowColor: ann.style.stroke,
-          },
-          silent: true,
-          z: 99,
-        };
-
-        const handle1 = {
-          type: "circle",
-          id: `${ann.id}__h1`,
-          shape: { cx: x1, cy: y1, r: HANDLE_RADIUS },
-          style: {
-            fill: handleFill,
-            stroke: accentColor,
-            lineWidth: 2,
-            opacity: selected ? 1 : 0,
-          },
-          draggable: true,
-          cursor: "crosshair",
-          z: 101,
-          onmousedown: (params: any) => {
-            callbacks.onSelect(ann.id);
-            stopDomEvent(params);
-          },
-          ondragstart: (params: any) => {
-            callbacks.onSelect(ann.id);
-            clearPrevOffset(params);
-            stopDomEvent(params);
-          },
-          ondrag: (params: any) => {
-            const { dx, dy } = getDragDelta(params);
-            params?.target?.drift?.(-dx, -dy);
-            callbacks.onHandle1Drag(ann.id, dx, dy);
-            stopDomEvent(params);
-          },
-          ondragend: (params: any) => {
-            clearPrevOffset(params);
-            stopDomEvent(params);
-          },
-          onclick: (params: any) => stopDomEvent(params),
-        };
-
-        const handle2 = {
-          type: "circle",
-          id: `${ann.id}__h2`,
-          shape: { cx: x2, cy: y2, r: HANDLE_RADIUS },
-          style: {
-            fill: handleFill,
-            stroke: accentColor,
-            lineWidth: 2,
-            opacity: selected ? 1 : 0,
-          },
-          draggable: true,
-          cursor: "crosshair",
-          z: 101,
-          onmousedown: (params: any) => {
-            callbacks.onSelect(ann.id);
-            stopDomEvent(params);
-          },
-          ondragstart: (params: any) => {
-            callbacks.onSelect(ann.id);
-            clearPrevOffset(params);
-            stopDomEvent(params);
-          },
-          ondrag: (params: any) => {
-            const { dx, dy } = getDragDelta(params);
-            params?.target?.drift?.(-dx, -dy);
-            callbacks.onHandle2Drag(ann.id, dx, dy);
-            stopDomEvent(params);
-          },
-          ondragend: (params: any) => {
-            clearPrevOffset(params);
-            stopDomEvent(params);
-          },
-          onclick: (params: any) => stopDomEvent(params),
-        };
-
-        const arrowHead = ann.style.arrowEnd
-          ? [
-              {
-                ...buildArrowHead({
-                  x1,
-                  y1,
-                  x2,
-                  y2,
-                  color: ann.style.stroke,
-                  size: arrowSize,
-                }),
-                id: `${ann.id}__arrowEnd`,
-                style: {
-                  fill: ann.style.stroke,
-                  opacity: ann.style.opacity,
-                },
-              },
-            ]
-          : [];
-
-        return {
-          type: "group",
-          id: ann.id,
-          // group is a hierarchy container only; dragging is handled by children.
-          silent: false,
-          children: [hitZone, visibleLine, ...arrowHead, handle1, handle2],
-        };
+        if (ann.type === "line") return buildLineGraphic(ann, selected, callbacks);
+        if (ann.type === "circle") return buildCircleGraphic(ann, selected, callbacks);
+        if (ann.type === "text") return buildTextGraphic(ann, selected, callbacks);
+        return buildImageGraphic(ann, selected, callbacks);
       });
     },
     [annotations, selectedId],
@@ -390,13 +136,14 @@ export function useAnnotations() {
     annotations,
     selectedId,
     selectedAnnotation,
-    addLine,
+    addAnnotation,
     selectAnnotation,
     clearSelection,
     moveAnnotation,
     moveHandle1,
     moveHandle2,
     updateAnnotationStyle,
+    updateAnnotationShape,
     deleteAnnotation,
     buildGraphicElements,
   };

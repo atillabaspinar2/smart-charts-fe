@@ -18,7 +18,7 @@ import { ChartContextMenu } from "./chartContextMenu";
 import { MapChart } from "./MapChart";
 import { colorRanges } from "./mapChartOptions";
 import { useAnnotations } from "@/hooks/useAnnotation";
-import { LineAnnotationStylePanel } from "@/components/annotations/LineAnnotationStylePanel";
+import { AnnotationStylePanel } from "@/components/annotations/AnnotationStylePanel";
 
 interface ChartItemProps {
   data: ChartItemData;
@@ -96,13 +96,14 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     const {
       selectedAnnotation,
       selectedId,
-      addLine,
+      addAnnotation,
       selectAnnotation,
       clearSelection,
       moveAnnotation,
       moveHandle1,
       moveHandle2,
       updateAnnotationStyle,
+      updateAnnotationShape,
       deleteAnnotation,
       buildGraphicElements,
     } = useAnnotations();
@@ -598,9 +599,9 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     // merge annotations into option.graphic
     const annotationGraphic = buildGraphicElements({
       onSelect: selectAnnotation,
-      onLineDrag: moveAnnotation,
-      onHandle1Drag: moveHandle1,
-      onHandle2Drag: moveHandle2,
+      onMove: moveAnnotation,
+      onLineHandle1Drag: moveHandle1,
+      onLineHandle2Drag: moveHandle2,
     });
     chartOption = {
       ...chartOption,
@@ -748,14 +749,20 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
 
     const onDrop = (e: React.DragEvent) => {
       e.preventDefault();
-      const type = e.dataTransfer.getData("annotationType");
+      const annotationType = e.dataTransfer.getData("annotationType");
 
-      if (type === "line" && containerRef.current) {
+      if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-
-        addLine({ x, y });
+        if (
+          annotationType === "line" ||
+          annotationType === "circle" ||
+          annotationType === "text" ||
+          annotationType === "image"
+        ) {
+          addAnnotation(annotationType, { x, y });
+        }
       }
     };
 
@@ -821,13 +828,16 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           />
         )}
 
-        {selectedAnnotation?.type === "line" && (
-          <LineAnnotationStylePanel
+        {selectedAnnotation && (
+          <AnnotationStylePanel
             annotation={selectedAnnotation}
             anchorRect={annotationPanelAnchorRect}
             onDelete={() => deleteAnnotation(selectedAnnotation.id)}
             onStyleChange={(styleUpdate) =>
               updateAnnotationStyle(selectedAnnotation.id, styleUpdate)
+            }
+            onShapeChange={(shapeUpdate) =>
+              updateAnnotationShape(selectedAnnotation.id, shapeUpdate)
             }
           />
         )}
