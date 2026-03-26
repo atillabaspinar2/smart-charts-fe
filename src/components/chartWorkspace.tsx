@@ -43,6 +43,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import {
   useWorkspaceLayoutStore,
+  defaultCanvasContainerSize,
   type CanvasSettings,
 } from "@/store/workspaceLayoutStore";
 import { useWorkspaceChartsStore } from "@/store/workspaceChartsStore";
@@ -54,10 +55,7 @@ const defaultChartSize = {
   height: 300,
 };
 
-const defaultContainerSize = {
-  width: 800,
-  height: 600,
-};
+const defaultContainerSize = defaultCanvasContainerSize;
 
 const EMPTY_ANNOTATIONS: AnyAnnotation[] = [];
 
@@ -132,6 +130,12 @@ export const ChartWorkspace: React.FC<{
 
   // Workspace-persisted UI state (canvas settings, chart theme, and media type)
   const layoutHydrated = useWorkspaceLayoutStore((s) => s.hasHydrated);
+  const persistedCanvasContainerSize = useWorkspaceLayoutStore(
+    (s) => s.canvasContainerSize,
+  );
+  const setCanvasContainerSize = useWorkspaceLayoutStore(
+    (s) => s.setCanvasContainerSize,
+  );
   const persistedCanvasSettings = useWorkspaceLayoutStore((s) => s.canvasSettings);
   const persistedWorkspaceTheme = useWorkspaceLayoutStore((s) => s.workspaceTheme);
   const persistedMediaType = useWorkspaceLayoutStore((s) => s.mediaType);
@@ -209,6 +213,18 @@ export const ChartWorkspace: React.FC<{
     [setWorkspaceCanvasUi],
   );
 
+  const persistCanvasContainerSizeDebounced = useMemo(
+    () =>
+      debounce(
+        (size: { width: number; height: number }) => {
+          setCanvasContainerSize(size);
+        },
+        250,
+        { maxWait: 1000 },
+      ),
+    [setCanvasContainerSize],
+  );
+
   const areCanvasSettingsEqual = useCallback(
     (a: CanvasSettings, b: CanvasSettings) =>
       a.animationDuration === b.animationDuration &&
@@ -235,6 +251,12 @@ export const ChartWorkspace: React.FC<{
     setMediaType((prev) =>
       prev === persistedMediaType ? prev : persistedMediaType,
     );
+    setContainerSize((prev) =>
+      prev.width === persistedCanvasContainerSize.width &&
+      prev.height === persistedCanvasContainerSize.height
+        ? prev
+        : persistedCanvasContainerSize,
+    );
 
     // Sync ThemeProvider global UI state from workspace.
     // Important: we intentionally do NOT re-run this effect on user toggles
@@ -257,6 +279,7 @@ export const ChartWorkspace: React.FC<{
     layoutHydrated,
     workspaceId,
     persistedCanvasSettings,
+    persistedCanvasContainerSize,
     persistedWorkspaceTheme,
     persistedMediaType,
     persistedAppTheme,
@@ -305,6 +328,33 @@ export const ChartWorkspace: React.FC<{
       persistWorkspaceCanvasUiDebounced.cancel();
     };
   }, [persistWorkspaceCanvasUiDebounced]);
+
+  useEffect(() => {
+    return () => {
+      persistCanvasContainerSizeDebounced.cancel();
+    };
+  }, [persistCanvasContainerSizeDebounced]);
+
+  useEffect(() => {
+    if (!layoutHydrated) return;
+    if (isHydratingWorkspaceUiRef.current) return;
+    if (!didInitWorkspaceUiRef.current) return;
+
+    if (
+      containerSize.width === persistedCanvasContainerSize.width &&
+      containerSize.height === persistedCanvasContainerSize.height
+    ) {
+      return;
+    }
+
+    persistCanvasContainerSizeDebounced(containerSize);
+  }, [
+    layoutHydrated,
+    containerSize,
+    persistedCanvasContainerSize.width,
+    persistedCanvasContainerSize.height,
+    persistCanvasContainerSizeDebounced,
+  ]);
 
   useEffect(() => {
     if (!layoutHydrated) return;
@@ -834,9 +884,26 @@ export const ChartWorkspace: React.FC<{
     chartEntities,
   ]);
 
+  const orderedCharts = useMemo(() => {
+    if (!chartStackOrder.length) return charts;
+    return [...charts].sort((a, b) => {
+      const ia = chartStackOrder.indexOf(a.instanceId);
+      const ib = chartStackOrder.indexOf(b.instanceId);
+      const sa = ia === -1 ? Number.MAX_SAFE_INTEGER : ia;
+      const sb = ib === -1 ? Number.MAX_SAFE_INTEGER : ib;
+      return sa - sb;
+    });
+  }, [charts, chartStackOrder]);
+
   useEffect(() => {
+    if (!layoutHydrated || !chartsStoreHydrated) return;
     syncLayoutCharts(charts);
-  }, [charts, syncLayoutCharts]);
+  }, [
+    charts,
+    syncLayoutCharts,
+    layoutHydrated,
+    chartsStoreHydrated,
+  ]);
 
   const onSelectChart = useCallback(
     (instanceId: string) => {
@@ -1459,6 +1526,20 @@ export const ChartWorkspace: React.FC<{
       null
     : null;
 
+  /** Draft/map state can lag one frame behind persisted store after refresh; use entity chartData as fallback. */
+  const resolvedPanelChartData = useMemo((): ChartData | undefined => {
+    if (!selectedChartInstanceId) return undefined;
+    const draft = chartDataDraftMap[selectedChartInstanceId];
+    const map = chartDataMap[selectedChartInstanceId];
+    const stored = chartEntities?.[selectedChartInstanceId]?.chartData;
+    return draft ?? map ?? (stored ?? undefined);
+  }, [
+    selectedChartInstanceId,
+    chartDataDraftMap,
+    chartDataMap,
+    chartEntities,
+  ]);
+
   const selectedChartDataOrientation = selectedChartInstanceId
     ? chartDataOrientationMap[selectedChartInstanceId] || "columns-as-series"
     : "columns-as-series";
@@ -1512,7 +1593,10 @@ export const ChartWorkspace: React.FC<{
         chartDataOrientationMap[selectedChartInstanceId] || "columns-as-series";
       if (currentOrientation === orientation) return;
 
-      const currentData = chartDataMap[selectedChartInstanceId];
+      const currentData =
+        chartDataMap[selectedChartInstanceId] ??
+        chartEntities?.[selectedChartInstanceId]?.chartData ??
+        undefined;
       if (
         currentData &&
         (currentData.type === "line" || currentData.type === "bar")
@@ -1533,6 +1617,7 @@ export const ChartWorkspace: React.FC<{
     },
     [
       chartDataMap,
+      chartEntities,
       chartDataOrientationMap,
       selectedChartInstanceId,
       transposeChartDataOrientation,
@@ -1630,7 +1715,8 @@ export const ChartWorkspace: React.FC<{
     if (!selectedChartInstanceId) return;
     const current =
       (chartDataDraftMap[selectedChartInstanceId] as MapChartData) ||
-      (chartDataMap[selectedChartInstanceId] as MapChartData);
+      (chartDataMap[selectedChartInstanceId] as MapChartData) ||
+      (chartEntities?.[selectedChartInstanceId]?.chartData as MapChartData | undefined);
     if (current && current.mapName !== mapName) {
       // Dynamically import getMapData
       const { getMapData } = await import("./mapChartOptions");
@@ -1660,8 +1746,9 @@ export const ChartWorkspace: React.FC<{
       {selectedChart?.type === "line" && selectedChartInstanceId && (
         <LineChartDataPanel
           data={
-            (chartDataDraftMap[selectedChartInstanceId] as LineChartData) ||
-            (chartDataMap[selectedChartInstanceId] as LineChartData)
+            resolvedPanelChartData?.type === "line"
+              ? resolvedPanelChartData
+              : undefined
           }
           onChange={(nextData) =>
             updateChartDataDraft(selectedChartInstanceId, nextData)
@@ -1676,8 +1763,9 @@ export const ChartWorkspace: React.FC<{
       {selectedChart?.type === "bar" && selectedChartInstanceId && (
         <BarChartDataPanel
           data={
-            (chartDataDraftMap[selectedChartInstanceId] as BarChartData) ||
-            (chartDataMap[selectedChartInstanceId] as BarChartData)
+            resolvedPanelChartData?.type === "bar"
+              ? resolvedPanelChartData
+              : undefined
           }
           onChange={(nextData) =>
             updateChartDataDraft(selectedChartInstanceId, nextData)
@@ -1692,8 +1780,9 @@ export const ChartWorkspace: React.FC<{
       {selectedChart?.type === "pie" && selectedChartInstanceId && (
         <PieChartDataPanel
           data={
-            (chartDataDraftMap[selectedChartInstanceId] as PieChartData) ||
-            (chartDataMap[selectedChartInstanceId] as PieChartData)
+            resolvedPanelChartData?.type === "pie"
+              ? resolvedPanelChartData
+              : undefined
           }
           onChange={(nextData) =>
             updateChartDataDraft(selectedChartInstanceId, nextData)
@@ -1707,8 +1796,9 @@ export const ChartWorkspace: React.FC<{
       {selectedChart?.type === "map" && selectedChartInstanceId && (
         <MapChartDataPanel
           data={
-            (chartDataDraftMap[selectedChartInstanceId] as MapChartData) ||
-            (chartDataMap[selectedChartInstanceId] as MapChartData)
+            resolvedPanelChartData?.type === "map"
+              ? resolvedPanelChartData
+              : undefined
           }
           onChange={(nextData) => {
             updateChartDataDraft(selectedChartInstanceId, nextData);
@@ -1807,7 +1897,7 @@ export const ChartWorkspace: React.FC<{
           }}
           onClick={onCanvasClick}
         >
-          {charts.map((c) => (
+          {orderedCharts.map((c) => (
             <ChartItem
               key={c.id}
               data={c}

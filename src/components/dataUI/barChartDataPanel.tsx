@@ -1,9 +1,10 @@
 import type { FC } from "react";
 import { DataGrid } from "./DataGrid";
 import { type BarChartData } from "../chartTypes";
+import { DataPanelUnavailable } from "./DataPanelUnavailable";
 
 interface BarChartDataPanelProps {
-  data: BarChartData;
+  data: BarChartData | undefined;
   onChange: (next: BarChartData) => void;
   themeColors: string[];
   registerApplyHandler?: (handler: (() => BarChartData) | null) => void;
@@ -15,6 +16,19 @@ export const BarChartDataPanel: FC<BarChartDataPanelProps> = ({
   themeColors,
   registerApplyHandler,
 }) => {
+  if (
+    !data ||
+    data.type !== "bar" ||
+    !Array.isArray(data.categories) ||
+    !Array.isArray(data.series)
+  ) {
+    return (
+      <DataPanelUnavailable title="Bar chart data not ready">
+        The editor cannot display until valid bar chart data is available.
+      </DataPanelUnavailable>
+    );
+  }
+
   const mapRowsToSeries = (rows: BarChartData["series"]) =>
     rows.map((row) => {
       const existing = data.series.find((s) => s.id === row.id);

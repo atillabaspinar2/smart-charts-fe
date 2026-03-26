@@ -1,9 +1,10 @@
 import type { FC } from "react";
 import { DataGrid, type GridSeriesRow } from "./DataGrid";
 import { type PieChartData } from "../chartTypes";
+import { DataPanelUnavailable } from "./DataPanelUnavailable";
 
 interface PieChartDataPanelProps {
-  data: PieChartData;
+  data: PieChartData | undefined;
   onChange: (next: PieChartData) => void;
   registerApplyHandler?: (handler: (() => PieChartData) | null) => void;
 }
@@ -13,6 +14,18 @@ export const PieChartDataPanel: FC<PieChartDataPanelProps> = ({
   onChange,
   registerApplyHandler,
 }) => {
+  if (
+    !data ||
+    data.type !== "pie" ||
+    !Array.isArray(data.data)
+  ) {
+    return (
+      <DataPanelUnavailable title="Pie chart data not ready">
+        The editor cannot display until valid pie chart data is available.
+      </DataPanelUnavailable>
+    );
+  }
+
   const categories = data.data.map((point) => point.name);
   const gridSeries: GridSeriesRow[] = [
     {
