@@ -19,6 +19,7 @@ import { MapChart } from "./MapChart";
 import { colorRanges } from "./mapChartOptions";
 import { createLineAnnotation } from "./chartGraphicsFactory";
 import { drop } from "lodash";
+import { useAnnotations } from "@/hooks/useAnnotation";
 
 interface ChartItemProps {
   data: ChartItemData;
@@ -593,45 +594,46 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       e.preventDefault();
     };
 
-    const onDrop = (e: React.DragEvent) => {
-      e.preventDefault();
-      const type = e.dataTransfer.getData("annotationType");
-      if (type === "line") {
-        e.stopPropagation();
-      }
+    // imperative annotation state management directly on chart instance
+    // const onDrop = (e: React.DragEvent) => {
+    //   e.preventDefault();
+    //   const type = e.dataTransfer.getData("annotationType");
+    //   if (type === "line") {
+    //     e.stopPropagation();
+    //   }
 
-      const container = containerRef.current;
+    //   const container = containerRef.current;
 
-      if (type && container) {
-        const containerRect = container.getBoundingClientRect();
-        const dropX = Math.max(
-          0,
-          e.clientX - containerRect.left + container.scrollLeft,
-        );
-        const dropY = Math.max(
-          0,
-          e.clientY - containerRect.top + container.scrollTop,
-        );
-        const echartsInstance = chartRef.current?.getEchartsInstance();
-        if (!echartsInstance) return;
+    //   if (type && container) {
+    //     const containerRect = container.getBoundingClientRect();
+    //     const dropX = Math.max(
+    //       0,
+    //       e.clientX - containerRect.left + container.scrollLeft,
+    //     );
+    //     const dropY = Math.max(
+    //       0,
+    //       e.clientY - containerRect.top + container.scrollTop,
+    //     );
+    //     const echartsInstance = chartRef.current?.getEchartsInstance();
+    //     if (!echartsInstance) return;
 
-        if (type === "line" && chartRef.current) {
-          const echartsInstance = chartRef.current.getEchartsInstance();
+    //     if (type === "line" && chartRef.current) {
+    //       const echartsInstance = chartRef.current.getEchartsInstance();
 
-          // SAVE AS RATIOS (Universal for Pie/Line/Bar)
+    //       // SAVE AS RATIOS (Universal for Pie/Line/Bar)
 
-          if (echartsInstance) {
-            // 2. Save to your state
-            createLineAnnotation(echartsInstance.id, {
-              p1: [dropX, dropY],
-              p2: [dropX + 100, dropY + 100], // Initial length and angle
-            });
-          }
-        }
-      }
-    };
+    //       if (echartsInstance) {
+    //         // 2. Save to your state
+    //         createLineAnnotation(echartsInstance.id, {
+    //           p1: [dropX, dropY],
+    //           p2: [dropX + 100, dropY + 100], // Initial length and angle
+    //         });
+    //       }
+    //     }
+    //   }
+    // };
 
-    // add line graphic
+    // // add line graphic
     // useEffect(() => {
     //   if (chartRef.current) {
     //     const echartsInstance = chartRef.current.getEchartsInstance();
@@ -646,6 +648,23 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     //     // echartsInstance.setOption({ graphic });
     //   }
     // }, [chartRef.current]);
+
+    // annotation wrapper
+    const { addLine } = useAnnotations(chartRef.current?.getEchartsInstance());
+
+    const onDrop = (e: React.DragEvent) => {
+      e.preventDefault();
+      const type = e.dataTransfer.getData("annotationType");
+
+      if (type === "line" && containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        // Just call the hook method
+        addLine([x, y]);
+      }
+    };
 
     return (
       <div

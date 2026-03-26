@@ -90,6 +90,10 @@ export function createLineAnnotation(
   const updatedChart = chart as any; // TypeScript workaround to attach custom state
 
   // 1. Attach local state directly to this specific instance
+  if (!updatedChart._annotationState) {
+    updatedChart._annotationState = [];
+  }
+
   updatedChart._annotationState = {
     p1: initialDataPoints.p1, // [x, y] in data units
     p2: initialDataPoints.p2, // [x, y] in data units
