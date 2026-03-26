@@ -17,8 +17,6 @@ import { getOptionsByType } from "./chartOptionTemplates";
 import { ChartContextMenu } from "./chartContextMenu";
 import { MapChart } from "./MapChart";
 import { colorRanges } from "./mapChartOptions";
-import { createLineAnnotation } from "./chartGraphicsFactory";
-import { drop } from "lodash";
 import { useAnnotations } from "@/hooks/useAnnotation";
 
 interface ChartItemProps {
@@ -89,6 +87,20 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     const [animateOnNextMount, setAnimateOnNextMount] = useState(false);
     const lastAppliedReanimateKeyRef = useRef<number>(0);
     const lastAppliedReanimateAllKeyRef = useRef<number>(0);
+
+    // annotations (line-only for step 1)
+    const {
+      selectedAnnotation,
+      addLine,
+      selectAnnotation,
+      clearSelection,
+      moveAnnotation,
+      moveHandle1,
+      moveHandle2,
+      updateAnnotationStyle,
+      deleteAnnotation,
+      buildGraphicElements,
+    } = useAnnotations();
 
     useEffect(() => {
       if (!containerRef.current) return;
@@ -511,6 +523,23 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       ];
     }
 
+    // merge annotations into option.graphic
+    const annotationGraphic = buildGraphicElements({
+      onSelect: selectAnnotation,
+      onLineDrag: moveAnnotation,
+      onHandle1Drag: moveHandle1,
+      onHandle2Drag: moveHandle2,
+    });
+    if (annotationGraphic.length > 0) {
+      chartOption = {
+        ...chartOption,
+        graphic: [
+          ...((chartOption as any).graphic ?? []),
+          ...annotationGraphic,
+        ],
+      };
+    }
+
     const chartHighlighted = isSelected
       ? "border-slate-300 rounded-lg shadow-[0_3px_10px_rgba(15,23,42,0.35)]"
       : "border-slate-200 rounded shadow-[0_2px_6px_rgba(0,0,0,0.08)]";
@@ -649,9 +678,6 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     //   }
     // }, [chartRef.current]);
 
-    // annotation wrapper
-    const { addLine } = useAnnotations(chartRef.current?.getEchartsInstance());
-
     const onDrop = (e: React.DragEvent) => {
       e.preventDefault();
       const type = e.dataTransfer.getData("annotationType");
@@ -661,8 +687,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
-        // Just call the hook method
-        addLine([x, y]);
+        addLine({ x, y });
       }
     };
 
@@ -707,12 +732,96 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             // @ts-ignore: preserveDrawingBuffer is valid for the underlying canvas
             opts={{ renderer: "canvas", preserveDrawingBuffer: true }}
             theme={theme || undefined}
+            onEvents={{
+              click: (params: any) => {
+                // Click on empty plot area clears annotation selection
+                if (params?.componentType !== "graphic") {
+                  clearSelection();
+                }
+              },
+            }}
             style={{
               width: "100%",
               height: "100%",
               background: effectiveBackgroundColor || "transparent",
             }}
           />
+        )}
+
+        {/* Floating style panel (line-only for step 1) */}
+        {selectedAnnotation?.type === "line" && (
+          <div
+            data-no-drag="true"
+            className="absolute top-2 right-2 z-50 w-[220px] rounded-md border border-slate-200 bg-white/95 p-3 text-slate-900 shadow-lg backdrop-blur"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <div className="text-xs font-semibold text-slate-700">
+                Line style
+              </div>
+              <button
+                className="text-xs text-slate-500 hover:text-slate-900"
+                onClick={() => deleteAnnotation(selectedAnnotation.id)}
+              >
+                Delete
+              </button>
+            </div>
+
+            <label className="mb-2 flex items-center justify-between gap-2 text-xs">
+              <span className="text-slate-600">Color</span>
+              <input
+                type="color"
+                value={selectedAnnotation.style.stroke}
+                onChange={(e) =>
+                  updateAnnotationStyle(selectedAnnotation.id, {
+                    stroke: e.target.value,
+                  })
+                }
+              />
+            </label>
+
+            <label className="mb-2 flex items-center justify-between gap-2 text-xs">
+              <span className="text-slate-600">Width</span>
+              <input
+                type="range"
+                min={1}
+                max={12}
+                value={selectedAnnotation.style.lineWidth}
+                onChange={(e) =>
+                  updateAnnotationStyle(selectedAnnotation.id, {
+                    lineWidth: Number(e.target.value),
+                  })
+                }
+              />
+            </label>
+
+            <label className="mb-2 flex items-center justify-between gap-2 text-xs">
+              <span className="text-slate-600">Dash</span>
+              <input
+                type="checkbox"
+                checked={(selectedAnnotation.style.lineDash?.length ?? 0) > 0}
+                onChange={(e) =>
+                  updateAnnotationStyle(selectedAnnotation.id, {
+                    lineDash: e.target.checked ? [6, 3] : [],
+                  })
+                }
+              />
+            </label>
+
+            <label className="flex items-center justify-between gap-2 text-xs">
+              <span className="text-slate-600">Arrow end</span>
+              <input
+                type="checkbox"
+                checked={Boolean(selectedAnnotation.style.arrowEnd)}
+                onChange={(e) =>
+                  updateAnnotationStyle(selectedAnnotation.id, {
+                    arrowEnd: e.target.checked,
+                  })
+                }
+              />
+            </label>
+          </div>
         )}
         <div
           data-no-drag="true"
