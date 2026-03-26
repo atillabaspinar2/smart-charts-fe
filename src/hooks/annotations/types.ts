@@ -42,6 +42,8 @@ export type ImageAnnotation = {
   style: {
     src: string;
     opacity: number;
+    lockAspectRatio?: boolean;
+    sourceAspectRatio?: number;
   };
 };
 
@@ -84,7 +86,12 @@ export function createAnnotation(type: AnnotationType, x: number, y: number): An
     id,
     type: "image",
     shape: { x: x - 60, y: y - 40, width: 120, height: 80 },
-    style: { src: "", opacity: 1 },
+    style: {
+      src: "",
+      opacity: 1,
+      lockAspectRatio: true,
+      sourceAspectRatio: 120 / 80,
+    },
   };
 }
 
