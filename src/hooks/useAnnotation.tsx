@@ -173,6 +173,58 @@ export function useAnnotations() {
         const accentColor = selected ? "#ffffff" : ann.style.stroke;
         const handleFill = selected ? ann.style.stroke : "#1e293b";
 
+        const stopDomEvent = (params: any) => {
+          const evt = params?.event;
+          // ZRender wraps the native event under `event`
+          const domEvt = evt?.event ?? evt;
+          domEvt?.stopPropagation?.();
+          domEvt?.preventDefault?.();
+          if (evt) evt.cancelBubble = true;
+          if (params) params.cancelBubble = true;
+        };
+
+        const getDragDelta = (params: any): { dx: number; dy: number } => {
+          if (typeof params?.dx === "number" && typeof params?.dy === "number") {
+            return { dx: params.dx, dy: params.dy };
+          }
+
+          const evt = params?.event;
+          const domEvt = evt?.event ?? evt;
+          const mx =
+            domEvt?.movementX ??
+            domEvt?.webkitMovementX ??
+            domEvt?.mozMovementX ??
+            domEvt?.msMovementX;
+          const my =
+            domEvt?.movementY ??
+            domEvt?.webkitMovementY ??
+            domEvt?.mozMovementY ??
+            domEvt?.msMovementY;
+          if (typeof mx === "number" && typeof my === "number") {
+            return { dx: mx, dy: my };
+          }
+
+          const ox = evt?.offsetX ?? evt?.zrX;
+          const oy = evt?.offsetY ?? evt?.zrY;
+          const target = params?.target as any;
+          if (typeof ox === "number" && typeof oy === "number" && target) {
+            const prev = target.__annPrevOffset;
+            target.__annPrevOffset = { x: ox, y: oy };
+            if (prev && typeof prev.x === "number" && typeof prev.y === "number") {
+              return { dx: ox - prev.x, dy: oy - prev.y };
+            }
+          }
+
+          return { dx: 0, dy: 0 };
+        };
+
+        const clearPrevOffset = (params: any) => {
+          const target = params?.target as any;
+          if (target && target.__annPrevOffset) {
+            delete target.__annPrevOffset;
+          }
+        };
+
         const hitZone = {
           type: "line",
           id: `${ann.id}_hit`,
@@ -181,8 +233,27 @@ export function useAnnotations() {
           draggable: true,
           cursor: "move",
           z: 100,
-          ondrag: ({ dx, dy }: any) => callbacks.onLineDrag(ann.id, dx, dy),
-          onclick: () => callbacks.onSelect(ann.id),
+          onmousedown: (params: any) => {
+            callbacks.onSelect(ann.id);
+            stopDomEvent(params);
+          },
+          ondragstart: (params: any) => {
+            callbacks.onSelect(ann.id);
+            clearPrevOffset(params);
+            stopDomEvent(params);
+          },
+          ondrag: (params: any) => {
+            const { dx, dy } = getDragDelta(params);
+            // Cancel ECharts internal dragging transform; we render from state.
+            params?.target?.drift?.(-dx, -dy);
+            callbacks.onLineDrag(ann.id, dx, dy);
+            stopDomEvent(params);
+          },
+          ondragend: (params: any) => {
+            clearPrevOffset(params);
+            stopDomEvent(params);
+          },
+          onclick: (params: any) => stopDomEvent(params),
         };
 
         const visibleLine = {
@@ -214,8 +285,26 @@ export function useAnnotations() {
           draggable: true,
           cursor: "crosshair",
           z: 101,
-          ondrag: ({ dx, dy }: any) => callbacks.onHandle1Drag(ann.id, dx, dy),
-          onclick: () => callbacks.onSelect(ann.id),
+          onmousedown: (params: any) => {
+            callbacks.onSelect(ann.id);
+            stopDomEvent(params);
+          },
+          ondragstart: (params: any) => {
+            callbacks.onSelect(ann.id);
+            clearPrevOffset(params);
+            stopDomEvent(params);
+          },
+          ondrag: (params: any) => {
+            const { dx, dy } = getDragDelta(params);
+            params?.target?.drift?.(-dx, -dy);
+            callbacks.onHandle1Drag(ann.id, dx, dy);
+            stopDomEvent(params);
+          },
+          ondragend: (params: any) => {
+            clearPrevOffset(params);
+            stopDomEvent(params);
+          },
+          onclick: (params: any) => stopDomEvent(params),
         };
 
         const handle2 = {
@@ -231,8 +320,26 @@ export function useAnnotations() {
           draggable: true,
           cursor: "crosshair",
           z: 101,
-          ondrag: ({ dx, dy }: any) => callbacks.onHandle2Drag(ann.id, dx, dy),
-          onclick: () => callbacks.onSelect(ann.id),
+          onmousedown: (params: any) => {
+            callbacks.onSelect(ann.id);
+            stopDomEvent(params);
+          },
+          ondragstart: (params: any) => {
+            callbacks.onSelect(ann.id);
+            clearPrevOffset(params);
+            stopDomEvent(params);
+          },
+          ondrag: (params: any) => {
+            const { dx, dy } = getDragDelta(params);
+            params?.target?.drift?.(-dx, -dy);
+            callbacks.onHandle2Drag(ann.id, dx, dy);
+            stopDomEvent(params);
+          },
+          ondragend: (params: any) => {
+            clearPrevOffset(params);
+            stopDomEvent(params);
+          },
+          onclick: (params: any) => stopDomEvent(params),
         };
 
         const arrowHead =

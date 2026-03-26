@@ -102,6 +102,28 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       buildGraphicElements,
     } = useAnnotations();
 
+    // Clear annotation selection when clicking empty chart area.
+    // (ECharts click events don't always fire for "blank" clicks in the way we want.)
+    useEffect(() => {
+      const echartsInstance = chartRef.current?.getEchartsInstance?.();
+      if (!echartsInstance) return;
+
+      const zr = echartsInstance.getZr?.();
+      if (!zr) return;
+
+      const onZrClick = (evt: any) => {
+        // If user clicked directly on a graphic element, it will have a target.
+        if (!evt?.target) {
+          clearSelection();
+        }
+      };
+
+      zr.on("click", onZrClick);
+      return () => {
+        zr.off("click", onZrClick);
+      };
+    }, [clearSelection, recordKey, theme, type, id]);
+
     useEffect(() => {
       if (!containerRef.current) return;
       const observer = new ResizeObserver(() => {
