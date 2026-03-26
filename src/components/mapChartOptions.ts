@@ -66,7 +66,9 @@ export const defaultMapOptions = (mapName?: string) => {
         name: `${effectiveMapName.charAt(0).toUpperCase() + effectiveMapName.slice(1)} Map`,
         type: "map",
         map: effectiveMapName,
-        roam: true,
+        // Disable roam/pan so users can't accidentally drag the map (center moves)
+        // and it doesn't trigger heavy redraws while dragging.
+        roam: false,
         label: {
           color: "black",
           fontSize: 10,

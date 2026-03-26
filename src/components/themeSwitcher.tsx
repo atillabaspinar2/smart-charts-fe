@@ -1,4 +1,4 @@
-import { PaintBoardIcon, Sun03Icon } from "@hugeicons/core-free-icons";
+import { Moon02Icon, PaintBoardIcon, Sun03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useTheme, type ThemeName } from "./theme-provider";
 
@@ -24,6 +24,7 @@ export const ThemeSwitcher: React.FC = () => {
   } = useTheme();
 
   const toggleMode = () => {
+    // System mode removed from UI; keep it strictly light/dark.
     setMode(mode === "dark" ? "light" : "dark");
   };
 
@@ -33,10 +34,10 @@ export const ThemeSwitcher: React.FC = () => {
         type="button"
         onClick={toggleMode}
         className="inline-flex h-9 w-9 items-center justify-center rounded-full border-0 bg-transparent p-0 text-zinc-100 transition-colors hover:text-zinc-300"
-        aria-label="Toggle dark and light mode"
+        aria-label={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
         title={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
       >
-        <HugeiconsIcon icon={Sun03Icon} size={20} />
+        <HugeiconsIcon icon={mode === "dark" ? Moon02Icon : Sun03Icon} size={20} />
       </button>
       <button
         type="button"
