@@ -89,8 +89,6 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     const lastAppliedReanimateKeyRef = useRef<number>(0);
     const lastAppliedReanimateAllKeyRef = useRef<number>(0);
     const echartsInstanceRef = useRef<any>(null);
-    const [annotationPanelAnchorRect, setAnnotationPanelAnchorRect] =
-      useState<DOMRect | null>(null);
 
     // annotations (line-only for step 1)
     const {
@@ -135,27 +133,6 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       zr.on("click", shouldClear);
       zr.on("mousedown", shouldClear);
     };
-
-    // Keep the floating panel anchored to this chart item's screen position.
-    useEffect(() => {
-      if (!selectedId) {
-        setAnnotationPanelAnchorRect(null);
-        return;
-      }
-
-      const updateRect = () => {
-        const rect = containerRef.current?.getBoundingClientRect?.();
-        setAnnotationPanelAnchorRect(rect ?? null);
-      };
-
-      updateRect();
-      window.addEventListener("resize", updateRect);
-      window.addEventListener("scroll", updateRect, true);
-      return () => {
-        window.removeEventListener("resize", updateRect);
-        window.removeEventListener("scroll", updateRect, true);
-      };
-    }, [selectedId]);
 
     // Clear annotation selection when clicking outside this chart item entirely.
     useEffect(() => {
@@ -831,7 +808,6 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         {selectedAnnotation && (
           <AnnotationStylePanel
             annotation={selectedAnnotation}
-            anchorRect={annotationPanelAnchorRect}
             onDelete={() => deleteAnnotation(selectedAnnotation.id)}
             onStyleChange={(styleUpdate) =>
               updateAnnotationStyle(selectedAnnotation.id, styleUpdate)
