@@ -1489,6 +1489,9 @@ export const ChartWorkspace: React.FC<{
           onChange={(nextData) =>
             updateChartDataDraft(selectedChartInstanceId, nextData)
           }
+          registerApplyHandler={(handler) => {
+            dataPanelApplyHandlerRef.current = handler;
+          }}
           themeColors={activeThemeColors}
         />
       )}
