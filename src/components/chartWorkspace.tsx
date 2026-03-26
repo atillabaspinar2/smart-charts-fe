@@ -41,6 +41,8 @@ import {
 } from "./chartTypes";
 import { useAuth } from "@/context/AuthContext";
 import { useWorkspaceLayoutStore } from "@/store/workspaceLayoutStore";
+import { useWorkspaceChartsStore } from "@/store/workspaceChartsStore";
+import type { AnyAnnotation } from "@/hooks/useAnnotation";
 
 const defaultChartSize = {
   width: 400,
@@ -51,6 +53,8 @@ const defaultContainerSize = {
   width: 800,
   height: 600,
 };
+
+const EMPTY_ANNOTATIONS: AnyAnnotation[] = [];
 
 const DATA_PANEL_FIXED_TOP = 120;
 const DATA_PANEL_HEADER_HEIGHT = 40;
@@ -82,6 +86,20 @@ export const ChartWorkspace: React.FC<{
   setAuthModal,
 }) => {
   const { isAuthenticated } = useAuth();
+  const workspaceId = useWorkspaceLayoutStore((s) => s.activeWorkspaceId);
+  const chartsStoreHydrated = useWorkspaceChartsStore((s) => s.hasHydrated);
+  const chartEntities = useWorkspaceChartsStore(
+    (s) => s.chartsByWorkspaceId[workspaceId],
+  );
+  const upsertChartData = useWorkspaceChartsStore((s) => s.upsertChartData);
+  const upsertChartSettings = useWorkspaceChartsStore(
+    (s) => s.upsertChartSettings,
+  );
+  const upsertPieSettings = useWorkspaceChartsStore((s) => s.upsertPieSettings);
+  const upsertMapSettings = useWorkspaceChartsStore((s) => s.upsertMapSettings);
+  const upsertAnnotations = useWorkspaceChartsStore(
+    (s) => s.upsertAnnotations,
+  );
   const [pendingRemoval, setPendingRemoval] = useState<
     { mode: "single"; chartId: number } | { mode: "all" } | null
   >(null);
@@ -155,6 +173,67 @@ export const ChartWorkspace: React.FC<{
     Record<string, MapChartSettings>
   >({});
 
+  // Hydrate persisted chart content once (per workspace) so refresh restores charts.
+  useEffect(() => {
+    if (!chartsStoreHydrated) return;
+
+    charts.forEach((chart) => {
+      const entity = chartEntities?.[chart.instanceId];
+      if (!entity) return;
+
+      if (entity.chartData && !chartDataMap[chart.instanceId]) {
+        setChartDataMap((prev) => ({
+          ...prev,
+          [chart.instanceId]: entity.chartData as ChartData,
+        }));
+        setChartDataDraftMap((prev) => ({
+          ...prev,
+          [chart.instanceId]: entity.chartData as ChartData,
+        }));
+        setChartDataDraftDirtyMap((prev) => ({
+          ...prev,
+          [chart.instanceId]: false,
+        }));
+      }
+
+      if (entity.chartSettings && !chartSettingsMap[chart.instanceId]) {
+        setChartSettingsMap((prev) => ({
+          ...prev,
+          [chart.instanceId]:
+            entity.chartSettings as
+              | LineChartSettings
+              | BarChartSettings
+              | PieChartSettings
+              | MapChartSettings,
+        }));
+      }
+
+      if (entity.pieSettings && !pieSettingsMap[chart.instanceId]) {
+        setPieSettingsMap((prev) => ({
+          ...prev,
+          [chart.instanceId]: entity.pieSettings as PieChartSettings,
+        }));
+      }
+
+      if (entity.mapSettings && !mapSettingsMap[chart.instanceId]) {
+        setMapSettingsMap((prev) => ({
+          ...prev,
+          [chart.instanceId]:
+            entity.mapSettings as MapChartSettings,
+        }));
+      }
+    });
+    // We intentionally include local maps so we only fill missing keys.
+  }, [
+    charts,
+    chartsStoreHydrated,
+    chartEntities,
+    chartDataMap,
+    chartSettingsMap,
+    pieSettingsMap,
+    mapSettingsMap,
+  ]);
+
   const [pendingImportChartInstanceId, setPendingImportChartInstanceId] =
     useState<string | null>(null);
   const dataPanelApplyHandlerRef = useRef<(() => ChartData) | null>(null);
@@ -173,6 +252,8 @@ export const ChartWorkspace: React.FC<{
       ...prev,
       [instanceId]: false,
     }));
+
+    upsertChartData(workspaceId, instanceId, nextData);
   };
 
   const updateChartDataDraft = (instanceId: string, nextData: ChartData) => {
@@ -193,9 +274,8 @@ export const ChartWorkspace: React.FC<{
 
   const initializeChartSettings = (instanceId: string, type: string) => {
     const templateOptions: any = getOptionsByType(type);
-    setChartSettingsMap((prev) => ({
-      ...prev,
-      [instanceId]: {
+    const nextSettings =
+      ({
         animationDuration: templateOptions.animationDuration || 1000,
         backgroundColor: "#ffffff",
         title: templateOptions?.title?.text || "",
@@ -213,8 +293,14 @@ export const ChartWorkspace: React.FC<{
         lineSmooth: false,
         lineStep: false,
         lineArea: false,
-      },
+      } as LineChartSettings | BarChartSettings | PieChartSettings | MapChartSettings);
+
+    setChartSettingsMap((prev) => ({
+      ...prev,
+      [instanceId]: nextSettings,
     }));
+
+    upsertChartSettings(workspaceId, instanceId, nextSettings);
   };
 
   const initializeChartData = (instanceId: string, type: string) => {
@@ -349,6 +435,9 @@ export const ChartWorkspace: React.FC<{
       const current = prev[instanceId] || defaultLineChartSettings;
       const next = { ...current, ...updates };
 
+      // Persist committed settings immediately (settings panel is treated as live).
+      upsertChartSettings(workspaceId, instanceId, next as any);
+
       const animationChanged =
         typeof updates.animationDuration === "number" &&
         updates.animationDuration !== current.animationDuration;
@@ -465,13 +554,14 @@ export const ChartWorkspace: React.FC<{
     instanceId: string,
     updates: Partial<PieChartSettings>,
   ) => {
-    setPieSettingsMap((prev) => ({
-      ...prev,
-      [instanceId]: {
+    setPieSettingsMap((prev) => {
+      const next = {
         ...(prev[instanceId] ?? defaultPieChartSettings),
         ...updates,
-      },
-    }));
+      };
+      upsertPieSettings(workspaceId, instanceId, next);
+      return { ...prev, [instanceId]: next };
+    });
   };
 
   const getMapSettings = (instanceId: string): MapChartSettings =>
@@ -481,13 +571,14 @@ export const ChartWorkspace: React.FC<{
     instanceId: string,
     updates: Partial<MapChartSettings>,
   ) => {
-    setMapSettingsMap((prev) => ({
-      ...prev,
-      [instanceId]: {
+    setMapSettingsMap((prev) => {
+      const next = {
         ...(prev[instanceId] ?? defaultMapChartSettings),
         ...updates,
-      },
-    }));
+      };
+      upsertMapSettings(workspaceId, instanceId, next);
+      return { ...prev, [instanceId]: next };
+    });
   };
 
   const updateChartData = (
@@ -537,9 +628,13 @@ export const ChartWorkspace: React.FC<{
   }, [charts, applyThemeColorsToChartSeries]);
 
   useEffect(() => {
+    if (!chartsStoreHydrated) return;
     charts.forEach((chart) => {
+      const entity = chartEntities?.[chart.instanceId];
       if (!chartSettingsMap[chart.instanceId]) {
-        initializeChartSettings(chart.instanceId, chart.type);
+        if (!entity?.chartSettings) {
+          initializeChartSettings(chart.instanceId, chart.type);
+        }
       }
       if (
         (chart.type === "line" ||
@@ -548,16 +643,31 @@ export const ChartWorkspace: React.FC<{
           chart.type === "map") &&
         !chartDataMap[chart.instanceId]
       ) {
-        initializeChartData(chart.instanceId, chart.type);
+        if (!entity?.chartData) {
+          initializeChartData(chart.instanceId, chart.type);
+        }
       }
-      if (chart.type === "pie" && !pieSettingsMap[chart.instanceId]) {
-        setPieSettingsMap((prev) => ({
-          ...prev,
-          [chart.instanceId]: defaultPieChartSettings,
-        }));
+      if (
+        chart.type === "pie" &&
+        !pieSettingsMap[chart.instanceId] &&
+        !entity?.pieSettings
+      ) {
+        setPieSettingsMap((prev) => {
+          const next = defaultPieChartSettings;
+          upsertPieSettings(workspaceId, chart.instanceId, next);
+          return { ...prev, [chart.instanceId]: next };
+        });
       }
     });
-  }, [charts, chartSettingsMap, chartDataMap, pieSettingsMap]);
+  }, [
+    charts,
+    chartSettingsMap,
+    chartDataMap,
+    pieSettingsMap,
+    chartsStoreHydrated,
+    workspaceId,
+    chartEntities,
+  ]);
 
   useEffect(() => {
     syncLayoutCharts(charts);
@@ -1567,6 +1677,16 @@ export const ChartWorkspace: React.FC<{
               theme={workspaceTheme || undefined}
               pieSettings={getPieSettings(c.instanceId)}
               mapSettings={getMapSettings(c.instanceId)}
+              annotations={
+                chartEntities?.[c.instanceId]?.annotations ?? EMPTY_ANNOTATIONS
+              }
+              onAnnotationsChange={(nextAnnotations) =>
+                upsertAnnotations(
+                  workspaceId,
+                  c.instanceId,
+                  nextAnnotations,
+                )
+              }
             />
           ))}
         </div>

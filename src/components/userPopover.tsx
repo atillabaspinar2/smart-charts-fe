@@ -17,9 +17,6 @@ export const UserPopover: React.FC<{
         popover="auto"
         className="popover-content min-w-52 rounded-lg border border-zinc-700 bg-zinc-900 p-4 text-zinc-100 shadow-xl backdrop:bg-black/20"
       >
-        <div className="mb-4">
-          <h3 className="font-bold">User Menu</h3>
-        </div>
         <ul className="space-y-2">
           <li>
             <button

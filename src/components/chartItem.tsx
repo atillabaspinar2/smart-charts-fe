@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactECharts from "echarts-for-react";
+import debounce from "lodash/debounce";
 import { recordCanvas } from "./record";
 import {
   type ChartData,
@@ -18,6 +19,7 @@ import { ChartContextMenu } from "./chartContextMenu";
 import { MapChart } from "./MapChart";
 import { colorRanges } from "./mapChartOptions";
 import { useAnnotations } from "@/hooks/useAnnotation";
+import type { AnyAnnotation } from "@/hooks/useAnnotation";
 import { AnnotationStylePanel } from "@/components/annotations/AnnotationStylePanel";
 
 interface ChartItemProps {
@@ -48,6 +50,8 @@ interface ChartItemProps {
   theme?: string;
   pieSettings?: PieChartSettings;
   mapSettings?: MapChartSettings;
+  annotations: AnyAnnotation[];
+  onAnnotationsChange: (annotations: AnyAnnotation[]) => void;
 }
 
 export const ChartItem: React.FC<ChartItemProps> = React.memo(
@@ -75,6 +79,8 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     theme,
     pieSettings,
     mapSettings,
+    annotations,
+    onAnnotationsChange,
   }) => {
     const { id, type } = data;
     const containerRef = useRef<HTMLDivElement>(null);
@@ -100,11 +106,45 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       moveAnnotation,
       moveHandle1,
       moveHandle2,
+      annotations: currentAnnotations,
       updateAnnotationStyle,
       updateAnnotationShape,
       deleteAnnotation,
       buildGraphicElements,
-    } = useAnnotations();
+    } = useAnnotations(annotations);
+
+    const onAnnotationsChangeRef = useRef(onAnnotationsChange);
+    useEffect(() => {
+      onAnnotationsChangeRef.current = onAnnotationsChange;
+    }, [onAnnotationsChange]);
+
+    // Persist annotation changes into the workspace store.
+    // Dragging and slider interactions can fire many state updates in a short time.
+    // Debounce store writes so we only persist after user "finishes" interacting.
+    const persistAnnotationsDebounced = useMemo(
+      () =>
+        debounce((next: AnyAnnotation[]) => {
+          onAnnotationsChangeRef.current(next);
+        }, 250, { maxWait: 1000 }),
+      [],
+    );
+
+    useEffect(() => {
+      // Prevent infinite loop: when store pushes the same annotation set back
+      // as `initialAnnotations`, `useAnnotations` re-hydrates local state and we
+      // should not write it back again.
+      const propStr = JSON.stringify(annotations);
+      const nextStr = JSON.stringify(currentAnnotations);
+      if (propStr === nextStr) return;
+
+      persistAnnotationsDebounced(currentAnnotations);
+    }, [annotations, currentAnnotations, persistAnnotationsDebounced]);
+
+    useEffect(() => {
+      return () => {
+        persistAnnotationsDebounced.cancel();
+      };
+    }, [persistAnnotationsDebounced]);
 
     // Clear annotation selection when clicking non-annotation chart area.
     // We attach via `onChartReady` since the instance may not exist in early effects.
