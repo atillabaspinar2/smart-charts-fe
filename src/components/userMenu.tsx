@@ -1,4 +1,3 @@
-import "./popover.css";
 import { useAuth } from "../context/AuthContext";
 import { UserPopover } from "./userPopover";
 import { ThemeSwitcher } from "./themeSwitcher";

@@ -1,6 +1,12 @@
 import { Moon02Icon, PaintBoardIcon, Sun03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useTheme, type ThemeName } from "./theme-provider";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const themes: Array<{ id: ThemeName; label: string }> = [
   { id: "theme-amber", label: "Amber" },
@@ -39,40 +45,33 @@ export const ThemeSwitcher: React.FC = () => {
       >
         <HugeiconsIcon icon={mode === "dark" ? Moon02Icon : Sun03Icon} size={20} />
       </button>
-      <button
-        type="button"
-        id="theme-popover-btn"
-        popoverTarget="theme-popover-content"
-        className="popover-btn inline-flex h-9 w-9 items-center justify-center rounded-full border-0 bg-transparent p-0 text-zinc-100 transition-colors hover:text-zinc-300"
-        aria-label="Open theme switcher"
-        title="Switch theme"
-      >
-        <HugeiconsIcon icon={PaintBoardIcon} size={24} />
-      </button>
-      <div
-        id="theme-popover-content"
-        popover="auto"
-        className="popover-content min-w-52 rounded-lg border border-border bg-popover p-4 text-popover-foreground shadow-xl"
-      >
-        <ul className="space-y-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border-0 bg-transparent p-0 text-zinc-100 transition-colors hover:text-zinc-300"
+            aria-label="Open theme switcher"
+            title="Switch theme"
+          >
+            <HugeiconsIcon icon={PaintBoardIcon} size={24} />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
           {themes.map((theme) => (
-            <li key={theme.id}>
-              <button
-                className={`w-full rounded border px-3 py-2 text-left text-sm transition-colors ${
-                  selectedTheme === theme.id
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-background text-foreground hover:bg-muted"
-                }`}
-                onClick={() => setSelectedTheme(theme.id)}
-                popoverTarget="theme-popover-content"
-                popoverTargetAction="hide"
-              >
-                {theme.label}
-              </button>
-            </li>
+            <DropdownMenuItem
+              key={theme.id}
+              onSelect={() => setSelectedTheme(theme.id)}
+              className={
+                selectedTheme === theme.id
+                  ? "bg-accent text-accent-foreground"
+                  : undefined
+              }
+            >
+              {theme.label}
+            </DropdownMenuItem>
           ))}
-        </ul>
-      </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 };
