@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { buildCircleGraphic } from "./annotations/builders/circleBuilder";
 import { buildImageGraphic } from "./annotations/builders/imageBuilder";
 import { buildLineGraphic } from "./annotations/builders/lineBuilder";
@@ -16,9 +16,23 @@ import {
 
 export type { AnyAnnotation, LineAnnotation, CircleAnnotation, TextAnnotation, ImageAnnotation };
 
-export function useAnnotations() {
-  const [annotations, setAnnotations] = useState<AnyAnnotation[]>([]);
+export function useAnnotations(initialAnnotations: AnyAnnotation[] = []) {
+  const [annotations, setAnnotations] = useState<AnyAnnotation[]>(
+    () => initialAnnotations,
+  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // When re-hydrating (e.g. switching workspace / refresh), replace annotations.
+  useEffect(() => {
+    setAnnotations(initialAnnotations);
+    // Preserve selection when possible.
+    // Persisting annotation changes via the store updates `initialAnnotations`
+    // reference; we don't want to clear selection every time.
+    setSelectedId((prev) => {
+      if (!prev) return null;
+      return initialAnnotations.some((a) => a.id === prev) ? prev : null;
+    });
+  }, [initialAnnotations]);
 
   const addAnnotation = useCallback((type: AnnotationType, dropPos: { x: number; y: number }) => {
     const newAnn = createAnnotation(type, dropPos.x, dropPos.y);

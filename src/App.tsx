@@ -9,16 +9,22 @@ import { Sidebar } from "./components/sidebar";
 import { AuthProvider } from "./context/AuthContext";
 import logo from "./assets/logo.svg";
 import { AboutDialog } from "./components/aboutDialog";
+import { useWorkspaceLayoutStore } from "@/store/workspaceLayoutStore";
+import { useWorkspaceChartsStore } from "@/store/workspaceChartsStore";
 
 function App() {
-  const [charts, setCharts] = useState<
-    Array<{
-      id: number;
-      instanceId: string;
-      type: string;
-      initialPosition?: { x: number; y: number };
-    }>
-  >([]);
+  const activeWorkspaceId = useWorkspaceLayoutStore(
+    (s) => s.activeWorkspaceId,
+  );
+  const chartEntities = useWorkspaceChartsStore(
+    (s) => s.chartsByWorkspaceId[activeWorkspaceId],
+  );
+  const charts = Object.values(chartEntities ?? {}).map((c) => ({
+    id: c.id,
+    instanceId: c.instanceId,
+    type: c.type,
+    initialPosition: c.initialPosition,
+  }));
 
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
 
@@ -26,18 +32,14 @@ function App() {
     chartType: string,
     initialPosition?: { x: number; y: number },
   ) => {
-    setCharts((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        instanceId: `chart-${Date.now()}-${Math.random()}`,
-        type: chartType,
-        initialPosition,
-      },
-    ]);
+    useWorkspaceChartsStore.getState().addChart(
+      activeWorkspaceId,
+      chartType,
+      initialPosition,
+    );
   };
   const removeChart = (id: number) => {
-    setCharts((prev) => prev.filter((c) => c.id !== id));
+    useWorkspaceChartsStore.getState().removeChart(activeWorkspaceId, id);
   };
   const [authModal, setAuthModal] = useState<"signup" | "signin" | null>(null);
   const [isCoarsePointer, setIsCoarsePointer] = useState(false);
