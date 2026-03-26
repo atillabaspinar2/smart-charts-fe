@@ -87,10 +87,12 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     const [animateOnNextMount, setAnimateOnNextMount] = useState(false);
     const lastAppliedReanimateKeyRef = useRef<number>(0);
     const lastAppliedReanimateAllKeyRef = useRef<number>(0);
+    const echartsInstanceRef = useRef<any>(null);
 
     // annotations (line-only for step 1)
     const {
       selectedAnnotation,
+      selectedId,
       addLine,
       selectAnnotation,
       clearSelection,
@@ -102,27 +104,44 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       buildGraphicElements,
     } = useAnnotations();
 
-    // Clear annotation selection when clicking empty chart area.
-    // (ECharts click events don't always fire for "blank" clicks in the way we want.)
-    useEffect(() => {
-      const echartsInstance = chartRef.current?.getEchartsInstance?.();
-      if (!echartsInstance) return;
-
-      const zr = echartsInstance.getZr?.();
+    // Clear annotation selection when clicking non-annotation chart area.
+    // We attach via `onChartReady` since the instance may not exist in early effects.
+    const attachZrDeselectHandlers = (echartsInstance: any) => {
+      const zr = echartsInstance?.getZr?.();
       if (!zr) return;
 
-      const onZrClick = (evt: any) => {
-        // If user clicked directly on a graphic element, it will have a target.
-        if (!evt?.target) {
+      const shouldClear = (evt: any) => {
+        const targetId = evt?.target?.id as string | undefined;
+        const clickedAnnotationGraphic =
+          typeof targetId === "string" && targetId.startsWith("ann_");
+        if (!clickedAnnotationGraphic) clearSelection();
+      };
+
+      // avoid duplicates if chart re-inits
+      zr.off("click", shouldClear);
+      zr.off("mousedown", shouldClear);
+
+      zr.on("click", shouldClear);
+      zr.on("mousedown", shouldClear);
+    };
+
+    // Clear annotation selection when clicking outside this chart item entirely.
+    useEffect(() => {
+      if (!selectedId) return;
+
+      const onDocMouseDown = (e: MouseEvent) => {
+        const container = containerRef.current;
+        if (!container) return;
+        if (!container.contains(e.target as Node)) {
           clearSelection();
         }
       };
 
-      zr.on("click", onZrClick);
+      document.addEventListener("mousedown", onDocMouseDown, true);
       return () => {
-        zr.off("click", onZrClick);
+        document.removeEventListener("mousedown", onDocMouseDown, true);
       };
-    }, [clearSelection, recordKey, theme, type, id]);
+    }, [clearSelection, selectedId]);
 
     useEffect(() => {
       if (!containerRef.current) return;
@@ -552,15 +571,11 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       onHandle1Drag: moveHandle1,
       onHandle2Drag: moveHandle2,
     });
-    if (annotationGraphic.length > 0) {
-      chartOption = {
-        ...chartOption,
-        graphic: [
-          ...((chartOption as any).graphic ?? []),
-          ...annotationGraphic,
-        ],
-      };
-    }
+    chartOption = {
+      ...chartOption,
+      // Fully control graphic so deleted annotations disappear.
+      graphic: annotationGraphic,
+    };
 
     const chartHighlighted = isSelected
       ? "border-slate-300 rounded-lg shadow-[0_3px_10px_rgba(15,23,42,0.35)]"
@@ -751,9 +766,14 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             ref={chartRef}
             key={`${type}-${recordKey}-${id}-${theme || "default"}`}
             option={chartOption}
+            replaceMerge={["graphic"]}
             // @ts-ignore: preserveDrawingBuffer is valid for the underlying canvas
             opts={{ renderer: "canvas", preserveDrawingBuffer: true }}
             theme={theme || undefined}
+            onChartReady={(instance: any) => {
+              echartsInstanceRef.current = instance;
+              attachZrDeselectHandlers(instance);
+            }}
             onEvents={{
               click: (params: any) => {
                 // Click on empty plot area clears annotation selection
