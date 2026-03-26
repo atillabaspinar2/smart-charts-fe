@@ -17,8 +17,8 @@ import { getOptionsByType } from "./chartOptionTemplates";
 import { ChartContextMenu } from "./chartContextMenu";
 import { MapChart } from "./MapChart";
 import { colorRanges } from "./mapChartOptions";
-import { createLineAnnotation } from "./chartGraphicsFactory";
-import { drop } from "lodash";
+import { useAnnotations } from "@/hooks/useAnnotation";
+import { AnnotationStylePanel } from "@/components/annotations/AnnotationStylePanel";
 
 interface ChartItemProps {
   data: ChartItemData;
@@ -88,6 +88,69 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     const [animateOnNextMount, setAnimateOnNextMount] = useState(false);
     const lastAppliedReanimateKeyRef = useRef<number>(0);
     const lastAppliedReanimateAllKeyRef = useRef<number>(0);
+    const echartsInstanceRef = useRef<any>(null);
+
+    // annotations (line-only for step 1)
+    const {
+      selectedAnnotation,
+      selectedId,
+      addAnnotation,
+      selectAnnotation,
+      clearSelection,
+      moveAnnotation,
+      moveHandle1,
+      moveHandle2,
+      updateAnnotationStyle,
+      updateAnnotationShape,
+      deleteAnnotation,
+      buildGraphicElements,
+    } = useAnnotations();
+
+    // Clear annotation selection when clicking non-annotation chart area.
+    // We attach via `onChartReady` since the instance may not exist in early effects.
+    const attachZrDeselectHandlers = (echartsInstance: any) => {
+      const zr = echartsInstance?.getZr?.();
+      if (!zr) return;
+
+      const shouldClear = (evt: any) => {
+        let node = evt?.target as any;
+        let clickedAnnotationGraphic = false;
+        while (node) {
+          const nodeId = node?.id as string | undefined;
+          if (typeof nodeId === "string" && nodeId.startsWith("ann_")) {
+            clickedAnnotationGraphic = true;
+            break;
+          }
+          node = node?.parent;
+        }
+        if (!clickedAnnotationGraphic) clearSelection();
+      };
+
+      // avoid duplicates if chart re-inits
+      zr.off("click", shouldClear);
+      zr.off("mousedown", shouldClear);
+
+      zr.on("click", shouldClear);
+      zr.on("mousedown", shouldClear);
+    };
+
+    // Clear annotation selection when clicking outside this chart item entirely.
+    useEffect(() => {
+      if (!selectedId) return;
+
+      const onDocMouseDown = (e: MouseEvent) => {
+        const container = containerRef.current;
+        if (!container) return;
+        if (!container.contains(e.target as Node)) {
+          clearSelection();
+        }
+      };
+
+      document.addEventListener("mousedown", onDocMouseDown, true);
+      return () => {
+        document.removeEventListener("mousedown", onDocMouseDown, true);
+      };
+    }, [clearSelection, selectedId]);
 
     useEffect(() => {
       if (!containerRef.current) return;
@@ -510,6 +573,19 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       ];
     }
 
+    // merge annotations into option.graphic
+    const annotationGraphic = buildGraphicElements({
+      onSelect: selectAnnotation,
+      onMove: moveAnnotation,
+      onLineHandle1Drag: moveHandle1,
+      onLineHandle2Drag: moveHandle2,
+    });
+    chartOption = {
+      ...chartOption,
+      // Fully control graphic so deleted annotations disappear.
+      graphic: annotationGraphic,
+    };
+
     const chartHighlighted = isSelected
       ? "border-slate-300 rounded-lg shadow-[0_3px_10px_rgba(15,23,42,0.35)]"
       : "border-slate-200 rounded shadow-[0_2px_6px_rgba(0,0,0,0.08)]";
@@ -593,45 +669,46 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       e.preventDefault();
     };
 
-    const onDrop = (e: React.DragEvent) => {
-      e.preventDefault();
-      const type = e.dataTransfer.getData("annotationType");
-      if (type === "line") {
-        e.stopPropagation();
-      }
+    // imperative annotation state management directly on chart instance
+    // const onDrop = (e: React.DragEvent) => {
+    //   e.preventDefault();
+    //   const type = e.dataTransfer.getData("annotationType");
+    //   if (type === "line") {
+    //     e.stopPropagation();
+    //   }
 
-      const container = containerRef.current;
+    //   const container = containerRef.current;
 
-      if (type && container) {
-        const containerRect = container.getBoundingClientRect();
-        const dropX = Math.max(
-          0,
-          e.clientX - containerRect.left + container.scrollLeft,
-        );
-        const dropY = Math.max(
-          0,
-          e.clientY - containerRect.top + container.scrollTop,
-        );
-        const echartsInstance = chartRef.current?.getEchartsInstance();
-        if (!echartsInstance) return;
+    //   if (type && container) {
+    //     const containerRect = container.getBoundingClientRect();
+    //     const dropX = Math.max(
+    //       0,
+    //       e.clientX - containerRect.left + container.scrollLeft,
+    //     );
+    //     const dropY = Math.max(
+    //       0,
+    //       e.clientY - containerRect.top + container.scrollTop,
+    //     );
+    //     const echartsInstance = chartRef.current?.getEchartsInstance();
+    //     if (!echartsInstance) return;
 
-        if (type === "line" && chartRef.current) {
-          const echartsInstance = chartRef.current.getEchartsInstance();
+    //     if (type === "line" && chartRef.current) {
+    //       const echartsInstance = chartRef.current.getEchartsInstance();
 
-          // SAVE AS RATIOS (Universal for Pie/Line/Bar)
+    //       // SAVE AS RATIOS (Universal for Pie/Line/Bar)
 
-          if (echartsInstance) {
-            // 2. Save to your state
-            createLineAnnotation(echartsInstance.id, {
-              p1: [dropX, dropY],
-              p2: [dropX + 100, dropY + 100], // Initial length and angle
-            });
-          }
-        }
-      }
-    };
+    //       if (echartsInstance) {
+    //         // 2. Save to your state
+    //         createLineAnnotation(echartsInstance.id, {
+    //           p1: [dropX, dropY],
+    //           p2: [dropX + 100, dropY + 100], // Initial length and angle
+    //         });
+    //       }
+    //     }
+    //   }
+    // };
 
-    // add line graphic
+    // // add line graphic
     // useEffect(() => {
     //   if (chartRef.current) {
     //     const echartsInstance = chartRef.current.getEchartsInstance();
@@ -646,6 +723,25 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     //     // echartsInstance.setOption({ graphic });
     //   }
     // }, [chartRef.current]);
+
+    const onDrop = (e: React.DragEvent) => {
+      e.preventDefault();
+      const annotationType = e.dataTransfer.getData("annotationType");
+
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        if (
+          annotationType === "line" ||
+          annotationType === "circle" ||
+          annotationType === "text" ||
+          annotationType === "image"
+        ) {
+          addAnnotation(annotationType, { x, y });
+        }
+      }
+    };
 
     return (
       <div
@@ -685,14 +781,40 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             ref={chartRef}
             key={`${type}-${recordKey}-${id}-${theme || "default"}`}
             option={chartOption}
+            replaceMerge={["graphic"]}
             // @ts-ignore: preserveDrawingBuffer is valid for the underlying canvas
             opts={{ renderer: "canvas", preserveDrawingBuffer: true }}
             theme={theme || undefined}
+            onChartReady={(instance: any) => {
+              echartsInstanceRef.current = instance;
+              attachZrDeselectHandlers(instance);
+            }}
+            onEvents={{
+              click: (params: any) => {
+                // Click on empty plot area clears annotation selection
+                if (params?.componentType !== "graphic") {
+                  clearSelection();
+                }
+              },
+            }}
             style={{
               width: "100%",
               height: "100%",
               background: effectiveBackgroundColor || "transparent",
             }}
+          />
+        )}
+
+        {selectedAnnotation && (
+          <AnnotationStylePanel
+            annotation={selectedAnnotation}
+            onDelete={() => deleteAnnotation(selectedAnnotation.id)}
+            onStyleChange={(styleUpdate) =>
+              updateAnnotationStyle(selectedAnnotation.id, styleUpdate)
+            }
+            onShapeChange={(shapeUpdate) =>
+              updateAnnotationShape(selectedAnnotation.id, shapeUpdate)
+            }
           />
         )}
         <div
