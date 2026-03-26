@@ -18,6 +18,7 @@ import { ChartContextMenu } from "./chartContextMenu";
 import { MapChart } from "./MapChart";
 import { colorRanges } from "./mapChartOptions";
 import { useAnnotations } from "@/hooks/useAnnotation";
+import { LineAnnotationStylePanel } from "@/components/annotations/LineAnnotationStylePanel";
 
 interface ChartItemProps {
   data: ChartItemData;
@@ -88,6 +89,8 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     const lastAppliedReanimateKeyRef = useRef<number>(0);
     const lastAppliedReanimateAllKeyRef = useRef<number>(0);
     const echartsInstanceRef = useRef<any>(null);
+    const [annotationPanelAnchorRect, setAnnotationPanelAnchorRect] =
+      useState<DOMRect | null>(null);
 
     // annotations (line-only for step 1)
     const {
@@ -124,6 +127,27 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       zr.on("click", shouldClear);
       zr.on("mousedown", shouldClear);
     };
+
+    // Keep the floating panel anchored to this chart item's screen position.
+    useEffect(() => {
+      if (!selectedId) {
+        setAnnotationPanelAnchorRect(null);
+        return;
+      }
+
+      const updateRect = () => {
+        const rect = containerRef.current?.getBoundingClientRect?.();
+        setAnnotationPanelAnchorRect(rect ?? null);
+      };
+
+      updateRect();
+      window.addEventListener("resize", updateRect);
+      window.addEventListener("scroll", updateRect, true);
+      return () => {
+        window.removeEventListener("resize", updateRect);
+        window.removeEventListener("scroll", updateRect, true);
+      };
+    }, [selectedId]);
 
     // Clear annotation selection when clicking outside this chart item entirely.
     useEffect(() => {
@@ -790,80 +814,15 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           />
         )}
 
-        {/* Floating style panel (line-only for step 1) */}
         {selectedAnnotation?.type === "line" && (
-          <div
-            data-no-drag="true"
-            className="absolute top-2 right-2 z-50 w-[220px] rounded-md border border-slate-200 bg-white/95 p-3 text-slate-900 shadow-lg backdrop-blur"
-            onMouseDown={(e) => e.stopPropagation()}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-2 flex items-center justify-between">
-              <div className="text-xs font-semibold text-slate-700">
-                Line style
-              </div>
-              <button
-                className="text-xs text-slate-500 hover:text-slate-900"
-                onClick={() => deleteAnnotation(selectedAnnotation.id)}
-              >
-                Delete
-              </button>
-            </div>
-
-            <label className="mb-2 flex items-center justify-between gap-2 text-xs">
-              <span className="text-slate-600">Color</span>
-              <input
-                type="color"
-                value={selectedAnnotation.style.stroke}
-                onChange={(e) =>
-                  updateAnnotationStyle(selectedAnnotation.id, {
-                    stroke: e.target.value,
-                  })
-                }
-              />
-            </label>
-
-            <label className="mb-2 flex items-center justify-between gap-2 text-xs">
-              <span className="text-slate-600">Width</span>
-              <input
-                type="range"
-                min={1}
-                max={12}
-                value={selectedAnnotation.style.lineWidth}
-                onChange={(e) =>
-                  updateAnnotationStyle(selectedAnnotation.id, {
-                    lineWidth: Number(e.target.value),
-                  })
-                }
-              />
-            </label>
-
-            <label className="mb-2 flex items-center justify-between gap-2 text-xs">
-              <span className="text-slate-600">Dash</span>
-              <input
-                type="checkbox"
-                checked={(selectedAnnotation.style.lineDash?.length ?? 0) > 0}
-                onChange={(e) =>
-                  updateAnnotationStyle(selectedAnnotation.id, {
-                    lineDash: e.target.checked ? [6, 3] : [],
-                  })
-                }
-              />
-            </label>
-
-            <label className="flex items-center justify-between gap-2 text-xs">
-              <span className="text-slate-600">Arrow end</span>
-              <input
-                type="checkbox"
-                checked={Boolean(selectedAnnotation.style.arrowEnd)}
-                onChange={(e) =>
-                  updateAnnotationStyle(selectedAnnotation.id, {
-                    arrowEnd: e.target.checked,
-                  })
-                }
-              />
-            </label>
-          </div>
+          <LineAnnotationStylePanel
+            annotation={selectedAnnotation}
+            anchorRect={annotationPanelAnchorRect}
+            onDelete={() => deleteAnnotation(selectedAnnotation.id)}
+            onStyleChange={(styleUpdate) =>
+              updateAnnotationStyle(selectedAnnotation.id, styleUpdate)
+            }
+          />
         )}
         <div
           data-no-drag="true"
