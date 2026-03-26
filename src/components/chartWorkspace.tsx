@@ -40,6 +40,7 @@ import {
   defaultMapChartSettings,
 } from "./chartTypes";
 import { useAuth } from "@/context/AuthContext";
+import { useWorkspaceLayoutStore } from "@/store/workspaceLayoutStore";
 
 const defaultChartSize = {
   width: 400,
@@ -84,13 +85,27 @@ export const ChartWorkspace: React.FC<{
   const [pendingRemoval, setPendingRemoval] = useState<
     { mode: "single"; chartId: number } | { mode: "all" } | null
   >(null);
-  const [chartPositionMap, setChartPositionMap] = useState<
-    Record<string, { x: number; y: number }>
-  >({});
-  const [chartSizeMap, setChartSizeMap] = useState<
-    Record<string, { width: number; height: number }>
-  >({});
-  const [chartStackOrder, setChartStackOrder] = useState<string[]>([]);
+  const chartPositionMap = useWorkspaceLayoutStore((s) => s.chartPositionMap);
+  const chartSizeMap = useWorkspaceLayoutStore((s) => s.chartSizeMap);
+  const chartStackOrder = useWorkspaceLayoutStore((s) => s.chartStackOrder);
+  const selectedChartInstanceId = useWorkspaceLayoutStore(
+    (s) => s.selectedChartInstanceId,
+  );
+  const syncLayoutCharts = useWorkspaceLayoutStore((s) => s.syncCharts);
+  const setSelectedChartInstanceId = useWorkspaceLayoutStore(
+    (s) => s.setSelectedChartInstanceId,
+  );
+  const moveChart = useWorkspaceLayoutStore((s) => s.moveChart);
+  const resizeChart = useWorkspaceLayoutStore((s) => s.resizeChart);
+  const moveChartToTop = useWorkspaceLayoutStore((s) => s.moveChartToTop);
+  const moveChartToBottom = useWorkspaceLayoutStore((s) => s.moveChartToBottom);
+  const moveChartForward = useWorkspaceLayoutStore((s) => s.moveChartForward);
+  const moveChartBackward = useWorkspaceLayoutStore((s) => s.moveChartBackward);
+  const mergeChartPositions = useWorkspaceLayoutStore(
+    (s) => s.mergeChartPositions,
+  );
+  const mergeChartSizes = useWorkspaceLayoutStore((s) => s.mergeChartSizes);
+  const clearLayout = useWorkspaceLayoutStore((s) => s.clearLayout);
   const [chartDataMap, setChartDataMap] = useState<Record<string, ChartData>>(
     {},
   );
@@ -112,9 +127,6 @@ export const ChartWorkspace: React.FC<{
   const [reanimateAllKey, setReanimateAllKey] = useState<number>(0);
   const [isCapturingAll, setIsCapturingAll] = useState(false);
   const [containerSize, setContainerSize] = useState(defaultContainerSize);
-  const [selectedChartInstanceId, setSelectedChartInstanceId] = useState<
-    string | null
-  >(null);
   const [dataPanelMode, setDataPanelMode] = useState<"grid" | "fixed-up">(
     "grid",
   );
@@ -548,134 +560,15 @@ export const ChartWorkspace: React.FC<{
   }, [charts, chartSettingsMap, chartDataMap, pieSettingsMap]);
 
   useEffect(() => {
-    setChartPositionMap((prev) => {
-      const next: Record<string, { x: number; y: number }> = {};
-      let changed = false;
+    syncLayoutCharts(charts);
+  }, [charts, syncLayoutCharts]);
 
-      charts.forEach((chart, index) => {
-        const existing = prev[chart.instanceId];
-        if (existing) {
-          next[chart.instanceId] = existing;
-          return;
-        }
-
-        changed = true;
-        if (chart.initialPosition) {
-          next[chart.instanceId] = chart.initialPosition;
-          return;
-        }
-        const offsetX = 20 + (index % 5) * 36;
-        const offsetY = 20 + Math.floor(index / 5) * 36;
-        next[chart.instanceId] = { x: offsetX, y: offsetY };
-      });
-
-      if (Object.keys(prev).length !== charts.length) changed = true;
-      return changed ? next : prev;
-    });
-  }, [charts]);
-
-  useEffect(() => {
-    setChartSizeMap((prev) => {
-      const next: Record<string, { width: number; height: number }> = {};
-      let changed = false;
-
-      charts.forEach((chart) => {
-        const existing = prev[chart.instanceId];
-        if (existing) {
-          next[chart.instanceId] = existing;
-          return;
-        }
-
-        changed = true;
-        next[chart.instanceId] = defaultChartSize;
-      });
-
-      if (Object.keys(prev).length !== charts.length) changed = true;
-      return changed ? next : prev;
-    });
-  }, [charts]);
-
-  useEffect(() => {
-    setChartStackOrder((prev) => {
-      const activeIds = charts.map((chart) => chart.instanceId);
-      const filtered = prev.filter((id) => activeIds.includes(id));
-      const existing = new Set(filtered);
-      const missing = activeIds.filter((id) => !existing.has(id));
-      const next = [...filtered, ...missing];
-      const unchanged =
-        prev.length === next.length &&
-        prev.every((value, index) => value === next[index]);
-      return unchanged ? prev : next;
-    });
-  }, [charts]);
-
-  const onSelectChart = useCallback((instanceId: string) => {
-    setSelectedChartInstanceId(instanceId);
-  }, []);
-
-  const onMoveChart = useCallback(
-    (instanceId: string, x: number, y: number) => {
-      setChartPositionMap((prev) => {
-        const current = prev[instanceId];
-        if (current && current.x === x && current.y === y) return prev;
-        return { ...prev, [instanceId]: { x, y } };
-      });
+  const onSelectChart = useCallback(
+    (instanceId: string) => {
+      setSelectedChartInstanceId(instanceId);
     },
-    [],
+    [setSelectedChartInstanceId],
   );
-
-  const onResizeChart = useCallback(
-    (instanceId: string, width: number, height: number) => {
-      setChartSizeMap((prev) => {
-        const current = prev[instanceId];
-        if (current && current.width === width && current.height === height) {
-          return prev;
-        }
-        return { ...prev, [instanceId]: { width, height } };
-      });
-    },
-    [],
-  );
-
-  const moveChartToTop = useCallback((instanceId: string) => {
-    setChartStackOrder((prev) => {
-      const index = prev.indexOf(instanceId);
-      if (index < 0 || index === prev.length - 1) return prev;
-      const next = prev.filter((id) => id !== instanceId);
-      next.push(instanceId);
-      return next;
-    });
-  }, []);
-
-  const moveChartToBottom = useCallback((instanceId: string) => {
-    setChartStackOrder((prev) => {
-      const index = prev.indexOf(instanceId);
-      if (index <= 0) return prev;
-      const next = prev.filter((id) => id !== instanceId);
-      next.unshift(instanceId);
-      return next;
-    });
-  }, []);
-
-  const moveChartForward = useCallback((instanceId: string) => {
-    setChartStackOrder((prev) => {
-      const index = prev.indexOf(instanceId);
-      if (index < 0 || index === prev.length - 1) return prev;
-      const next = [...prev];
-      [next[index], next[index + 1]] = [next[index + 1], next[index]];
-      return next;
-    });
-  }, []);
-
-  const moveChartBackward = useCallback((instanceId: string) => {
-    setChartStackOrder((prev) => {
-      const index = prev.indexOf(instanceId);
-      if (index <= 0) return prev;
-      const next = [...prev];
-      [next[index], next[index - 1]] = [next[index - 1], next[index]];
-      return next;
-    });
-  }, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const workspaceRef = useRef<HTMLDivElement>(null);
@@ -887,8 +780,7 @@ export const ChartWorkspace: React.FC<{
   const handleRemoveAll = () => {
     charts.forEach((chart) => removeChart(chart.id));
     setSelectedChartInstanceId(null);
-    setChartPositionMap({});
-    setChartStackOrder([]);
+    clearLayout();
   };
 
   const requestRemoveChart = useCallback((chartId: number) => {
@@ -904,19 +796,23 @@ export const ChartWorkspace: React.FC<{
 
     if (pendingRemoval.mode === "single") {
       removeChart(pendingRemoval.chartId);
-      setSelectedChartInstanceId((current) => {
-        const chartToRemove = charts.find(
-          (chart) => chart.id === pendingRemoval.chartId,
-        );
-        if (!chartToRemove) return current;
-        return current === chartToRemove.instanceId ? null : current;
-      });
+      const chartToRemove = charts.find((chart) => chart.id === pendingRemoval.chartId);
+      if (chartToRemove && selectedChartInstanceId === chartToRemove.instanceId) {
+        setSelectedChartInstanceId(null);
+      }
     } else {
       handleRemoveAll();
     }
 
     setPendingRemoval(null);
-  }, [charts, handleRemoveAll, pendingRemoval, removeChart]);
+  }, [
+    charts,
+    handleRemoveAll,
+    pendingRemoval,
+    removeChart,
+    selectedChartInstanceId,
+    setSelectedChartInstanceId,
+  ]);
 
   const handleRefreshAll = () => {
     setReanimateAllKey(Date.now());
@@ -1098,7 +994,7 @@ export const ChartWorkspace: React.FC<{
       rowHeight = Math.max(rowHeight, rect.height);
     });
 
-    setChartPositionMap((prev) => ({ ...prev, ...nextPositions }));
+    mergeChartPositions(nextPositions);
   };
 
   const handleExpandChartToFullWidth = useCallback(
@@ -1165,17 +1061,23 @@ export const ChartWorkspace: React.FC<{
         rowHeight = Math.max(rowHeight, rect.height);
       });
 
-      setChartSizeMap((prev) => ({
-        ...prev,
+      mergeChartSizes({
         [instanceId]: {
           width: availableWidth,
           height: expandedRect.height,
         },
-      }));
-      setChartPositionMap((prev) => ({ ...prev, ...nextPositions }));
+      });
+      mergeChartPositions(nextPositions);
       setSelectedChartInstanceId(instanceId);
     },
-    [chartSizeMap, chartStackOrder, charts],
+    [
+      chartSizeMap,
+      chartStackOrder,
+      charts,
+      mergeChartPositions,
+      mergeChartSizes,
+      setSelectedChartInstanceId,
+    ],
   );
 
   const handleOpenImportDialog = (instanceId: string) => {
@@ -1641,8 +1543,8 @@ export const ChartWorkspace: React.FC<{
               onSelectChart={onSelectChart}
               position={chartPositionMap[c.instanceId] || { x: 20, y: 20 }}
               size={chartSizeMap[c.instanceId] || defaultChartSize}
-              onMove={onMoveChart}
-              onResize={onResizeChart}
+              onMove={moveChart}
+              onResize={resizeChart}
               zIndex={
                 selectedChartInstanceId === c.instanceId
                   ? CHART_Z_INDEX_SELECTED
