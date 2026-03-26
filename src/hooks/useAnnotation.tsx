@@ -167,7 +167,7 @@ export function useAnnotations() {
       onHandle1Drag: (id: string, dx: number, dy: number) => void;
       onHandle2Drag: (id: string, dx: number, dy: number) => void;
     }) => {
-      return annotations.flatMap((ann) => {
+      return annotations.map((ann) => {
         const selected = ann.id === selectedId;
         const { x1, y1, x2, y2 } = ann.shape;
         const accentColor = selected ? "#ffffff" : ann.style.stroke;
@@ -239,7 +239,7 @@ export function useAnnotations() {
 
         const hitZone = {
           type: "line",
-          id: `${ann.id}_hit`,
+          id: `${ann.id}__hit`,
           shape: { x1, y1, x2, y2 },
           style: { stroke: "transparent", lineWidth: HIT_ZONE_WIDTH },
           draggable: true,
@@ -270,7 +270,7 @@ export function useAnnotations() {
 
         const visibleLine = {
           type: "line",
-          id: `${ann.id}_line`,
+          id: `${ann.id}__line`,
           shape: { x1, y1, x2: trimmedLineEndX, y2: trimmedLineEndY },
           style: {
             stroke: ann.style.stroke,
@@ -286,7 +286,7 @@ export function useAnnotations() {
 
         const handle1 = {
           type: "circle",
-          id: `${ann.id}_h1`,
+          id: `${ann.id}__h1`,
           shape: { cx: x1, cy: y1, r: HANDLE_RADIUS },
           style: {
             fill: handleFill,
@@ -321,7 +321,7 @@ export function useAnnotations() {
 
         const handle2 = {
           type: "circle",
-          id: `${ann.id}_h2`,
+          id: `${ann.id}__h2`,
           shape: { cx: x2, cy: y2, r: HANDLE_RADIUS },
           style: {
             fill: handleFill,
@@ -365,7 +365,7 @@ export function useAnnotations() {
                   color: ann.style.stroke,
                   size: arrowSize,
                 }),
-                id: `${ann.id}_arrowEnd`,
+                id: `${ann.id}__arrowEnd`,
                 style: {
                   fill: ann.style.stroke,
                   opacity: ann.style.opacity,
@@ -374,7 +374,13 @@ export function useAnnotations() {
             ]
           : [];
 
-        return [hitZone, visibleLine, ...arrowHead, handle1, handle2];
+        return {
+          type: "group",
+          id: ann.id,
+          // group is a hierarchy container only; dragging is handled by children.
+          silent: false,
+          children: [hitZone, visibleLine, ...arrowHead, handle1, handle2],
+        };
       });
     },
     [annotations, selectedId],

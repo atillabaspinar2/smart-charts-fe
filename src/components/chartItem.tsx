@@ -114,9 +114,16 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       if (!zr) return;
 
       const shouldClear = (evt: any) => {
-        const targetId = evt?.target?.id as string | undefined;
-        const clickedAnnotationGraphic =
-          typeof targetId === "string" && targetId.startsWith("ann_");
+        let node = evt?.target as any;
+        let clickedAnnotationGraphic = false;
+        while (node) {
+          const nodeId = node?.id as string | undefined;
+          if (typeof nodeId === "string" && nodeId.startsWith("ann_")) {
+            clickedAnnotationGraphic = true;
+            break;
+          }
+          node = node?.parent;
+        }
         if (!clickedAnnotationGraphic) clearSelection();
       };
 
