@@ -6,11 +6,39 @@ import { indexedDbStorage } from "./indexedDbStorage";
 
 const defaultChartSize = { width: 400, height: 300 };
 
+export type CanvasSettings = {
+  animationDuration: number;
+  backgroundColor: string;
+  title: string;
+  fontFamily: string;
+  fontSize: number;
+};
+
+export type AppMode = "light" | "dark" | "system";
+
+const defaultCanvasSettings: CanvasSettings = {
+  animationDuration: 1000,
+  backgroundColor: "#ffffff",
+  title: "Workspace",
+  fontFamily: "Noto Sans",
+  fontSize: 12,
+};
+
+const defaultAppTheme = "theme-green";
+const defaultAppMode: AppMode = "light";
+const defaultMediaType = "webm";
+const defaultWorkspaceTheme = "";
+
 type WorkspaceLayout = {
   chartPositionMap: Record<string, { x: number; y: number }>;
   chartSizeMap: Record<string, { width: number; height: number }>;
   chartStackOrder: string[];
   selectedChartInstanceId: string | null;
+  canvasSettings: CanvasSettings;
+  workspaceTheme: string;
+  mediaType: string;
+  appTheme: string;
+  appMode: AppMode;
 };
 
 type WorkspaceMeta = {
@@ -21,6 +49,7 @@ type WorkspaceMeta = {
 };
 
 type LayoutState = {
+  hasHydrated: boolean;
   workspaces: WorkspaceMeta[];
   activeWorkspaceId: string;
   layoutsByWorkspaceId: Record<string, WorkspaceLayout>;
@@ -28,6 +57,11 @@ type LayoutState = {
   chartSizeMap: Record<string, { width: number; height: number }>;
   chartStackOrder: string[];
   selectedChartInstanceId: string | null;
+  canvasSettings: CanvasSettings;
+  workspaceTheme: string;
+  mediaType: string;
+  appTheme: string;
+  appMode: AppMode;
 
   createWorkspace: (name?: string) => string;
   setActiveWorkspace: (workspaceId: string) => void;
@@ -35,6 +69,17 @@ type LayoutState = {
   deleteWorkspace: (workspaceId: string) => void;
   syncCharts: (charts: ChartItemData[]) => void;
   setSelectedChartInstanceId: (instanceId: string | null) => void;
+  setCanvasSettings: (settings: CanvasSettings) => void;
+  setWorkspaceTheme: (theme: string) => void;
+  setMediaType: (mediaType: string) => void;
+  setWorkspaceCanvasUi: (ui: {
+    canvasSettings: CanvasSettings;
+    workspaceTheme: string;
+    mediaType: string;
+  }) => void;
+  setAppTheme: (theme: string) => void;
+  setAppMode: (mode: AppMode) => void;
+  setWorkspaceAppUi: (ui: { appTheme: string; appMode: AppMode }) => void;
   moveChart: (instanceId: string, x: number, y: number) => void;
   resizeChart: (instanceId: string, width: number, height: number) => void;
   moveChartToTop: (instanceId: string) => void;
@@ -56,6 +101,11 @@ const makeEmptyLayout = (): WorkspaceLayout => ({
   chartSizeMap: {},
   chartStackOrder: [],
   selectedChartInstanceId: null,
+  canvasSettings: defaultCanvasSettings,
+  workspaceTheme: defaultWorkspaceTheme,
+  mediaType: defaultMediaType,
+  appTheme: defaultAppTheme,
+  appMode: defaultAppMode,
 });
 
 const makeWorkspace = (name?: string): WorkspaceMeta => ({
@@ -70,7 +120,10 @@ const withActiveLayout = (
   updater: (layout: WorkspaceLayout) => WorkspaceLayout,
 ) => {
   const activeId = state.activeWorkspaceId;
-  const current = state.layoutsByWorkspaceId[activeId] ?? makeEmptyLayout();
+  const currentStored = state.layoutsByWorkspaceId[activeId];
+  const current = currentStored
+    ? { ...makeEmptyLayout(), ...currentStored }
+    : makeEmptyLayout();
   const nextLayout = updater(current);
   return {
     layoutsByWorkspaceId: {
@@ -81,6 +134,11 @@ const withActiveLayout = (
     chartSizeMap: nextLayout.chartSizeMap,
     chartStackOrder: nextLayout.chartStackOrder,
     selectedChartInstanceId: nextLayout.selectedChartInstanceId,
+    canvasSettings: nextLayout.canvasSettings,
+    workspaceTheme: nextLayout.workspaceTheme,
+    mediaType: nextLayout.mediaType,
+    appTheme: nextLayout.appTheme,
+    appMode: nextLayout.appMode,
     workspaces: state.workspaces.map((w) =>
       w.id === activeId ? { ...w, updatedAt: nowIso() } : w,
     ),
@@ -93,6 +151,7 @@ export const useWorkspaceLayoutStore = create<LayoutState>()(
       const defaultWorkspace = makeWorkspace("Default workspace");
       const defaultLayout = makeEmptyLayout();
       return {
+        hasHydrated: false,
         workspaces: [defaultWorkspace],
         activeWorkspaceId: defaultWorkspace.id,
         layoutsByWorkspaceId: { [defaultWorkspace.id]: defaultLayout },
@@ -100,20 +159,31 @@ export const useWorkspaceLayoutStore = create<LayoutState>()(
         chartSizeMap: defaultLayout.chartSizeMap,
         chartStackOrder: defaultLayout.chartStackOrder,
         selectedChartInstanceId: defaultLayout.selectedChartInstanceId,
+        canvasSettings: defaultLayout.canvasSettings,
+        workspaceTheme: defaultLayout.workspaceTheme,
+        mediaType: defaultLayout.mediaType,
+        appTheme: defaultLayout.appTheme,
+        appMode: defaultLayout.appMode,
 
       createWorkspace: (name) => {
         const ws = makeWorkspace(name);
+          const empty = makeEmptyLayout();
         set((state) => ({
           workspaces: [...state.workspaces, ws],
           layoutsByWorkspaceId: {
             ...state.layoutsByWorkspaceId,
-            [ws.id]: makeEmptyLayout(),
+              [ws.id]: empty,
           },
           activeWorkspaceId: ws.id,
           chartPositionMap: {},
           chartSizeMap: {},
           chartStackOrder: [],
           selectedChartInstanceId: null,
+            canvasSettings: empty.canvasSettings,
+            workspaceTheme: empty.workspaceTheme,
+            mediaType: empty.mediaType,
+            appTheme: empty.appTheme,
+            appMode: empty.appMode,
         }));
         return ws.id;
       },
@@ -122,13 +192,21 @@ export const useWorkspaceLayoutStore = create<LayoutState>()(
         set((state) => {
           const exists = state.workspaces.some((w) => w.id === workspaceId);
           if (!exists) return state;
-          const layout = state.layoutsByWorkspaceId[workspaceId] ?? makeEmptyLayout();
+            const layoutStored = state.layoutsByWorkspaceId[workspaceId];
+            const layout = layoutStored
+              ? { ...makeEmptyLayout(), ...layoutStored }
+              : makeEmptyLayout();
           return {
             activeWorkspaceId: workspaceId,
             chartPositionMap: layout.chartPositionMap,
             chartSizeMap: layout.chartSizeMap,
             chartStackOrder: layout.chartStackOrder,
             selectedChartInstanceId: layout.selectedChartInstanceId,
+              canvasSettings: layout.canvasSettings,
+              workspaceTheme: layout.workspaceTheme,
+              mediaType: layout.mediaType,
+              appTheme: layout.appTheme,
+              appMode: layout.appMode,
           };
         }),
 
@@ -151,7 +229,10 @@ export const useWorkspaceLayoutStore = create<LayoutState>()(
             state.activeWorkspaceId === workspaceId
               ? remaining[0].id
               : state.activeWorkspaceId;
-          const activeLayout = nextLayouts[nextActive] ?? makeEmptyLayout();
+            const activeLayoutStored = nextLayouts[nextActive];
+            const activeLayout = activeLayoutStored
+              ? { ...makeEmptyLayout(), ...activeLayoutStored }
+              : makeEmptyLayout();
           return {
             workspaces: remaining,
             layoutsByWorkspaceId: nextLayouts,
@@ -160,13 +241,21 @@ export const useWorkspaceLayoutStore = create<LayoutState>()(
             chartSizeMap: activeLayout.chartSizeMap,
             chartStackOrder: activeLayout.chartStackOrder,
             selectedChartInstanceId: activeLayout.selectedChartInstanceId,
+              canvasSettings: activeLayout.canvasSettings,
+              workspaceTheme: activeLayout.workspaceTheme,
+              mediaType: activeLayout.mediaType,
+              appTheme: activeLayout.appTheme,
+              appMode: activeLayout.appMode,
           };
         }),
 
       syncCharts: (charts) => {
         const state = get();
-        const activeLayout =
-          state.layoutsByWorkspaceId[state.activeWorkspaceId] ?? makeEmptyLayout();
+          const activeLayoutStored =
+            state.layoutsByWorkspaceId[state.activeWorkspaceId];
+          const activeLayout = activeLayoutStored
+            ? { ...makeEmptyLayout(), ...activeLayoutStored }
+            : makeEmptyLayout();
         const activeIds = charts.map((chart) => chart.instanceId);
         const activeIdSet = new Set(activeIds);
 
@@ -204,10 +293,11 @@ export const useWorkspaceLayoutStore = create<LayoutState>()(
         const selectedExists = nextSelected && activeIdSet.has(nextSelected);
 
         const nextLayout: WorkspaceLayout = {
-          chartPositionMap: nextPositionMap,
-          chartSizeMap: nextSizeMap,
-          chartStackOrder: nextOrder,
-          selectedChartInstanceId: selectedExists ? nextSelected : null,
+            ...activeLayout,
+            chartPositionMap: nextPositionMap,
+            chartSizeMap: nextSizeMap,
+            chartStackOrder: nextOrder,
+            selectedChartInstanceId: selectedExists ? nextSelected : null,
         };
         set({
           ...withActiveLayout(state, () => nextLayout),
@@ -221,6 +311,65 @@ export const useWorkspaceLayoutStore = create<LayoutState>()(
             selectedChartInstanceId: instanceId,
           })),
         ),
+
+        setCanvasSettings: (settings) =>
+          set((state) =>
+            withActiveLayout(state, (layout) => ({
+              ...layout,
+              canvasSettings: settings,
+            })),
+          ),
+
+        setWorkspaceTheme: (theme) =>
+          set((state) =>
+            withActiveLayout(state, (layout) => ({
+              ...layout,
+              workspaceTheme: theme,
+            })),
+          ),
+
+        setMediaType: (mediaType) =>
+          set((state) =>
+            withActiveLayout(state, (layout) => ({
+              ...layout,
+              mediaType,
+            })),
+          ),
+
+        setWorkspaceCanvasUi: (ui) =>
+          set((state) =>
+            withActiveLayout(state, (layout) => ({
+              ...layout,
+              canvasSettings: ui.canvasSettings,
+              workspaceTheme: ui.workspaceTheme,
+              mediaType: ui.mediaType,
+            })),
+          ),
+
+        setAppTheme: (appTheme) =>
+          set((state) =>
+            withActiveLayout(state, (layout) => ({
+              ...layout,
+              appTheme,
+            })),
+          ),
+
+        setAppMode: (appMode) =>
+          set((state) =>
+            withActiveLayout(state, (layout) => ({
+              ...layout,
+              appMode,
+            })),
+          ),
+
+        setWorkspaceAppUi: (ui) =>
+          set((state) =>
+            withActiveLayout(state, (layout) => ({
+              ...layout,
+              appTheme: ui.appTheme,
+              appMode: ui.appMode,
+            })),
+          ),
 
       moveChart: (instanceId, x, y) =>
         set((state) => {
@@ -320,7 +469,8 @@ export const useWorkspaceLayoutStore = create<LayoutState>()(
 
       clearLayout: () =>
         set((state) =>
-          withActiveLayout(state, () => ({
+          withActiveLayout(state, (layout) => ({
+            ...layout,
             chartPositionMap: {},
             chartSizeMap: {},
             chartStackOrder: [],
@@ -333,6 +483,9 @@ export const useWorkspaceLayoutStore = create<LayoutState>()(
       name: "smartcharts-workspace-layout-v1",
       version: 1,
       storage: createJSONStorage(() => indexedDbStorage),
+      onRehydrateStorage: () => (state) => {
+        if (state) state.hasHydrated = true;
+      },
     },
   ),
 );

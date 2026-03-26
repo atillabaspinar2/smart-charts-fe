@@ -71,20 +71,23 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
   const removeLabel = contextType === "canvas" ? "Remove all" : "Remove";
   const animateLabel = contextType === "canvas" ? "Animate all" : "Animate";
   const showImport = contextType === "chart" && Boolean(onImport);
+  // Match annotation panel (Card) look, without changing layout.
   const menuContainerClassName =
-    "border border-border bg-card text-card-foreground drop-shadow-lg";
+    "border border-border bg-card text-card-foreground shadow-lg";
   const iconButtonClassName =
     "rounded p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground";
   const separatorClassName = "bg-border";
+  const iconSize = 16;
 
   return (
     <div
       id={id}
       className={`relative flex items-center rounded p-0.5 ${menuContainerClassName} ${className}`}
+      style={{ opacity: 0.92 }}
     >
       {showImport && (
         <>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <Tooltip content="Import CSV or Excel">
               <button
                 type="button"
@@ -92,7 +95,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
                 aria-label="Import CSV or Excel"
                 className={iconButtonClassName}
               >
-                <HugeiconsIcon icon={FileImportIcon} size={16} />
+                <HugeiconsIcon icon={FileImportIcon} size={iconSize} />
               </button>
             </Tooltip>
           </div>
@@ -102,7 +105,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
         </>
       )}
 
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1">
         <Tooltip content="Download as video">
           <button
             type="button"
@@ -110,7 +113,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
             aria-label="Download as video"
             className={`${iconButtonClassName} ${isRecording ? "text-red-500 animate-pulse hover:text-red-600" : ""}`}
           >
-            <HugeiconsIcon icon={FileVideoCameraIcon} size={16} />
+            <HugeiconsIcon icon={FileVideoCameraIcon} size={iconSize} />
           </button>
         </Tooltip>
 
@@ -121,14 +124,14 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
             aria-label="Download as image"
             className={iconButtonClassName}
           >
-            <HugeiconsIcon icon={ImageDownload02Icon} size={16} />
+            <HugeiconsIcon icon={ImageDownload02Icon} size={iconSize} />
           </button>
         </Tooltip>
       </div>
 
       <div className={`mx-1.5 h-4 w-px self-center ${separatorClassName}`} />
 
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1">
         <Tooltip content={animateLabel}>
           <button
             type="button"
@@ -136,7 +139,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
             aria-label={animateLabel}
             className={iconButtonClassName}
           >
-            <HugeiconsIcon icon={Refresh01Icon} size={16} />
+            <HugeiconsIcon icon={Refresh01Icon} size={iconSize} />
           </button>
         </Tooltip>
 
@@ -148,7 +151,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
               aria-label="Auto arrange"
               className={iconButtonClassName}
             >
-              <HugeiconsIcon icon={GridViewIcon} size={16} />
+              <HugeiconsIcon icon={GridViewIcon} size={iconSize} />
             </button>
           </Tooltip>
         )}
@@ -161,7 +164,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
               aria-label="Expand chart"
               className={iconButtonClassName}
             >
-              <HugeiconsIcon icon={ArrowHorizontalIcon} size={16} />
+              <HugeiconsIcon icon={ArrowHorizontalIcon} size={iconSize} />
             </button>
           </Tooltip>
         )}
@@ -174,7 +177,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
               aria-label="Expand canvas"
               className={iconButtonClassName}
             >
-              <HugeiconsIcon icon={ArrowHorizontalIcon} size={16} />
+              <HugeiconsIcon icon={ArrowHorizontalIcon} size={iconSize} />
             </button>
           </Tooltip>
         )}
@@ -186,7 +189,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
               aria-label="Autofit"
               className={iconButtonClassName}
             >
-              <HugeiconsIcon icon={FitToScreenIcon} size={16} />
+              <HugeiconsIcon icon={FitToScreenIcon} size={iconSize} />
             </button>
           </Tooltip>
         )}
@@ -202,7 +205,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
                 aria-label="Layer order"
                 className={iconButtonClassName}
               >
-                <HugeiconsIcon icon={Layers01Icon} size={16} />
+                <HugeiconsIcon icon={Layers01Icon} size={iconSize} />
               </button>
             </Tooltip>
 
@@ -263,7 +266,7 @@ export const ChartContextMenu: React.FC<ChartContextMenuProps> = ({
           aria-label={removeLabel}
           className={iconButtonClassName}
         >
-          <HugeiconsIcon icon={Delete02Icon} size={16} />
+          <HugeiconsIcon icon={Delete02Icon} size={iconSize} />
         </button>
       </Tooltip>
     </div>

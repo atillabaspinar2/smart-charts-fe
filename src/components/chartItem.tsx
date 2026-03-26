@@ -146,6 +146,41 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       };
     }, [persistAnnotationsDebounced]);
 
+    // Throttle live-resize persistence + echarts resizing to avoid excessive
+    // IndexedDB writes / heavy re-renders (map charts are especially sensitive).
+    const persistResizeDebounced = useMemo(() => {
+      const waitMs = type === "map" ? 200 : 80;
+
+      const safeResizeEcharts = () => {
+        try {
+          const host = containerRef.current;
+          if (!host || !host.isConnected) return;
+
+          if (type === "map") {
+            const inst = mapChartRef.current?.getEchartsInstance?.();
+            inst?.resize?.();
+            return;
+          }
+
+          const inst = chartRef.current?.getEchartsInstance?.();
+          inst?.resize?.();
+        } catch {
+          // ECharts-for-React can throw if called while DOM is mid-update.
+          // Throttling + try/catch keeps the app stable.
+        }
+      };
+
+      return debounce(
+        (width: number, height: number) => {
+          onResize(data.instanceId, width, height);
+          safeResizeEcharts();
+        },
+        waitMs,
+        // Avoid `leading` so we don't write to the store while ECharts is still mounting.
+        { leading: false, trailing: true, maxWait: waitMs * 2 },
+      );
+    }, [data.instanceId, onResize, type]);
+
     // Clear annotation selection when clicking non-annotation chart area.
     // We attach via `onChartReady` since the instance may not exist in early effects.
     const attachZrDeselectHandlers = (echartsInstance: any) => {
@@ -197,13 +232,18 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       const observer = new ResizeObserver(() => {
         const node = containerRef.current;
         if (node) {
-          onResize(data.instanceId, node.offsetWidth, node.offsetHeight);
+          persistResizeDebounced(node.offsetWidth, node.offsetHeight);
         }
-        chartRef.current?.getEchartsInstance()?.resize();
       });
       observer.observe(containerRef.current);
       return () => observer.disconnect();
-    }, [data.instanceId, onResize]);
+    }, [persistResizeDebounced]);
+
+    useEffect(() => {
+      return () => {
+        persistResizeDebounced.cancel();
+      };
+    }, [persistResizeDebounced]);
 
     const reanimateChart = () => {
       setAnimateOnNextMount(true);

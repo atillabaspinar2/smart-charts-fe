@@ -113,7 +113,7 @@ export function AnnotationStylePanel({
         position: "absolute",
         top: 10,
         right: 10,
-        width: 280,
+        width: 188,
         zIndex: 9999,
         opacity: 0.92,
         transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)`,

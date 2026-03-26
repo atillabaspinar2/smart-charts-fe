@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import debounce from "lodash/debounce";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowUp01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { ChartSettingsPanel } from "./ChartSettingsPanel";
@@ -40,9 +41,13 @@ import {
   defaultMapChartSettings,
 } from "./chartTypes";
 import { useAuth } from "@/context/AuthContext";
-import { useWorkspaceLayoutStore } from "@/store/workspaceLayoutStore";
+import {
+  useWorkspaceLayoutStore,
+  type CanvasSettings,
+} from "@/store/workspaceLayoutStore";
 import { useWorkspaceChartsStore } from "@/store/workspaceChartsStore";
 import type { AnyAnnotation } from "@/hooks/useAnnotation";
+import { useTheme, type ThemeName } from "./theme-provider";
 
 const defaultChartSize = {
   width: 400,
@@ -124,6 +129,29 @@ export const ChartWorkspace: React.FC<{
   );
   const mergeChartSizes = useWorkspaceLayoutStore((s) => s.mergeChartSizes);
   const clearLayout = useWorkspaceLayoutStore((s) => s.clearLayout);
+
+  // Workspace-persisted UI state (canvas settings, chart theme, and media type)
+  const layoutHydrated = useWorkspaceLayoutStore((s) => s.hasHydrated);
+  const persistedCanvasSettings = useWorkspaceLayoutStore((s) => s.canvasSettings);
+  const persistedWorkspaceTheme = useWorkspaceLayoutStore((s) => s.workspaceTheme);
+  const persistedMediaType = useWorkspaceLayoutStore((s) => s.mediaType);
+  // Workspace-persisted global app UI state (ThemeProvider theme + light/dark mode)
+  const persistedAppTheme = useWorkspaceLayoutStore((s) => s.appTheme);
+  const persistedAppMode = useWorkspaceLayoutStore((s) => s.appMode);
+  const setWorkspaceCanvasUi = useWorkspaceLayoutStore(
+    (s) => s.setWorkspaceCanvasUi,
+  );
+  const setWorkspaceAppUi = useWorkspaceLayoutStore((s) => s.setWorkspaceAppUi);
+
+  const { theme: appTheme, mode: appMode, setTheme, setMode } = useTheme();
+  const appThemeRef = useRef(appTheme);
+  const appModeRef = useRef(appMode);
+  useEffect(() => {
+    appThemeRef.current = appTheme;
+  }, [appTheme]);
+  useEffect(() => {
+    appModeRef.current = appMode;
+  }, [appMode]);
   const [chartDataMap, setChartDataMap] = useState<Record<string, ChartData>>(
     {},
   );
@@ -162,6 +190,143 @@ export const ChartWorkspace: React.FC<{
     fontSize: 12,
   });
   const [workspaceTheme, setWorkspaceTheme] = useState<string>("");
+  const didInitWorkspaceUiRef = useRef(false);
+  const isHydratingWorkspaceUiRef = useRef(false);
+
+  const persistWorkspaceCanvasUiDebounced = useMemo(
+    () =>
+      debounce(
+        (ui: {
+          canvasSettings: CanvasSettings;
+          workspaceTheme: string;
+          mediaType: string;
+        }) => {
+          setWorkspaceCanvasUi(ui);
+        },
+        250,
+        { maxWait: 1000 },
+      ),
+    [setWorkspaceCanvasUi],
+  );
+
+  const areCanvasSettingsEqual = useCallback(
+    (a: CanvasSettings, b: CanvasSettings) =>
+      a.animationDuration === b.animationDuration &&
+      a.backgroundColor === b.backgroundColor &&
+      a.title === b.title &&
+      a.fontFamily === b.fontFamily &&
+      a.fontSize === b.fontSize,
+    [],
+  );
+
+  // Restore and persist workspace-scoped UI state.
+  useEffect(() => {
+    if (!layoutHydrated) return;
+    isHydratingWorkspaceUiRef.current = true;
+
+    setCanvasSettings((prev) =>
+      areCanvasSettingsEqual(prev, persistedCanvasSettings)
+        ? prev
+        : persistedCanvasSettings,
+    );
+    setWorkspaceTheme((prev) =>
+      prev === persistedWorkspaceTheme ? prev : persistedWorkspaceTheme,
+    );
+    setMediaType((prev) =>
+      prev === persistedMediaType ? prev : persistedMediaType,
+    );
+
+    // Sync ThemeProvider global UI state from workspace.
+    // Important: we intentionally do NOT re-run this effect on user toggles
+    // (so we don't fight with the ThemeProvider state).
+    if (persistedAppTheme !== appThemeRef.current) {
+      setTheme(persistedAppTheme as ThemeName);
+    }
+    const effectivePersistedMode = persistedAppMode === "system" ? "light" : persistedAppMode;
+    if (effectivePersistedMode !== appModeRef.current) {
+      setMode(effectivePersistedMode);
+    }
+
+    // Keep the "hydrating" guard enabled for this effect flush so the
+    // "persist back" effects don't write to the store immediately.
+    window.setTimeout(() => {
+      didInitWorkspaceUiRef.current = true;
+      isHydratingWorkspaceUiRef.current = false;
+    }, 0);
+  }, [
+    layoutHydrated,
+    workspaceId,
+    persistedCanvasSettings,
+    persistedWorkspaceTheme,
+    persistedMediaType,
+    persistedAppTheme,
+    persistedAppMode,
+    setCanvasSettings,
+    setWorkspaceTheme,
+    setMediaType,
+    setTheme,
+    setMode,
+    areCanvasSettingsEqual,
+  ]);
+
+  useEffect(() => {
+    if (!layoutHydrated) return;
+    if (isHydratingWorkspaceUiRef.current) return;
+    if (!didInitWorkspaceUiRef.current) return;
+
+    const canvasUnchanged = areCanvasSettingsEqual(
+      canvasSettings,
+      persistedCanvasSettings,
+    );
+    const themeUnchanged = workspaceTheme === persistedWorkspaceTheme;
+    const mediaUnchanged = mediaType === persistedMediaType;
+
+    if (canvasUnchanged && themeUnchanged && mediaUnchanged) return;
+
+    persistWorkspaceCanvasUiDebounced({
+      canvasSettings,
+      workspaceTheme,
+      mediaType,
+    });
+  }, [
+    layoutHydrated,
+    canvasSettings,
+    workspaceTheme,
+    mediaType,
+    persistedCanvasSettings,
+    persistedWorkspaceTheme,
+    persistedMediaType,
+    persistWorkspaceCanvasUiDebounced,
+    areCanvasSettingsEqual,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      persistWorkspaceCanvasUiDebounced.cancel();
+    };
+  }, [persistWorkspaceCanvasUiDebounced]);
+
+  useEffect(() => {
+    if (!layoutHydrated) return;
+    if (isHydratingWorkspaceUiRef.current) return;
+    if (!didInitWorkspaceUiRef.current) return;
+
+    if (persistedAppTheme === appTheme && persistedAppMode === appMode) {
+      return;
+    }
+
+    setWorkspaceAppUi({
+      appTheme,
+      appMode,
+    });
+  }, [
+    layoutHydrated,
+    appTheme,
+    appMode,
+    persistedAppTheme,
+    persistedAppMode,
+    setWorkspaceAppUi,
+  ]);
   const [chartDataOrientationMap, setChartDataOrientationMap] = useState<
     Record<string, DataOrientation>
   >({});
