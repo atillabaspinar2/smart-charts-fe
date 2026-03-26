@@ -6,6 +6,8 @@ import { indexedDbStorage } from "./indexedDbStorage";
 
 const defaultChartSize = { width: 400, height: 300 };
 
+export const defaultCanvasContainerSize = { width: 800, height: 600 };
+
 export type CanvasSettings = {
   animationDuration: number;
   backgroundColor: string;
@@ -35,6 +37,7 @@ type WorkspaceLayout = {
   chartStackOrder: string[];
   selectedChartInstanceId: string | null;
   canvasSettings: CanvasSettings;
+  canvasContainerSize: { width: number; height: number };
   workspaceTheme: string;
   mediaType: string;
   appTheme: string;
@@ -58,6 +61,7 @@ type LayoutState = {
   chartStackOrder: string[];
   selectedChartInstanceId: string | null;
   canvasSettings: CanvasSettings;
+  canvasContainerSize: { width: number; height: number };
   workspaceTheme: string;
   mediaType: string;
   appTheme: string;
@@ -80,6 +84,7 @@ type LayoutState = {
   setAppTheme: (theme: string) => void;
   setAppMode: (mode: AppMode) => void;
   setWorkspaceAppUi: (ui: { appTheme: string; appMode: AppMode }) => void;
+  setCanvasContainerSize: (size: { width: number; height: number }) => void;
   moveChart: (instanceId: string, x: number, y: number) => void;
   resizeChart: (instanceId: string, width: number, height: number) => void;
   moveChartToTop: (instanceId: string) => void;
@@ -102,6 +107,7 @@ const makeEmptyLayout = (): WorkspaceLayout => ({
   chartStackOrder: [],
   selectedChartInstanceId: null,
   canvasSettings: defaultCanvasSettings,
+  canvasContainerSize: defaultCanvasContainerSize,
   workspaceTheme: defaultWorkspaceTheme,
   mediaType: defaultMediaType,
   appTheme: defaultAppTheme,
@@ -135,6 +141,7 @@ const withActiveLayout = (
     chartStackOrder: nextLayout.chartStackOrder,
     selectedChartInstanceId: nextLayout.selectedChartInstanceId,
     canvasSettings: nextLayout.canvasSettings,
+    canvasContainerSize: nextLayout.canvasContainerSize,
     workspaceTheme: nextLayout.workspaceTheme,
     mediaType: nextLayout.mediaType,
     appTheme: nextLayout.appTheme,
@@ -160,6 +167,7 @@ export const useWorkspaceLayoutStore = create<LayoutState>()(
         chartStackOrder: defaultLayout.chartStackOrder,
         selectedChartInstanceId: defaultLayout.selectedChartInstanceId,
         canvasSettings: defaultLayout.canvasSettings,
+        canvasContainerSize: defaultLayout.canvasContainerSize,
         workspaceTheme: defaultLayout.workspaceTheme,
         mediaType: defaultLayout.mediaType,
         appTheme: defaultLayout.appTheme,
@@ -180,6 +188,7 @@ export const useWorkspaceLayoutStore = create<LayoutState>()(
           chartStackOrder: [],
           selectedChartInstanceId: null,
             canvasSettings: empty.canvasSettings,
+            canvasContainerSize: empty.canvasContainerSize,
             workspaceTheme: empty.workspaceTheme,
             mediaType: empty.mediaType,
             appTheme: empty.appTheme,
@@ -203,6 +212,7 @@ export const useWorkspaceLayoutStore = create<LayoutState>()(
             chartStackOrder: layout.chartStackOrder,
             selectedChartInstanceId: layout.selectedChartInstanceId,
               canvasSettings: layout.canvasSettings,
+              canvasContainerSize: layout.canvasContainerSize,
               workspaceTheme: layout.workspaceTheme,
               mediaType: layout.mediaType,
               appTheme: layout.appTheme,
@@ -242,6 +252,7 @@ export const useWorkspaceLayoutStore = create<LayoutState>()(
             chartStackOrder: activeLayout.chartStackOrder,
             selectedChartInstanceId: activeLayout.selectedChartInstanceId,
               canvasSettings: activeLayout.canvasSettings,
+              canvasContainerSize: activeLayout.canvasContainerSize,
               workspaceTheme: activeLayout.workspaceTheme,
               mediaType: activeLayout.mediaType,
               appTheme: activeLayout.appTheme,
@@ -251,6 +262,7 @@ export const useWorkspaceLayoutStore = create<LayoutState>()(
 
       syncCharts: (charts) => {
         const state = get();
+        if (!state.hasHydrated) return;
           const activeLayoutStored =
             state.layoutsByWorkspaceId[state.activeWorkspaceId];
           const activeLayout = activeLayoutStored
@@ -368,6 +380,14 @@ export const useWorkspaceLayoutStore = create<LayoutState>()(
               ...layout,
               appTheme: ui.appTheme,
               appMode: ui.appMode,
+            })),
+          ),
+
+        setCanvasContainerSize: (size) =>
+          set((state) =>
+            withActiveLayout(state, (layout) => ({
+              ...layout,
+              canvasContainerSize: size,
             })),
           ),
 

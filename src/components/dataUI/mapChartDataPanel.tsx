@@ -9,9 +9,14 @@ import {
   SelectValue,
 } from "../ui/select";
 import { DataGrid } from "./DataGrid";
+import { DataPanelUnavailable } from "./DataPanelUnavailable";
 
 type Props = {
-  data: MapChartData & { series: { data: { name: string; value: number }[] } };
+  data:
+    | (MapChartData & {
+        series: { data: { name: string; value: number }[] };
+      })
+    | undefined;
   onChange: (data: MapChartData) => void;
   onMapNameChange?: (mapName: string) => void;
   availableMaps: Record<string, string>[];
@@ -25,6 +30,20 @@ export const MapChartDataPanel: React.FC<Props> = ({
   onMapNameChange,
   registerApplyHandler,
 }) => {
+  if (
+    !data ||
+    data.type !== "map" ||
+    !data.mapName ||
+    !data.series ||
+    !Array.isArray(data.series.data)
+  ) {
+    return (
+      <DataPanelUnavailable title="Map chart data not ready">
+        The editor cannot display until valid map chart data is available.
+      </DataPanelUnavailable>
+    );
+  }
+
   // Always one category: "Value"
   const categories = ["Value"];
   // Build series array for DataGrid

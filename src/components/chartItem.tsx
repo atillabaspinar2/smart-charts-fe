@@ -5,6 +5,7 @@ import { recordCanvas } from "./record";
 import {
   type ChartData,
   type ChartItemData,
+  type ChartSettingsBase,
   type LineChartSettings,
   type BarChartSettings,
   type PieChartSettings,
@@ -599,12 +600,6 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       const templateSeries = Array.isArray(opts.series)
         ? opts.series[0] || {}
         : {};
-      // Pie settings do not have legendTop/legendLeft/legendOrient/showLegend
-      chartOption.legend = {
-        ...baseLegend,
-        ...legendVerticalPosition,
-        ...legendHorizontalPosition,
-      };
       const pieSeriesData =
         chartData?.type === "pie"
           ? chartData.data.map((point) => ({
@@ -612,6 +607,22 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
               value: point.value,
             }))
           : templateSeries.data;
+      const pieLegend = settings as ChartSettingsBase;
+      const legendSliceNames = Array.isArray(pieSeriesData)
+        ? pieSeriesData.map((d: { name?: string }) => String(d?.name ?? ""))
+        : [];
+      chartOption.legend = {
+        ...baseLegend,
+        show: pieLegend.showLegend,
+        orient: pieLegend.legendOrient,
+        ...(pieLegend.legendTop === "top" ? { top: 12 } : { bottom: 12 }),
+        ...(pieLegend.legendLeft === "left"
+          ? { left: 12 }
+          : pieLegend.legendLeft === "right"
+            ? { right: 12 }
+            : { left: "center" }),
+        data: legendSliceNames,
+      };
 
       chartOption.series = [
         {

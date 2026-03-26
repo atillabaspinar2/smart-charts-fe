@@ -1,9 +1,10 @@
 import type { FC } from "react";
 import { DataGrid, type GridSeriesRow } from "./DataGrid";
 import { type LineChartData } from "../chartTypes";
+import { DataPanelUnavailable } from "./DataPanelUnavailable";
 
 interface LineChartDataPanelProps {
-  data: LineChartData;
+  data: LineChartData | undefined;
   onChange: (next: LineChartData) => void;
   themeColors: string[];
   registerApplyHandler?: (handler: (() => LineChartData) | null) => void;
@@ -15,6 +16,19 @@ export const LineChartDataPanel: FC<LineChartDataPanelProps> = ({
   themeColors,
   registerApplyHandler,
 }) => {
+  if (
+    !data ||
+    data.type !== "line" ||
+    !Array.isArray(data.categories) ||
+    !Array.isArray(data.series)
+  ) {
+    return (
+      <DataPanelUnavailable title="Line chart data not ready">
+        The editor cannot display until valid line chart data is available.
+      </DataPanelUnavailable>
+    );
+  }
+
   const mapRowsToSeries = (rows: GridSeriesRow[]) =>
     rows.map((row) => {
       const existing = data.series.find((s) => s.id === row.id);
