@@ -39,7 +39,7 @@ export const ThemeSwitcher: React.FC = () => {
       <button
         type="button"
         onClick={toggleMode}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border-0 bg-transparent p-0 text-zinc-100 transition-colors hover:text-zinc-300"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full border-0 bg-transparent p-0 text-zinc-100 transition-colors hover:text-zinc-300 cursor-pointer"
         aria-label={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
         title={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
       >
@@ -49,7 +49,7 @@ export const ThemeSwitcher: React.FC = () => {
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border-0 bg-transparent p-0 text-zinc-100 transition-colors hover:text-zinc-300"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border-0 bg-transparent p-0 text-zinc-100 transition-colors hover:text-zinc-300 cursor-pointer"
             aria-label="Open theme switcher"
             title="Switch theme"
           >
