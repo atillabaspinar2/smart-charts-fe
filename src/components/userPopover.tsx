@@ -16,7 +16,7 @@ export const UserPopover: React.FC<{
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="rounded px-4 text-xs text-zinc-100 hover:text-zinc-300"
+            className="rounded px-4 text-xs text-zinc-100 hover:text-zinc-300 cursor-pointer"
           >
             <span className="block">Signed in as</span>
             <span className="block">{user.fullName}</span>
