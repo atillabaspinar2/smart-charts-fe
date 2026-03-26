@@ -342,22 +342,26 @@ export function useAnnotations() {
           onclick: (params: any) => stopDomEvent(params),
         };
 
-        const arrowHead =
-          ann.style.arrowEnd && selected
-            ? [
-                {
-                  ...buildArrowHead({
-                    x1,
-                    y1,
-                    x2,
-                    y2,
-                    color: ann.style.stroke,
-                    size: Math.max(10, ann.style.lineWidth * 3 + 8),
-                  }),
-                  id: `${ann.id}_arrowEnd`,
+        const arrowHead = ann.style.arrowEnd
+          ? [
+              {
+                ...buildArrowHead({
+                  x1,
+                  y1,
+                  x2,
+                  y2,
+                  color: ann.style.stroke,
+                  size: Math.max(10, ann.style.lineWidth * 3 + 8),
+                }),
+                id: `${ann.id}_arrowEnd`,
+                // keep arrow visible even when deselected; add a subtle dim.
+                style: {
+                  fill: ann.style.stroke,
+                  opacity: selected ? 1 : Math.min(0.9, ann.style.opacity),
                 },
-              ]
-            : [];
+              },
+            ]
+          : [];
 
         return [hitZone, visibleLine, ...arrowHead, handle1, handle2];
       });
