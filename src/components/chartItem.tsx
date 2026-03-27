@@ -49,8 +49,6 @@ interface ChartItemProps {
   onImportData: (instanceId: string) => void;
   mediaType: string;
   theme?: string;
-  pieSettings?: PieChartSettings;
-  mapSettings?: MapChartSettings;
   annotations: AnyAnnotation[];
   onAnnotationsChange: (annotations: AnyAnnotation[]) => void;
 }
@@ -78,8 +76,6 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     onImportData,
     mediaType,
     theme,
-    pieSettings,
-    mapSettings,
     annotations,
     onAnnotationsChange,
   }) => {
@@ -341,10 +337,15 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       if (colorSource === "theme") return false;
       return color.length > 0;
     };
-    const effectiveBackgroundColor =
-      hasTheme && settings.backgroundColor === "#ffffff"
+    const effectiveBackgroundColor = (() => {
+      if (type === "map") {
+        const bg = (settings as MapChartSettings).backgroundColor?.trim() ?? "";
+        return bg === "" ? "#ffffff" : bg;
+      }
+      return hasTheme && settings.backgroundColor === "#ffffff"
         ? undefined
         : settings.backgroundColor;
+    })();
 
     // For map charts, ensure option.series[0].map is set to chartData.mapName and inject style panel settings
     let chartOption = {
@@ -366,7 +367,8 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       backgroundColor: effectiveBackgroundColor,
     };
     if (type === "map" && chartData && chartData.type === "map") {
-      const updatedMapSettings = mapSettings ?? defaultMapChartSettings;
+      const updatedMapSettings =
+        (settings as MapChartSettings) ?? defaultMapChartSettings;
 
       const mapChartData = chartData as MapChartData;
       if (mapChartData.series && mapChartData.series.data) {
@@ -388,7 +390,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
               ...chartOption.series[0],
               map: chartData.mapName,
               animationDelayUpdate: (idx: number) =>
-                idx * (updatedMapSettings?.animationDelayUpdateValue || 100),
+                idx * (updatedMapSettings?.animationDelayUpdateValue || 20),
 
               label: {
                 show: updatedMapSettings.showLabel,
@@ -596,7 +598,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     }
 
     if (type === "pie") {
-      const ps = pieSettings ?? defaultPieChartSettings;
+      const ps = (settings as PieChartSettings) ?? defaultPieChartSettings;
       const templateSeries = Array.isArray(opts.series)
         ? opts.series[0] || {}
         : {};

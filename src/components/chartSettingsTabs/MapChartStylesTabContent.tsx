@@ -30,14 +30,14 @@ export const MapChartStylesTabContent: FC<MapChartStylesTabContentProps> = ({
         <div className="flex items-center justify-between">
           <Label className="text-xs">Animation speed</Label>
           <span className="w-8 text-right text-xs text-muted-foreground">
-            {mapSettings.animationDelayUpdateValue || 50}
+            {mapSettings.animationDelayUpdateValue || 20}
           </span>
         </div>
         <Slider
           min={0}
           max={500}
           step={1}
-          value={[mapSettings.animationDelayUpdateValue || 100]}
+          value={[mapSettings.animationDelayUpdateValue || 20]}
           onValueChange={([v]) =>
             setMapSettings({ animationDelayUpdateValue: v })
           }

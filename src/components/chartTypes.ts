@@ -72,6 +72,13 @@ export interface PieChartSettings extends ChartSettingsBase {
   showLabel: boolean;
 }
 
+/** Persisted per-chart settings (discriminated by chart `type` + interface shape). */
+export type ChartSettingsUnion =
+  | LineChartSettings
+  | BarChartSettings
+  | PieChartSettings
+  | MapChartSettings;
+
 export type SeriesColorSource = "theme" | "custom";
 
 export type LineChartVariation =
@@ -178,12 +185,12 @@ export const defaultPieChartSettings: PieChartSettings = {
 export const defaultMapChartSettings: MapChartSettings = {
   mapName: "countries",
   regionColor: "#c23531",
-  animationDelayUpdateValue: 50,
+  animationDelayUpdateValue: 20,
   showLabel: false,
   labelFontColor: "#000",
   labelFontSize: 10,
   animationDuration: 0,
-  backgroundColor: "",
+  backgroundColor: "#ffffff",
   title: "",
   fontFamily: "",
   fontSize: 0,

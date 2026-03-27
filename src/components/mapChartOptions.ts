@@ -77,7 +77,7 @@ export const defaultMapOptions = (mapName?: string) => {
           // formatter: "{b}: {c}",
           formatter: "{c}",
         },
-        animationDelayUpdate: (idx: number) => idx * 100,
+        animationDelayUpdate: (idx: number) => idx * 20,
         universalTransition: true,
         itemStyle: {
           borderColor: "#4B5563", // dark grey border
