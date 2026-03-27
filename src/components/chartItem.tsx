@@ -760,61 +760,6 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       e.preventDefault();
     };
 
-    // imperative annotation state management directly on chart instance
-    // const onDrop = (e: React.DragEvent) => {
-    //   e.preventDefault();
-    //   const type = e.dataTransfer.getData("annotationType");
-    //   if (type === "line") {
-    //     e.stopPropagation();
-    //   }
-
-    //   const container = containerRef.current;
-
-    //   if (type && container) {
-    //     const containerRect = container.getBoundingClientRect();
-    //     const dropX = Math.max(
-    //       0,
-    //       e.clientX - containerRect.left + container.scrollLeft,
-    //     );
-    //     const dropY = Math.max(
-    //       0,
-    //       e.clientY - containerRect.top + container.scrollTop,
-    //     );
-    //     const echartsInstance = chartRef.current?.getEchartsInstance();
-    //     if (!echartsInstance) return;
-
-    //     if (type === "line" && chartRef.current) {
-    //       const echartsInstance = chartRef.current.getEchartsInstance();
-
-    //       // SAVE AS RATIOS (Universal for Pie/Line/Bar)
-
-    //       if (echartsInstance) {
-    //         // 2. Save to your state
-    //         createLineAnnotation(echartsInstance.id, {
-    //           p1: [dropX, dropY],
-    //           p2: [dropX + 100, dropY + 100], // Initial length and angle
-    //         });
-    //       }
-    //     }
-    //   }
-    // };
-
-    // // add line graphic
-    // useEffect(() => {
-    //   if (chartRef.current) {
-    //     const echartsInstance = chartRef.current.getEchartsInstance();
-    //     if (echartsInstance) {
-    //       const graphic = createLineAnnotation(echartsInstance.id, {
-    //         p1: [0.2, 0.2],
-    //         p2: [0.8, 0.8],
-    //       });
-    //       echartsInstance.setOption({ graphic });
-    //     }
-
-    //     // echartsInstance.setOption({ graphic });
-    //   }
-    // }, [chartRef.current]);
-
     const onDrop = (e: React.DragEvent) => {
       e.preventDefault();
       const annotationType = e.dataTransfer.getData("annotationType");
