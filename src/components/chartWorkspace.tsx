@@ -39,6 +39,7 @@ import {
   defaultLineChartSettings,
   defaultBarChartSettings,
   defaultMapChartSettings,
+  type ChartSettingsUnion,
 } from "./chartTypes";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -98,8 +99,6 @@ export const ChartWorkspace: React.FC<{
   const upsertChartSettings = useWorkspaceChartsStore(
     (s) => s.upsertChartSettings,
   );
-  const upsertPieSettings = useWorkspaceChartsStore((s) => s.upsertPieSettings);
-  const upsertMapSettings = useWorkspaceChartsStore((s) => s.upsertMapSettings);
   const upsertAnnotations = useWorkspaceChartsStore(
     (s) => s.upsertAnnotations,
   );
@@ -380,13 +379,6 @@ export const ChartWorkspace: React.FC<{
   const [chartDataOrientationMap, setChartDataOrientationMap] = useState<
     Record<string, DataOrientation>
   >({});
-  const [pieSettingsMap, setPieSettingsMap] = useState<
-    Record<string, PieChartSettings>
-  >({});
-
-  const [mapSettingsMap, setMapSettingsMap] = useState<
-    Record<string, MapChartSettings>
-  >({});
 
   // Hydrate persisted chart content once (per workspace) so refresh restores charts.
   useEffect(() => {
@@ -423,20 +415,6 @@ export const ChartWorkspace: React.FC<{
         }));
       }
 
-      if (entity.pieSettings && !pieSettingsMap[chart.instanceId]) {
-        setPieSettingsMap((prev) => ({
-          ...prev,
-          [chart.instanceId]: entity.pieSettings as PieChartSettings,
-        }));
-      }
-
-      if (entity.mapSettings && !mapSettingsMap[chart.instanceId]) {
-        setMapSettingsMap((prev) => ({
-          ...prev,
-          [chart.instanceId]:
-            entity.mapSettings as MapChartSettings,
-        }));
-      }
     });
     // We intentionally include local maps so we only fill missing keys.
   }, [
@@ -445,8 +423,6 @@ export const ChartWorkspace: React.FC<{
     chartEntities,
     chartDataMap,
     chartSettingsMap,
-    pieSettingsMap,
-    mapSettingsMap,
   ]);
 
   const [pendingImportChartInstanceId, setPendingImportChartInstanceId] =
@@ -489,8 +465,27 @@ export const ChartWorkspace: React.FC<{
 
   const initializeChartSettings = (instanceId: string, type: string) => {
     const templateOptions: any = getOptionsByType(type);
-    const nextSettings =
-      ({
+
+    let nextSettings: ChartSettingsUnion;
+
+    if (type === "pie") {
+      nextSettings = {
+        ...defaultPieChartSettings,
+        animationDuration: templateOptions.animationDuration || 1000,
+        backgroundColor: "#ffffff",
+        title: templateOptions?.title?.text || "",
+        fontFamily: canvasSettings.fontFamily,
+        fontSize: canvasSettings.fontSize,
+      };
+    } else if (type === "map") {
+      nextSettings = {
+        ...defaultMapChartSettings,
+        animationDuration: templateOptions.animationDuration || 1000,
+        fontFamily: canvasSettings.fontFamily,
+        fontSize: canvasSettings.fontSize,
+      };
+    } else {
+      nextSettings = {
         animationDuration: templateOptions.animationDuration || 1000,
         backgroundColor: "#ffffff",
         title: templateOptions?.title?.text || "",
@@ -508,7 +503,8 @@ export const ChartWorkspace: React.FC<{
         lineSmooth: false,
         lineStep: false,
         lineArea: false,
-      } as LineChartSettings | BarChartSettings | PieChartSettings | MapChartSettings);
+      } as LineChartSettings | BarChartSettings;
+    }
 
     setChartSettingsMap((prev) => ({
       ...prev,
@@ -593,15 +589,32 @@ export const ChartWorkspace: React.FC<{
     }
 
     if (type === "map") {
+      const mapName = "countries";
       const nextData: MapChartData & {
         series: { data: { name: string; value: number }[] };
       } = {
         type: "map",
-        mapName: "countries",
+        mapName,
         series: { data: [] },
       };
 
       commitChartData(instanceId, nextData);
+
+      // Fill region rows for the data panel (same as changing map in the panel).
+      void (async () => {
+        try {
+          const { getMapData } = await import("./mapChartOptions");
+          const regions = await getMapData(mapName);
+          if (regions.length === 0) return;
+          commitChartData(instanceId, {
+            type: "map",
+            mapName,
+            series: { data: regions },
+          });
+        } catch {
+          // Map asset failed; empty grid until user picks a map or imports data.
+        }
+      })();
       return;
     }
 
@@ -644,7 +657,12 @@ export const ChartWorkspace: React.FC<{
 
   const updateChartSettings = (
     instanceId: string,
-    updates: Partial<LineChartSettings & BarChartSettings & PieChartSettings>,
+    updates: Partial<
+      LineChartSettings &
+      BarChartSettings &
+      PieChartSettings &
+      MapChartSettings
+    >,
   ) => {
     setChartSettingsMap((prev) => {
       const current = prev[instanceId] || defaultLineChartSettings;
@@ -656,81 +674,12 @@ export const ChartWorkspace: React.FC<{
       const animationChanged =
         typeof updates.animationDuration === "number" &&
         updates.animationDuration !== current.animationDuration;
-      const backgroundChanged =
-        typeof updates.backgroundColor === "string" &&
-        updates.backgroundColor !== current.backgroundColor;
-      const titleChanged =
-        typeof updates.title === "string" && updates.title !== current.title;
-      const fontFamilyChanged =
-        typeof updates.fontFamily === "string" &&
-        updates.fontFamily !== current.fontFamily;
-      const fontSizeChanged =
-        typeof updates.fontSize === "number" &&
-        updates.fontSize !== current.fontSize;
-      const showLegendChanged =
-        typeof updates.showLegend === "boolean" &&
-        updates.showLegend !== current.showLegend;
-      const legendTopChanged =
-        typeof updates.legendTop === "string" &&
-        updates.legendTop !== current.legendTop;
-      const legendLeftChanged =
-        typeof updates.legendLeft === "string" &&
-        updates.legendLeft !== current.legendLeft;
-      const legendOrientChanged =
-        typeof updates.legendOrient === "string" &&
-        updates.legendOrient !== current.legendOrient;
-      const barShowBackgroundChanged =
-        "barShowBackground" in current &&
-        typeof updates.barShowBackground === "boolean" &&
-        updates.barShowBackground !== current.barShowBackground;
-      const barBackgroundColorChanged =
-        "barBackgroundColor" in current &&
-        typeof updates.barBackgroundColor === "string" &&
-        updates.barBackgroundColor !== current.barBackgroundColor;
-      const barAxisOrientationChanged =
-        "barAxisOrientation" in current &&
-        typeof updates.barAxisOrientation === "string" &&
-        updates.barAxisOrientation !== current.barAxisOrientation;
-      const barStackEnabledChanged =
-        "barStackEnabled" in current &&
-        typeof updates.barStackEnabled === "boolean" &&
-        updates.barStackEnabled !== current.barStackEnabled;
-      const lineShowLabelsChanged =
-        "lineShowLabels" in current &&
-        typeof updates.lineShowLabels === "boolean" &&
-        updates.lineShowLabels !== current.lineShowLabels;
-      const lineSmoothChanged =
-        "lineSmooth" in current &&
-        typeof updates.lineSmooth === "boolean" &&
-        updates.lineSmooth !== current.lineSmooth;
-      const lineStepChanged =
-        "lineStep" in current &&
-        typeof updates.lineStep === "boolean" &&
-        updates.lineStep !== current.lineStep;
-      const lineAreaChanged =
-        "lineArea" in current &&
-        typeof updates.lineArea === "boolean" &&
-        updates.lineArea !== current.lineArea;
 
-      if (
-        !animationChanged &&
-        !backgroundChanged &&
-        !titleChanged &&
-        !fontFamilyChanged &&
-        !fontSizeChanged &&
-        !showLegendChanged &&
-        !legendTopChanged &&
-        !legendLeftChanged &&
-        !legendOrientChanged &&
-        !barShowBackgroundChanged &&
-        !barBackgroundColorChanged &&
-        !barAxisOrientationChanged &&
-        !barStackEnabledChanged &&
-        !lineShowLabelsChanged &&
-        !lineSmoothChanged &&
-        !lineStepChanged &&
-        !lineAreaChanged
-      ) {
+      // Only the flags above were used historically; pie/map-specific fields (innerRadius,
+      // mapName, visualMapColorRange, …) must still update local state — do not short-circuit.
+      const nextSerialized = JSON.stringify(next);
+      const currentSerialized = JSON.stringify(current);
+      if (nextSerialized === currentSerialized) {
         return prev;
       }
 
@@ -762,38 +711,16 @@ export const ChartWorkspace: React.FC<{
     return defaultLineChartSettings; // fallback
   };
 
-  const getPieSettings = (instanceId: string): PieChartSettings =>
-    pieSettingsMap[instanceId] ?? defaultPieChartSettings;
-
-  const updatePieSettings = (
-    instanceId: string,
-    updates: Partial<PieChartSettings>,
-  ) => {
-    setPieSettingsMap((prev) => {
-      const next = {
-        ...(prev[instanceId] ?? defaultPieChartSettings),
-        ...updates,
-      };
-      upsertPieSettings(workspaceId, instanceId, next);
-      return { ...prev, [instanceId]: next };
-    });
+  const getPieChartSettings = (instanceId: string): PieChartSettings => {
+    const chart = charts.find((c) => c.instanceId === instanceId);
+    const s = getChartSettings(instanceId, chart?.type);
+    return s as PieChartSettings;
   };
 
-  const getMapSettings = (instanceId: string): MapChartSettings =>
-    mapSettingsMap[instanceId] ?? defaultMapChartSettings;
-
-  const updateMapSettings = (
-    instanceId: string,
-    updates: Partial<MapChartSettings>,
-  ) => {
-    setMapSettingsMap((prev) => {
-      const next = {
-        ...(prev[instanceId] ?? defaultMapChartSettings),
-        ...updates,
-      };
-      upsertMapSettings(workspaceId, instanceId, next);
-      return { ...prev, [instanceId]: next };
-    });
+  const getMapChartSettings = (instanceId: string): MapChartSettings => {
+    const chart = charts.find((c) => c.instanceId === instanceId);
+    const s = getChartSettings(instanceId, chart?.type);
+    return s as MapChartSettings;
   };
 
   const updateChartData = (
@@ -862,23 +789,11 @@ export const ChartWorkspace: React.FC<{
           initializeChartData(chart.instanceId, chart.type);
         }
       }
-      if (
-        chart.type === "pie" &&
-        !pieSettingsMap[chart.instanceId] &&
-        !entity?.pieSettings
-      ) {
-        setPieSettingsMap((prev) => {
-          const next = defaultPieChartSettings;
-          upsertPieSettings(workspaceId, chart.instanceId, next);
-          return { ...prev, [chart.instanceId]: next };
-        });
-      }
     });
   }, [
     charts,
     chartSettingsMap,
     chartDataMap,
-    pieSettingsMap,
     chartsStoreHydrated,
     workspaceId,
     chartEntities,
@@ -1114,7 +1029,8 @@ export const ChartWorkspace: React.FC<{
     if (charts.length === 0) return 1000;
     return charts.reduce((max, chart) => {
       const duration =
-        getChartSettings(chart.instanceId).animationDuration || 1000;
+        getChartSettings(chart.instanceId, chart.type).animationDuration ||
+        1000;
       return Math.max(max, duration);
     }, 1000);
   };
@@ -1903,7 +1819,7 @@ export const ChartWorkspace: React.FC<{
               data={c}
               reanimateSignal={reanimateSignal}
               reanimateAllKey={reanimateAllKey}
-              settings={getChartSettings(c.instanceId)}
+              settings={getChartSettings(c.instanceId, c.type)}
               chartData={chartDataMap[c.instanceId]}
               onSelectChart={onSelectChart}
               position={chartPositionMap[c.instanceId] || { x: 20, y: 20 }}
@@ -1930,8 +1846,6 @@ export const ChartWorkspace: React.FC<{
               onImportData={handleOpenImportDialog}
               mediaType={mediaType}
               theme={workspaceTheme || undefined}
-              pieSettings={getPieSettings(c.instanceId)}
-              mapSettings={getMapSettings(c.instanceId)}
               annotations={
                 chartEntities?.[c.instanceId]?.annotations ?? EMPTY_ANNOTATIONS
               }
@@ -1977,20 +1891,20 @@ export const ChartWorkspace: React.FC<{
         {selectedChartInstanceId ? (
           <ChartSettingsPanel
             animationDuration={
-              getChartSettings(selectedChartInstanceId).animationDuration
+              getChartSettings(selectedChartInstanceId, selectedChart?.type).animationDuration
             }
             setAnimationDuration={(value) =>
               updateChartSettings(selectedChartInstanceId, {
                 animationDuration: value,
               })
             }
-            fontFamily={getChartSettings(selectedChartInstanceId).fontFamily}
+            fontFamily={getChartSettings(selectedChartInstanceId, selectedChart?.type).fontFamily}
             setFontFamily={(value) =>
               updateChartSettings(selectedChartInstanceId, {
                 fontFamily: value,
               })
             }
-            fontSize={getChartSettings(selectedChartInstanceId).fontSize}
+            fontSize={getChartSettings(selectedChartInstanceId, selectedChart?.type).fontSize}
             setFontSize={(value) =>
               updateChartSettings(selectedChartInstanceId, {
                 fontSize: value,
@@ -1999,39 +1913,39 @@ export const ChartWorkspace: React.FC<{
             mediaType={mediaType}
             setMediaType={setMediaType}
             backgroundColor={
-              getChartSettings(selectedChartInstanceId).backgroundColor
+              getChartSettings(selectedChartInstanceId, selectedChart?.type).backgroundColor
             }
             setBackgroundColor={(color) =>
               updateChartSettings(selectedChartInstanceId, {
                 backgroundColor: color,
               })
             }
-            title={getChartSettings(selectedChartInstanceId).title}
+            title={getChartSettings(selectedChartInstanceId, selectedChart?.type).title}
             setTitle={(value) =>
               updateChartSettings(selectedChartInstanceId, {
                 title: value,
               })
             }
-            showLegend={getChartSettings(selectedChartInstanceId).showLegend}
+            showLegend={getChartSettings(selectedChartInstanceId, selectedChart?.type).showLegend}
             setShowLegend={(value) =>
               updateChartSettings(selectedChartInstanceId, {
                 showLegend: value,
               })
             }
-            legendTop={getChartSettings(selectedChartInstanceId).legendTop}
+            legendTop={getChartSettings(selectedChartInstanceId, selectedChart?.type).legendTop}
             setLegendTop={(value) =>
               updateChartSettings(selectedChartInstanceId, {
                 legendTop: value,
               })
             }
-            legendLeft={getChartSettings(selectedChartInstanceId).legendLeft}
+            legendLeft={getChartSettings(selectedChartInstanceId, selectedChart?.type).legendLeft}
             setLegendLeft={(value) =>
               updateChartSettings(selectedChartInstanceId, {
                 legendLeft: value,
               })
             }
             legendOrient={
-              getChartSettings(selectedChartInstanceId).legendOrient
+              getChartSettings(selectedChartInstanceId, selectedChart?.type).legendOrient
             }
             setLegendOrient={(value) =>
               updateChartSettings(selectedChartInstanceId, {
@@ -2039,7 +1953,7 @@ export const ChartWorkspace: React.FC<{
               })
             }
             barShowBackground={(() => {
-              const settings = getChartSettings(selectedChartInstanceId);
+              const settings = getChartSettings(selectedChartInstanceId, selectedChart?.type);
               return "barShowBackground" in settings
                 ? settings.barShowBackground
                 : undefined;
@@ -2050,7 +1964,7 @@ export const ChartWorkspace: React.FC<{
               })
             }
             barBackgroundColor={(() => {
-              const settings = getChartSettings(selectedChartInstanceId);
+              const settings = getChartSettings(selectedChartInstanceId, selectedChart?.type);
               return "barBackgroundColor" in settings
                 ? settings.barBackgroundColor
                 : undefined;
@@ -2061,7 +1975,7 @@ export const ChartWorkspace: React.FC<{
               })
             }
             barAxisOrientation={(() => {
-              const settings = getChartSettings(selectedChartInstanceId);
+              const settings = getChartSettings(selectedChartInstanceId, selectedChart?.type);
               return "barAxisOrientation" in settings
                 ? settings.barAxisOrientation
                 : undefined;
@@ -2072,7 +1986,7 @@ export const ChartWorkspace: React.FC<{
               })
             }
             barStackEnabled={(() => {
-              const settings = getChartSettings(selectedChartInstanceId);
+              const settings = getChartSettings(selectedChartInstanceId, selectedChart?.type);
               return "barStackEnabled" in settings
                 ? settings.barStackEnabled
                 : undefined;
@@ -2083,7 +1997,7 @@ export const ChartWorkspace: React.FC<{
               })
             }
             lineShowLabels={(() => {
-              const settings = getChartSettings(selectedChartInstanceId);
+              const settings = getChartSettings(selectedChartInstanceId, selectedChart?.type);
               return "lineShowLabels" in settings
                 ? settings.lineShowLabels
                 : undefined;
@@ -2094,7 +2008,7 @@ export const ChartWorkspace: React.FC<{
               })
             }
             lineSmooth={(() => {
-              const settings = getChartSettings(selectedChartInstanceId);
+              const settings = getChartSettings(selectedChartInstanceId, selectedChart?.type);
               return "lineSmooth" in settings ? settings.lineSmooth : undefined;
             })()}
             setLineSmooth={(value) =>
@@ -2103,14 +2017,14 @@ export const ChartWorkspace: React.FC<{
               })
             }
             lineStep={(() => {
-              const settings = getChartSettings(selectedChartInstanceId);
+              const settings = getChartSettings(selectedChartInstanceId, selectedChart?.type);
               return "lineStep" in settings ? settings.lineStep : undefined;
             })()}
             setLineStep={(value) =>
               updateChartSettings(selectedChartInstanceId, { lineStep: value })
             }
             lineArea={(() => {
-              const settings = getChartSettings(selectedChartInstanceId);
+              const settings = getChartSettings(selectedChartInstanceId, selectedChart?.type);
               return "lineArea" in settings ? settings.lineArea : undefined;
             })()}
             setLineArea={(value) =>
@@ -2121,13 +2035,13 @@ export const ChartWorkspace: React.FC<{
             }
             dataOrientation={selectedChartDataOrientation}
             setDataOrientation={handleChangeDataOrientation}
-            pieSettings={getPieSettings(selectedChartInstanceId)}
+            pieSettings={getPieChartSettings(selectedChartInstanceId)}
             setPieSettings={(updates) =>
-              updatePieSettings(selectedChartInstanceId, updates)
+              updateChartSettings(selectedChartInstanceId, updates)
             }
-            mapSettings={getMapSettings(selectedChartInstanceId)}
+            mapSettings={getMapChartSettings(selectedChartInstanceId)}
             setMapSettings={(updates) =>
-              updateMapSettings(selectedChartInstanceId, updates)
+              updateChartSettings(selectedChartInstanceId, updates)
             }
           />
         ) : (

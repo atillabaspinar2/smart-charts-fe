@@ -4,19 +4,10 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import type {
   ChartData,
   ChartItemData,
-  LineChartSettings,
-  BarChartSettings,
-  PieChartSettings,
-  MapChartSettings,
+  ChartSettingsUnion,
 } from "@/components/chartTypes";
 import type { AnyAnnotation } from "@/hooks/useAnnotation";
 import { indexedDbStorage } from "./indexedDbStorage";
-
-type ChartSettingsUnion =
-  | LineChartSettings
-  | BarChartSettings
-  | PieChartSettings
-  | MapChartSettings;
 
 export type ChartEntity = {
   id: number; // ChartItemData.id
@@ -25,9 +16,8 @@ export type ChartEntity = {
   initialPosition?: { x: number; y: number };
 
   chartData: ChartData | null;
+  /** Single source of truth: line, bar, pie, or map settings (see ChartSettingsUnion). */
   chartSettings: ChartSettingsUnion | null;
-  pieSettings: PieChartSettings | null;
-  mapSettings: MapChartSettings | null;
 
   annotations: AnyAnnotation[];
 };
@@ -45,21 +35,15 @@ type WorkspaceChartsState = {
   ) => ChartItemData;
   removeChart: (workspaceId: string, chartId: number) => void;
 
-  upsertChartData: (workspaceId: string, instanceId: string, data: ChartData) => void;
+  upsertChartData: (
+    workspaceId: string,
+    instanceId: string,
+    data: ChartData,
+  ) => void;
   upsertChartSettings: (
     workspaceId: string,
     instanceId: string,
     settings: ChartSettingsUnion,
-  ) => void;
-  upsertPieSettings: (
-    workspaceId: string,
-    instanceId: string,
-    settings: PieChartSettings,
-  ) => void;
-  upsertMapSettings: (
-    workspaceId: string,
-    instanceId: string,
-    settings: MapChartSettings,
   ) => void;
   upsertAnnotations: (
     workspaceId: string,
@@ -80,8 +64,6 @@ const makeEmptyEntity = (
   initialPosition,
   chartData: null,
   chartSettings: null,
-  pieSettings: null,
-  mapSettings: null,
   annotations: [],
 });
 
@@ -176,46 +158,6 @@ export const useWorkspaceChartsStore = create<WorkspaceChartsState>()(
         });
       },
 
-      upsertPieSettings: (workspaceId, instanceId, settings) => {
-        set((state) => {
-          const byWs = state.chartsByWorkspaceId[workspaceId] ?? {};
-          const current = byWs[instanceId];
-          if (!current) return state;
-          return {
-            chartsByWorkspaceId: {
-              ...state.chartsByWorkspaceId,
-              [workspaceId]: {
-                ...byWs,
-                [instanceId]: {
-                  ...current,
-                  pieSettings: settings,
-                },
-              },
-            },
-          };
-        });
-      },
-
-      upsertMapSettings: (workspaceId, instanceId, settings) => {
-        set((state) => {
-          const byWs = state.chartsByWorkspaceId[workspaceId] ?? {};
-          const current = byWs[instanceId];
-          if (!current) return state;
-          return {
-            chartsByWorkspaceId: {
-              ...state.chartsByWorkspaceId,
-              [workspaceId]: {
-                ...byWs,
-                [instanceId]: {
-                  ...current,
-                  mapSettings: settings,
-                },
-              },
-            },
-          };
-        });
-      },
-
       upsertAnnotations: (workspaceId, instanceId, annotations) => {
         set((state) => {
           const byWs = state.chartsByWorkspaceId[workspaceId] ?? {};
@@ -247,3 +189,4 @@ export const useWorkspaceChartsStore = create<WorkspaceChartsState>()(
   ),
 );
 
+export type { ChartSettingsUnion } from "@/components/chartTypes";

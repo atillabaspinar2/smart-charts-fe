@@ -109,7 +109,7 @@ export const MapChart: React.FC<MapChartProps> = ({
                 itemStyle: { opacity: 1 },
                 animationDelayUpdate:
                   option.series[0].animationDelayUpdate ??
-                  ((idx: number) => idx * 100),
+                  ((idx: number) => idx * 20),
               },
             ],
           },
