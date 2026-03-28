@@ -182,6 +182,12 @@ export const ChartWorkspace: React.FC<{
     useState<ReanimateSignal | null>(null);
   const [hiddenChartIds, setHiddenChartIds] = useState<Set<string>>(new Set());
   const playbackTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const [animBarKey, setAnimBarKey] = useState(0);
+  const [animBarDurationMs, setAnimBarDurationMs] = useState(1000);
+  const animBarClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Counts how many upcoming reanimateSignal updates belong to a "animate all"
+  // batch and should NOT restart the progress bar independently.
+  const suppressBarSignalCountRef = useRef(0);
   const [isCapturingAll, setIsCapturingAll] = useState(false);
   const [activeCanvasTab, setActiveCanvasTab] = useState<"workspace" | "timeline">("workspace");
   const [containerSize, setContainerSize] = useState(defaultContainerSize);
@@ -1066,10 +1072,28 @@ export const ChartWorkspace: React.FC<{
     setSelectedChartInstanceId,
   ]);
 
+  const startProgressBar = useCallback((durationMs: number) => {
+    if (animBarClearTimerRef.current !== null) {
+      clearTimeout(animBarClearTimerRef.current);
+    }
+    setAnimBarDurationMs(durationMs);
+    setAnimBarKey((k) => k + 1);
+    // Remove the bar once the animation completes
+    animBarClearTimerRef.current = setTimeout(() => {
+      setAnimBarKey(0);
+      animBarClearTimerRef.current = null;
+    }, durationMs + 50);
+  }, []);
+
   const triggerStaggeredPlayback = useCallback(() => {
     // Cancel any in-progress timers from a previous playback
     playbackTimersRef.current.forEach(clearTimeout);
     playbackTimersRef.current = [];
+
+    const totalMs = persistedCanvasSettings.timelineTotalMs ?? 10000;
+    // Suppress per-chart bar restarts for all signals fired by this batch
+    suppressBarSignalCountRef.current = charts.length;
+    startProgressBar(totalMs);
 
     // Hide every chart immediately; each will reveal at its own startMs
     setHiddenChartIds(new Set(charts.map((c) => c.instanceId)));
@@ -1093,7 +1117,23 @@ export const ChartWorkspace: React.FC<{
 
       playbackTimersRef.current.push(t);
     });
-  }, [charts, chartEntities]);
+  }, [charts, chartEntities, persistedCanvasSettings.timelineTotalMs, startProgressBar]);
+
+  // Show progress bar for single-chart reanimate (skip signals from batch playback)
+  useEffect(() => {
+    if (!reanimateSignal) return;
+    if (suppressBarSignalCountRef.current > 0) {
+      suppressBarSignalCountRef.current -= 1;
+      return;
+    }
+    const chart = charts.find((c) => c.instanceId === reanimateSignal.instanceId);
+    if (!chart) return;
+    const clip = chartEntities?.[chart.instanceId]?.timelineClip;
+    const durationMs = clip
+      ? clip.endMs - clip.startMs
+      : (getChartSettings(chart.instanceId, chart.type).animationDuration ?? 1000);
+    startProgressBar(durationMs);
+  }, [reanimateSignal]);
 
   const handleRefreshAll = () => {
     triggerStaggeredPlayback();
@@ -1887,6 +1927,19 @@ export const ChartWorkspace: React.FC<{
               }}
               onClick={onCanvasClick}
             >
+              {/* Animation progress bar — spans the top of the canvas for the clip duration */}
+              {animBarKey > 0 && (
+                <div className="absolute top-0 left-1 right-1 z-50 pointer-events-none">
+                  <div
+                    key={animBarKey}
+                    className="h-0.5 rounded-full bg-rose-500"
+                    style={{
+                      width: "0%",
+                      animation: `anim-bar-grow ${animBarDurationMs}ms linear forwards`,
+                    }}
+                  />
+                </div>
+              )}
               {orderedCharts.map((c) => (
                 <ChartItem
                   key={c.id}
