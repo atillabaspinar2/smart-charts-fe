@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { exportChartDataToCSV } from "../utils/spreadsheetExport";
 import debounce from "lodash/debounce";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowUp01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
@@ -1628,7 +1629,23 @@ export const ChartWorkspace: React.FC<{
 
   const dataPanelHeaderRight = (
     <div className="flex items-center gap-1">
-      <Tooltip content="Apply">
+      <Tooltip content="Export CSV">
+        <button
+          type="button"
+          onClick={() => {
+            if (!selectedChartInstanceId) return;
+            const data = chartDataMap[selectedChartInstanceId];
+            if (data) exportChartDataToCSV(data);
+          }}
+          data-no-panel-drag="true"
+          aria-label="Export chart data as CSV"
+          className="rounded bg-white/20 px-2 py-1 text-xs font-medium text-zinc-100 hover:bg-white/30 disabled:opacity-50"
+          disabled={!selectedChartInstanceId}
+        >
+          Export
+        </button>
+      </Tooltip>
+      <Tooltip content="Apply Changes">
         <button
           type="button"
           onClick={() => {
