@@ -307,14 +307,14 @@ export default function AnimationTimeline() {
             {ticks.map(({ ms, px }) => (
               <div
                 key={ms}
-                className="absolute top-0 flex flex-col items-center"
+                className="absolute top-0 flex flex-col items-center -translate-x-1/2"
                 style={{ left: TRACK_PAD + px }}
               >
                 <div
                   className="w-px bg-border"
                   style={{ height: ms === 0 || ms === totalMs ? 10 : 6 }}
                 />
-                <span className="text-[9px] text-muted-foreground mt-0.5 -translate-x-1/2 whitespace-nowrap">
+                <span className="text-[9px] text-muted-foreground mt-0.5 whitespace-nowrap">
                   {msToLabel(ms)}
                 </span>
               </div>
