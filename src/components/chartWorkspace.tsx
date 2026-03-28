@@ -1018,6 +1018,9 @@ export const ChartWorkspace: React.FC<{
     ctx.fillRect(0, 0, width, height);
 
     chartItems.forEach((item) => {
+      // Skip charts that are hidden (waiting for their timeline startMs)
+      if ((item as HTMLElement).style.visibility === "hidden") return;
+
       const sourceCanvas = item.querySelector(
         "canvas",
       ) as HTMLCanvasElement | null;
