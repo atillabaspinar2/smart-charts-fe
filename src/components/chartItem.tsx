@@ -89,6 +89,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     const [isRecording, setIsRecording] = useState(false);
     const [recordKey, setRecordKey] = useState<number>(0);
     const [animateOnNextMount, setAnimateOnNextMount] = useState(false);
+    const reanimateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const lastAppliedReanimateKeyRef = useRef<number>(0);
     const lastAppliedReanimateAllKeyRef = useRef<number>(0);
     const echartsInstanceRef = useRef<any>(null);
@@ -243,8 +244,18 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     }, [persistResizeDebounced]);
 
     const reanimateChart = () => {
-      setAnimateOnNextMount(true);
-      setRecordKey(Date.now());
+      const inst: any =
+        echartsInstanceRef.current ??
+        chartRef.current?.getEchartsInstance?.() ??
+        mapChartRef.current?.getEchartsInstance?.();
+      inst?.clear?.();
+
+      if (reanimateTimerRef.current !== null) clearTimeout(reanimateTimerRef.current);
+      reanimateTimerRef.current = setTimeout(() => {
+        reanimateTimerRef.current = null;
+        setAnimateOnNextMount(true);
+        setRecordKey(Date.now());
+      }, 10);
     };
 
     useEffect(() => {
