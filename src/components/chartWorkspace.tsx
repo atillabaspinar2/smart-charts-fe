@@ -56,7 +56,7 @@ import {
 import { useWorkspaceChartsStore } from "@/store/workspaceChartsStore";
 import type { AnyAnnotation } from "@/hooks/useAnnotation";
 import { useTheme, type ThemeName } from "./theme-provider";
-import AnimationTimeline from "./AnimationTimeline";
+import AnimationTimeline from "./timeline/AnimationTimeline";
 
 const defaultChartSize = {
   width: 400,
