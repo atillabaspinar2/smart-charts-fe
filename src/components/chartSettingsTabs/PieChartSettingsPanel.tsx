@@ -29,7 +29,6 @@ export interface PieChartSettingsPanelProps extends BaseSettingsPanelProps {
   // Common settings tab
   fontSize: number;
   setFontSize: (v: number) => void;
-  handleAnimationChange: (value: string) => void;
 }
 
 export const PieChartSettingsPanel: FC<PieChartSettingsPanelProps> = ({
@@ -47,8 +46,6 @@ export const PieChartSettingsPanel: FC<PieChartSettingsPanelProps> = ({
   setLegendOrient,
   title,
   setTitle,
-  animationInput,
-  handleAnimationChange,
   fontSize,
   setFontSize,
   backgroundColor,
@@ -98,8 +95,6 @@ export const PieChartSettingsPanel: FC<PieChartSettingsPanelProps> = ({
           chartLabel="Chart"
           title={title}
           setTitle={setTitle}
-          animationInput={animationInput}
-          onAnimationChange={handleAnimationChange}
           fontSizeInput={String(fontSize)}
           onFontSizeChange={(value) => setFontSize(Number(value))}
           backgroundColor={backgroundColor}

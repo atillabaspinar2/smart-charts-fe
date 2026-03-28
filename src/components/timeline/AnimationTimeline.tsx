@@ -1,27 +1,19 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useWorkspaceLayoutStore } from "@/store/workspaceLayoutStore";
+import { useWorkspaceChartsStore } from "@/store/workspaceChartsStore";
+import type { TimelineClip } from "@/store/workspaceChartsStore"; // used in applyDuration
 import {
   ROW_HEIGHT,
   LABEL_WIDTH,
   RULER_HEIGHT,
   TRACK_PAD,
   CLIP_COLORS,
-  type Clip,
-  type TimelineRow,
 } from "./timelineTypes";
 import { msToLabel, buildTickMarks } from "./timelineUtils";
-import { TimelineClip } from "./TimelineClip";
-
-// ─── Example seed data (replace with real data when wiring up) ────────────────
-
-const EXAMPLE_ROWS: Omit<TimelineRow, "clip">[] = [
-  { id: "canvas",  label: "Canvas",         colorIdx: 0 },
-  { id: "chart-1", label: "Chart 1 – Bar",  colorIdx: 1 },
-  { id: "chart-2", label: "Chart 2 – Line", colorIdx: 2 },
-  { id: "chart-3", label: "Chart 3 – Map",  colorIdx: 3 },
-];
+import { TimelineClip as TimelineClipComponent } from "./TimelineClip";
 
 // ─── Row label ────────────────────────────────────────────────────────────────
 
@@ -36,38 +28,50 @@ function RowLabel({ label }: { label: string }) {
   );
 }
 
-// ─── Constraint logic ─────────────────────────────────────────────────────────
+// ─── Chart type label helper ──────────────────────────────────────────────────
 
-function applyConstraints(draft: TimelineRow[]): TimelineRow[] {
-  const canvasIdx = draft.findIndex((r) => r.id === "canvas");
-  if (canvasIdx === -1) return draft;
-
-  const maxChartEnd = Math.max(
-    0,
-    ...draft.filter((r) => r.id !== "canvas").map((r) => r.clip.endMs),
-  );
-
-  const canvas = draft[canvasIdx];
-  // Rule 3: start always 0. Rules 1 & 2: end >= max chart end. Rule 4: may exceed it.
-  const clampedEnd = Math.max(canvas.clip.endMs, maxChartEnd);
-
-  if (canvas.clip.startMs === 0 && canvas.clip.endMs === clampedEnd) return draft;
-
-  return draft.map((r) =>
-    r.id === "canvas" ? { ...r, clip: { startMs: 0, endMs: clampedEnd } } : r,
-  );
+function chartLabel(type: string, title: string | undefined, index: number): string {
+  const base = title?.trim() || `${type.charAt(0).toUpperCase() + type.slice(1)} ${index + 1}`;
+  return base;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function AnimationTimeline() {
-  const [totalMs, setTotalMs]             = useState(10000);
-  const [durationInput, setDurationInput] = useState("10");
-  const [containerWidth, setContainerWidth] = useState(0);
-  const [dragLineMs, setDragLineMs]       = useState<number | null>(null);
+  // ── Store access ──────────────────────────────────────────────────────────
+  const {
+    activeWorkspaceId,
+    canvasSettings,
+    setCanvasSettings,
+    chartStackOrder,
+  } = useWorkspaceLayoutStore();
 
+  const {
+    chartsByWorkspaceId,
+    upsertChartTimelineClip,
+  } = useWorkspaceChartsStore();
+
+  const chartMap = chartsByWorkspaceId[activeWorkspaceId] ?? {};
+  // Ordered chart entities matching the canvas stack order
+  const orderedEntities = chartStackOrder
+    .map((id) => chartMap[id])
+    .filter(Boolean);
+
+  const totalMs = canvasSettings.timelineTotalMs ?? 10000;
+
+  // ── Duration input (local, synced from store) ─────────────────────────────
+  const [durationInput, setDurationInput] = useState(String(totalMs / 1000));
+  useEffect(() => {
+    setDurationInput(String(totalMs / 1000));
+  }, [totalMs]);
+
+  // ── Drag line ─────────────────────────────────────────────────────────────
+  const [dragLineMs, setDragLineMs] = useState<number | null>(null);
+
+  // ── Track width measurement ───────────────────────────────────────────────
+  const [containerWidth, setContainerWidth] = useState(0);
   const usableWidth = Math.max(0, containerWidth - 2 * TRACK_PAD);
-  const pxPerMs     = usableWidth > 0 ? usableWidth / totalMs : 0;
+  const pxPerMs = usableWidth > 0 ? usableWidth / totalMs : 0;
 
   const laneCallbackRef = useCallback((node: HTMLDivElement | null) => {
     if (!node) return;
@@ -77,41 +81,58 @@ export default function AnimationTimeline() {
     ro.observe(node);
   }, []);
 
-  const [rows, setRows] = useState<TimelineRow[]>(() =>
-    EXAMPLE_ROWS.map((r, i) => ({
-      ...r,
-      clip: {
-        startMs: i === 0 ? 0 : i * 1000,
-        endMs:   i === 0 ? 10000 : Math.min(10000, i * 1000 + 4000),
-      },
-    })),
-  );
-
+  // ── Apply new total duration ──────────────────────────────────────────────
   const applyDuration = () => {
     const secs = parseFloat(durationInput);
     if (isNaN(secs) || secs <= 0) return;
     const ms = Math.round(secs * 1000);
-    setTotalMs(ms);
-    setRows((prev) =>
-      prev.map((r) => ({
-        ...r,
-        clip: {
-          startMs: Math.min(r.clip.startMs, ms),
-          endMs:   Math.min(r.clip.endMs,   ms),
-        },
-      })),
-    );
+
+    // Clamp all chart clips to the new total duration
+    orderedEntities.forEach((entity) => {
+      const clip = entity.timelineClip ?? { startMs: 0, endMs: Math.min(4000, ms) };
+      const clamped: TimelineClip = {
+        startMs: Math.min(clip.startMs, ms),
+        endMs: Math.min(clip.endMs, ms),
+      };
+      upsertChartTimelineClip(activeWorkspaceId, entity.instanceId, clamped);
+    });
+
+    setCanvasSettings({ ...canvasSettings, timelineTotalMs: ms, animationDuration: ms });
   };
 
-  const updateClip = (id: string, next: Clip) => {
-    setRows((prev) =>
-      applyConstraints(prev.map((r) => (r.id === id ? { ...r, clip: next } : r))),
-    );
+  // ── Clip update with constraints ──────────────────────────────────────────
+  const updateClip = (id: string, next: TimelineClip) => {
+    if (id === "canvas") {
+      // Rule 3: start fixed at 0
+      // Rule 1: end >= max chart end   Rule 4: may exceed max chart end
+      const maxChartEnd = Math.max(
+        0,
+        ...orderedEntities.map((e) => e.timelineClip?.endMs ?? 0),
+      );
+      const clampedEnd = Math.max(next.endMs, maxChartEnd);
+      setCanvasSettings({
+        ...canvasSettings,
+        timelineTotalMs: clampedEnd,
+        animationDuration: clampedEnd,
+      });
+    } else {
+      upsertChartTimelineClip(activeWorkspaceId, id, next);
+      // Rule 2: expand canvas end if chart end exceeds it
+      if (next.endMs > totalMs) {
+        setCanvasSettings({
+          ...canvasSettings,
+          timelineTotalMs: next.endMs,
+          animationDuration: next.endMs,
+        });
+      }
+    }
   };
 
-  const ticks       = buildTickMarks(totalMs, usableWidth);
-  const gridHeight  = RULER_HEIGHT + rows.length * ROW_HEIGHT;
-  const dragLinePx  = dragLineMs !== null ? TRACK_PAD + dragLineMs * pxPerMs : null;
+  // ── Derived layout ────────────────────────────────────────────────────────
+  const ticks = buildTickMarks(totalMs, usableWidth);
+  const rowCount = 1 + orderedEntities.length; // canvas + charts
+  const gridHeight = RULER_HEIGHT + rowCount * ROW_HEIGHT;
+  const dragLinePx = dragLineMs !== null ? TRACK_PAD + dragLineMs * pxPerMs : null;
 
   return (
     <div className="flex flex-col gap-3 p-3 text-sm">
@@ -163,39 +184,57 @@ export default function AnimationTimeline() {
           </div>
         </div>
 
-        {/* Data rows */}
-        {rows.map((row) => (
-          <div
-            key={row.id}
-            className="flex border-b border-border last:border-b-0"
-            style={{ height: ROW_HEIGHT }}
-          >
-            <RowLabel label={row.label} />
-            <div className="relative flex-1 bg-background">
-              {ticks.map(({ ms, px }) => (
-                <div
-                  key={ms}
-                  className="absolute top-0 bottom-0 w-px bg-border/30"
-                  style={{ left: TRACK_PAD + px }}
-                />
-              ))}
-              {usableWidth > 0 && (
-                <TimelineClip
-                  clip={row.clip}
-                  totalMs={totalMs}
-                  usableWidthPx={usableWidth}
-                  colorClass={CLIP_COLORS[row.colorIdx % CLIP_COLORS.length]}
-                  fixedStart={row.id === "canvas"}
-                  onClipChange={(next) => updateClip(row.id, next)}
-                  onDragMove={setDragLineMs}
-                  onDragEnd={() => setDragLineMs(null)}
-                />
-              )}
-            </div>
+        {/* Canvas row */}
+        <div className="flex border-b border-border" style={{ height: ROW_HEIGHT }}>
+          <RowLabel label="Canvas" />
+          <div className="relative flex-1 bg-background">
+            {ticks.map(({ ms, px }) => (
+              <div key={ms} className="absolute top-0 bottom-0 w-px bg-border/30" style={{ left: TRACK_PAD + px }} />
+            ))}
+            {usableWidth > 0 && (
+              <TimelineClipComponent
+                clip={{ startMs: 0, endMs: totalMs }}
+                totalMs={totalMs}
+                usableWidthPx={usableWidth}
+                colorClass={CLIP_COLORS[0]}
+                fixedStart
+                onClipChange={(next) => updateClip("canvas", next)}
+                onDragMove={setDragLineMs}
+                onDragEnd={() => setDragLineMs(null)}
+              />
+            )}
           </div>
-        ))}
+        </div>
 
-        {/* Drag position indicator */}
+        {/* Chart rows */}
+        {orderedEntities.map((entity, i) => {
+          const clip = entity.timelineClip ?? { startMs: 0, endMs: Math.min(4000, totalMs) };
+          const label = chartLabel(entity.type, entity.chartSettings?.title, i);
+          const colorIdx = (i % (CLIP_COLORS.length - 1)) + 1;
+          return (
+            <div key={entity.instanceId} className="flex border-b border-border last:border-b-0" style={{ height: ROW_HEIGHT }}>
+              <RowLabel label={label} />
+              <div className="relative flex-1 bg-background">
+                {ticks.map(({ ms, px }) => (
+                  <div key={ms} className="absolute top-0 bottom-0 w-px bg-border/30" style={{ left: TRACK_PAD + px }} />
+                ))}
+                {usableWidth > 0 && (
+                  <TimelineClipComponent
+                    clip={clip}
+                    totalMs={totalMs}
+                    usableWidthPx={usableWidth}
+                    colorClass={CLIP_COLORS[colorIdx]}
+                    onClipChange={(next) => updateClip(entity.instanceId, next)}
+                    onDragMove={setDragLineMs}
+                    onDragEnd={() => setDragLineMs(null)}
+                  />
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Drag indicator */}
         {dragLinePx !== null && (
           <div
             className="absolute top-0 pointer-events-none z-20"

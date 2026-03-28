@@ -14,8 +14,6 @@ import { ColorPicker } from "../ui/colorpicker";
 export interface BaseSettingsPanelProps {
   title: string;
   setTitle: (v: string) => void;
-  animationInput: string;
-  handleAnimationChange: (value: string) => void;
   backgroundColor: string;
   setBackgroundColor: (v: string) => void;
 }
@@ -37,8 +35,6 @@ export interface CanvasSettingsPanelProps extends BaseSettingsPanelProps {
 export const CanvasSettingsPanel: FC<CanvasSettingsPanelProps> = ({
   title,
   setTitle,
-  animationInput,
-  handleAnimationChange,
   fontFamily,
   setFontFamily,
   backgroundColor,
@@ -66,23 +62,6 @@ export const CanvasSettingsPanel: FC<CanvasSettingsPanelProps> = ({
         placeholder="Enter workspace title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-      />
-    </div>
-    <div className="mb-4">
-      <Label
-        htmlFor="settings-animation"
-        className="mb-1 block text-sm font-medium"
-      >
-        Animation (ms)
-      </Label>
-      <Input
-        id="settings-animation"
-        type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        value={animationInput}
-        placeholder="1000"
-        onChange={(e) => handleAnimationChange(e.target.value)}
       />
     </div>
     <div className="mb-4">

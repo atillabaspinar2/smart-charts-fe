@@ -26,12 +26,15 @@ import { AnnotationStylePanel } from "@/components/annotations/AnnotationStylePa
 interface ChartItemProps {
   data: ChartItemData;
   reanimateSignal: ReanimateSignal | null;
-  reanimateAllKey: number;
   settings:
     | LineChartSettings
     | BarChartSettings
     | PieChartSettings
     | MapChartSettings;
+  /** Timeline clip for this chart. When present, clip duration drives animationDuration for each series. */
+  timelineClip?: { startMs: number; endMs: number };
+  /** When true, the chart container is hidden (waiting for its timeline startMs). */
+  isHidden?: boolean;
   chartData?: ChartData;
   onSelectChart: (instanceId: string) => void;
   position: { x: number; y: number };
@@ -57,8 +60,9 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
   ({
     data,
     reanimateSignal,
-    reanimateAllKey,
     settings,
+    timelineClip,
+    isHidden = false,
     chartData,
     onSelectChart,
     position,
@@ -80,6 +84,14 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     onAnnotationsChange,
   }) => {
     const { id, type } = data;
+
+    // Clip duration is the single source of truth for animation length.
+    // Falls back to settings.animationDuration for charts without a timeline clip (e.g. map).
+    const animationDurationMs =
+      timelineClip != null
+        ? timelineClip.endMs - timelineClip.startMs
+        : (settings.animationDuration ?? 1000);
+
     const containerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<any>(null);
     const mapChartRef = useRef<any>(null);
@@ -91,7 +103,6 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     const [animateOnNextMount, setAnimateOnNextMount] = useState(false);
     const reanimateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const lastAppliedReanimateKeyRef = useRef<number>(0);
-    const lastAppliedReanimateAllKeyRef = useRef<number>(0);
     const echartsInstanceRef = useRef<any>(null);
 
     // annotations (line-only for step 1)
@@ -264,10 +275,10 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         () => {
           setAnimateOnNextMount(false);
         },
-        Math.max(50, (settings.animationDuration ?? 1000) + 50),
+        Math.max(50, animationDurationMs + 50),
       );
       return () => window.clearTimeout(timer);
-    }, [animateOnNextMount, settings.animationDuration]);
+    }, [animateOnNextMount, animationDurationMs]);
 
     useEffect(() => {
       if (!reanimateSignal) return;
@@ -277,14 +288,6 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       lastAppliedReanimateKeyRef.current = reanimateSignal.key;
       reanimateChart();
     }, [reanimateSignal, data.instanceId]);
-
-    useEffect(() => {
-      if (!reanimateAllKey) return;
-      if (lastAppliedReanimateAllKeyRef.current === reanimateAllKey) return;
-
-      lastAppliedReanimateAllKeyRef.current = reanimateAllKey;
-      reanimateChart();
-    }, [reanimateAllKey]);
 
     useEffect(() => {
       return () => {
@@ -310,7 +313,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         setIsRecording(true);
         try {
           const buffer = 500;
-          const durationMs = settings.animationDuration + buffer;
+          const durationMs = animationDurationMs + buffer;
           await recordCanvas(canvas, durationMs, mediaType);
         } catch (err) {
           console.error("Recording failed", err);
@@ -361,6 +364,9 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     // For map charts, ensure option.series[0].map is set to chartData.mapName and inject style panel settings
     let chartOption = {
       ...opts,
+      // Root-level animationDuration is intentionally omitted for line/bar/pie —
+      // animation duration is controlled per-series so ECharts applies it precisely.
+      animationDuration: undefined,
       title: {
         ...(opts.title || {}),
         text: settings.title,
@@ -529,11 +535,9 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
                 opacity: 0.2,
               }
             : undefined,
-          // Animation options for every series
+          // Animation duration driven by timeline clip for this chart instance
           animation: animateOnNextMount,
-          animationDuration: animateOnNextMount
-            ? (settings.animationDuration ?? 1000)
-            : 0,
+          animationDuration: animateOnNextMount ? animationDurationMs : 0,
         };
       });
     }
@@ -599,11 +603,9 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             color: settings.barBackgroundColor,
           },
           stack: settings.barStackEnabled ? "x" : undefined,
-          // Animation options for every series
+          // Animation duration driven by timeline clip for this chart instance
           animation: animateOnNextMount,
-          animationDuration: animateOnNextMount
-            ? (settings.animationDuration ?? 1000)
-            : 0,
+          animationDuration: animateOnNextMount ? animationDurationMs : 0,
         };
       });
     }
@@ -668,11 +670,9 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           },
           labelLine: { show: false },
           data: pieSeriesData,
-          // Explicitly set animation options for pie
+          // Animation duration driven by timeline clip for this chart instance
           animation: animateOnNextMount,
-          animationDuration: animateOnNextMount
-            ? (settings.animationDuration ?? 1000)
-            : 0,
+          animationDuration: animateOnNextMount ? animationDurationMs : 0,
         },
       ];
     }
@@ -814,6 +814,8 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           width: `${size.width}px`,
           height: `${size.height}px`,
           zIndex,
+          visibility: isHidden ? "hidden" : "visible",
+          pointerEvents: isHidden ? "none" : "auto",
         }}
       >
         {type === "map" && chartData && chartData.type === "map" ? (
