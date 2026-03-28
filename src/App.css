@@ -592,6 +592,11 @@ select {
   background-size: 10px 10px;
 }
 
+@keyframes anim-bar-grow {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
 .canvas-grid {
   /* Create a tiny 1px dot using your muted color with low alpha */
   background-image: radial-gradient(

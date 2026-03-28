@@ -389,12 +389,20 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
 
       const mapChartData = chartData as MapChartData;
       if (mapChartData.series && mapChartData.series.data) {
+        // Derive per-item delay from timeline clip duration ÷ data length.
+        // Falls back to animationDelayUpdateValue setting when no clip is set.
+        const dataLength = mapChartData.series.data.length || 1;
+        const clipDuration =
+          timelineClip != null
+            ? timelineClip.endMs - timelineClip.startMs
+            : (updatedMapSettings?.animationDelayUpdateValue || 20) * dataLength;
+        const perItemDelayMs = clipDuration / dataLength;
+
         chartOption = {
-          mapName: chartData.mapName, // Ensure mapName is set in option for MapChart
+          mapName: chartData.mapName,
           ...chartOption,
           visualMap: {
             ...chartOption.visualMap,
-
             inRange: {
               color:
                 colorRanges[
@@ -406,8 +414,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             {
               ...chartOption.series[0],
               map: chartData.mapName,
-              animationDelayUpdate: (idx: number) =>
-                idx * (updatedMapSettings?.animationDelayUpdateValue || 20),
+              animationDelayUpdate: (idx: number) => idx * perItemDelayMs,
 
               label: {
                 show: updatedMapSettings.showLabel,
