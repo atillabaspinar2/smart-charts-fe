@@ -56,6 +56,7 @@ import {
 import { useWorkspaceChartsStore } from "@/store/workspaceChartsStore";
 import type { AnyAnnotation } from "@/hooks/useAnnotation";
 import { useTheme, type ThemeName } from "./theme-provider";
+import AnimationTimeline from "./AnimationTimeline";
 
 const defaultChartSize = {
   width: 400,
@@ -1908,9 +1909,7 @@ export const ChartWorkspace: React.FC<{
             forceMount
             className="mt-0 data-[state=inactive]:hidden"
           >
-            <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-              Animation timeline coming soon.
-            </div>
+            <AnimationTimeline />
           </TabsContent>
         </PanelView>
       </Tabs>
