@@ -57,9 +57,8 @@ export const defaultMapOptions = (mapName?: string) => {
         color: colorRanges.Indigo, // Default color range
       },
     },
-    animation: true,
 
-    universalTransition: true,
+
     series: [
       {
         // geoIndex: 0,

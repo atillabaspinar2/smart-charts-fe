@@ -10,6 +10,12 @@ import { Tooltip } from "./UILibrary/Tooltip";
 import { PanelView } from "./UILibrary/PanelView";
 import { Button } from "@/components/ui/button";
 import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/components/ui/tabs";
+import {
   getThemeBackground,
   getThemePalette,
 } from "../assets/themes/registerThemes";
@@ -175,6 +181,7 @@ export const ChartWorkspace: React.FC<{
     useState<ReanimateSignal | null>(null);
   const [reanimateAllKey, setReanimateAllKey] = useState<number>(0);
   const [isCapturingAll, setIsCapturingAll] = useState(false);
+  const [activeCanvasTab, setActiveCanvasTab] = useState<"workspace" | "timeline">("workspace");
   const [containerSize, setContainerSize] = useState(defaultContainerSize);
   const [dataPanelMode, setDataPanelMode] = useState<"grid" | "fixed-up">(
     "grid",
@@ -903,6 +910,9 @@ export const ChartWorkspace: React.FC<{
     const updateContainerSize = () => {
       const width = container.offsetWidth;
       const height = container.offsetHeight;
+      // Ignore zero dimensions: happens when the workspace tab is hidden
+      // (display:none / visibility:hidden collapses the container).
+      if (width === 0 || height === 0) return;
       setContainerSize((prev) => {
         if (prev.width === width && prev.height === height) return prev;
         return { width, height };
@@ -1780,86 +1790,130 @@ export const ChartWorkspace: React.FC<{
         </div>
       )}
 
-      <PanelView
-        title="Workspace"
-        className="relative z-10"
-        bodyClassName="p-0 overflow-hidden"
-        onClick={() => setSelectedChartInstanceId(null)}
-        headerRight={
-          <CanvasContextMenu
-            id="canvas-context-menu"
-            onRemoveAll={requestRemoveAll}
-            onCaptureAll={handleCaptureAll}
-            onRefreshAll={handleRefreshAll}
-            onDownloadAll={handleDownloadAll}
-            onAutoArrange={handleAutoArrange}
-            onExpandContainerToPanel={handleExpandContainerToPanel}
-            onAutofitContainer={handleAutofitContainer}
-            isCapturing={isCapturingAll}
-          />
-        }
+      <Tabs
+        defaultValue="workspace"
+        className="relative z-10 gap-0"
+        onValueChange={(v) => setActiveCanvasTab(v as "workspace" | "timeline")}
       >
-        <div
-          id="chart-canvas"
-          ref={containerRef}
-          className="relative resize overflow-auto p-1 border border-border rounded-md bg-white/50 shadow-lg canvas-grid"
-          style={{
-            width: `${containerSize.width}px`,
-            height: `${containerSize.height}px`,
-            backgroundColor: canvasSettings.backgroundColor,
-            isolation: "isolate",
-            cursor:
-              isMobileMode && pendingMobileChartType ? "crosshair" : "default",
-          }}
-          onClick={onCanvasClick}
+        <PanelView
+          title={
+            <TabsList className="h-auto gap-1 bg-transparent p-0">
+              <TabsTrigger
+                value="workspace"
+                className="h-6 flex-none rounded-t-md rounded-b-none border-b-0 px-3 py-0 focus-visible:ring-0"
+              >
+                Workspace
+              </TabsTrigger>
+              <TabsTrigger
+                value="timeline"
+                className="h-6 flex-none rounded-t-md rounded-b-none border-b-0 px-3 py-0 focus-visible:ring-0"
+              >
+                Animation Timeline
+              </TabsTrigger>
+            </TabsList>
+          }
+          headerClassName="pb-0!"
+          titleClassName="self-end"
+          bodyClassName="p-0 overflow-hidden"
+          onClick={() => setSelectedChartInstanceId(null)}
+          headerRight={activeCanvasTab === "workspace" && (
+            <CanvasContextMenu
+              id="canvas-context-menu"
+              onRemoveAll={requestRemoveAll}
+              onCaptureAll={handleCaptureAll}
+              onRefreshAll={handleRefreshAll}
+              onDownloadAll={handleDownloadAll}
+              onAutoArrange={handleAutoArrange}
+              onExpandContainerToPanel={handleExpandContainerToPanel}
+              onAutofitContainer={handleAutofitContainer}
+              isCapturing={isCapturingAll}
+            />)
+          }
         >
-          {orderedCharts.map((c) => (
-            <ChartItem
-              key={c.id}
-              data={c}
-              reanimateSignal={reanimateSignal}
-              reanimateAllKey={reanimateAllKey}
-              settings={getChartSettings(c.instanceId, c.type)}
-              chartData={chartDataMap[c.instanceId]}
-              onSelectChart={onSelectChart}
-              position={chartPositionMap[c.instanceId] || { x: 20, y: 20 }}
-              size={chartSizeMap[c.instanceId] || defaultChartSize}
-              onMove={moveChart}
-              onResize={resizeChart}
-              zIndex={
-                selectedChartInstanceId === c.instanceId
-                  ? CHART_Z_INDEX_SELECTED
-                  : Math.min(
-                      CHART_Z_INDEX_MAX,
-                      Math.max(1, chartStackOrder.indexOf(c.instanceId) + 1),
+          <TabsContent
+            value="workspace"
+            forceMount
+            className="mt-0 data-[state=inactive]:invisible data-[state=inactive]:h-0 data-[state=inactive]:overflow-hidden"
+          >
+            <div
+              id="chart-canvas"
+              ref={containerRef}
+              className="relative resize overflow-auto p-1 border border-border rounded-md bg-white/50 shadow-lg canvas-grid"
+              style={{
+                width: `${containerSize.width}px`,
+                height: `${containerSize.height}px`,
+                backgroundColor: canvasSettings.backgroundColor,
+                isolation: "isolate",
+                cursor:
+                  isMobileMode && pendingMobileChartType
+                    ? "crosshair"
+                    : "default",
+              }}
+              onClick={onCanvasClick}
+            >
+              {orderedCharts.map((c) => (
+                <ChartItem
+                  key={c.id}
+                  data={c}
+                  reanimateSignal={reanimateSignal}
+                  reanimateAllKey={reanimateAllKey}
+                  settings={getChartSettings(c.instanceId, c.type)}
+                  chartData={chartDataMap[c.instanceId]}
+                  onSelectChart={onSelectChart}
+                  position={chartPositionMap[c.instanceId] || { x: 20, y: 20 }}
+                  size={chartSizeMap[c.instanceId] || defaultChartSize}
+                  onMove={moveChart}
+                  onResize={resizeChart}
+                  zIndex={
+                    selectedChartInstanceId === c.instanceId
+                      ? CHART_Z_INDEX_SELECTED
+                      : Math.min(
+                          CHART_Z_INDEX_MAX,
+                          Math.max(
+                            1,
+                            chartStackOrder.indexOf(c.instanceId) + 1,
+                          ),
+                        )
+                  }
+                  onExpandToFullWidth={() =>
+                    handleExpandChartToFullWidth(c.instanceId)
+                  }
+                  onMoveToTop={() => moveChartToTop(c.instanceId)}
+                  onMoveUp={() => moveChartForward(c.instanceId)}
+                  onMoveDown={() => moveChartBackward(c.instanceId)}
+                  onMoveToBottom={() => moveChartToBottom(c.instanceId)}
+                  isSelected={selectedChartInstanceId === c.instanceId}
+                  onRequestRemoveChart={requestRemoveChart}
+                  onImportData={handleOpenImportDialog}
+                  mediaType={mediaType}
+                  theme={workspaceTheme || undefined}
+                  annotations={
+                    chartEntities?.[c.instanceId]?.annotations ??
+                    EMPTY_ANNOTATIONS
+                  }
+                  onAnnotationsChange={(nextAnnotations) =>
+                    upsertAnnotations(
+                      workspaceId,
+                      c.instanceId,
+                      nextAnnotations,
                     )
-              }
-              onExpandToFullWidth={() =>
-                handleExpandChartToFullWidth(c.instanceId)
-              }
-              onMoveToTop={() => moveChartToTop(c.instanceId)}
-              onMoveUp={() => moveChartForward(c.instanceId)}
-              onMoveDown={() => moveChartBackward(c.instanceId)}
-              onMoveToBottom={() => moveChartToBottom(c.instanceId)}
-              isSelected={selectedChartInstanceId === c.instanceId}
-              onRequestRemoveChart={requestRemoveChart}
-              onImportData={handleOpenImportDialog}
-              mediaType={mediaType}
-              theme={workspaceTheme || undefined}
-              annotations={
-                chartEntities?.[c.instanceId]?.annotations ?? EMPTY_ANNOTATIONS
-              }
-              onAnnotationsChange={(nextAnnotations) =>
-                upsertAnnotations(
-                  workspaceId,
-                  c.instanceId,
-                  nextAnnotations,
-                )
-              }
-            />
-          ))}
-        </div>
-      </PanelView>
+                  }
+                />
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent
+            value="timeline"
+            forceMount
+            className="mt-0 data-[state=inactive]:hidden"
+          >
+            <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+              Animation timeline coming soon.
+            </div>
+          </TabsContent>
+        </PanelView>
+      </Tabs>
 
       <Modal
         isOpen={pendingRemoval !== null}

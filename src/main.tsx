@@ -10,7 +10,7 @@ registerThemes();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider>
+    <ThemeProvider defaultTheme="theme-red" defaultMode="dark">
       <App />
     </ThemeProvider>
   </StrictMode>,

@@ -6,7 +6,7 @@ import { indexedDbStorage } from "./indexedDbStorage";
 
 const defaultChartSize = { width: 400, height: 300 };
 
-export const defaultCanvasContainerSize = { width: 800, height: 600 };
+export const defaultCanvasContainerSize = { width: 900, height: 600 };
 
 export type CanvasSettings = {
   animationDuration: number;
@@ -26,8 +26,8 @@ const defaultCanvasSettings: CanvasSettings = {
   fontSize: 12,
 };
 
-const defaultAppTheme = "theme-green";
-const defaultAppMode: AppMode = "light";
+const defaultAppTheme = "theme-red";
+const defaultAppMode: AppMode = "dark";
 const defaultMediaType = "webm";
 const defaultWorkspaceTheme = "";
 
