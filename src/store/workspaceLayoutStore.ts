@@ -10,6 +10,8 @@ export const defaultCanvasContainerSize = { width: 900, height: 600 };
 
 export type CanvasSettings = {
   animationDuration: number;
+  /** Total timeline duration in ms. Canvas clip is always [0, timelineTotalMs]. */
+  timelineTotalMs: number;
   backgroundColor: string;
   title: string;
   fontFamily: string;
@@ -20,6 +22,7 @@ export type AppMode = "light" | "dark" | "system";
 
 const defaultCanvasSettings: CanvasSettings = {
   animationDuration: 1000,
+  timelineTotalMs: 10000,
   backgroundColor: "#ffffff",
   title: "Workspace",
   fontFamily: "Noto Sans",

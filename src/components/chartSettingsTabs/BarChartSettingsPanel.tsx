@@ -35,8 +35,6 @@ export interface BarChartSettingsPanelProps {
   // Common settings tab
   title: string;
   setTitle: (v: string) => void;
-  animationInput: string;
-  handleAnimationChange: (value: string) => void;
   fontSize: number;
   setFontSize: (v: number) => void;
   backgroundColor: string;
@@ -66,8 +64,6 @@ export const BarChartSettingsPanel: FC<BarChartSettingsPanelProps> = ({
   setLegendOrient,
   title,
   setTitle,
-  animationInput,
-  handleAnimationChange,
   fontSize,
   setFontSize,
   backgroundColor,
@@ -125,8 +121,6 @@ export const BarChartSettingsPanel: FC<BarChartSettingsPanelProps> = ({
           chartLabel="Chart"
           title={title}
           setTitle={setTitle}
-          animationInput={animationInput}
-          onAnimationChange={handleAnimationChange}
           fontSizeInput={String(fontSize)}
           onFontSizeChange={(value) => setFontSize(Number(value))}
           backgroundColor={backgroundColor}

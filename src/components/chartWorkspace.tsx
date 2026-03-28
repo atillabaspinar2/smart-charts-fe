@@ -180,7 +180,8 @@ export const ChartWorkspace: React.FC<{
   const [mediaType, setMediaType] = useState<string>("webm");
   const [reanimateSignal, setReanimateSignal] =
     useState<ReanimateSignal | null>(null);
-  const [reanimateAllKey, setReanimateAllKey] = useState<number>(0);
+  const [hiddenChartIds, setHiddenChartIds] = useState<Set<string>>(new Set());
+  const playbackTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [isCapturingAll, setIsCapturingAll] = useState(false);
   const [activeCanvasTab, setActiveCanvasTab] = useState<"workspace" | "timeline">("workspace");
   const [containerSize, setContainerSize] = useState(defaultContainerSize);
@@ -193,8 +194,9 @@ export const ChartWorkspace: React.FC<{
   });
   const [dataPanelTop, setDataPanelTop] =
     useState<number>(DATA_PANEL_FIXED_TOP);
-  const [canvasSettings, setCanvasSettings] = useState({
+  const [canvasSettings, setCanvasSettings] = useState<CanvasSettings>({
     animationDuration: 1000,
+    timelineTotalMs: 10000,
     backgroundColor: "#ffffff",
     title: "Workspace",
     fontFamily: "Noto Sans",
@@ -493,24 +495,14 @@ export const ChartWorkspace: React.FC<{
         fontSize: canvasSettings.fontSize,
       };
     } else {
+      const baseDefaults = type === "bar" ? defaultBarChartSettings : defaultLineChartSettings;
       nextSettings = {
+        ...baseDefaults,
         animationDuration: templateOptions.animationDuration || 1000,
         backgroundColor: "#ffffff",
         title: templateOptions?.title?.text || "",
         fontFamily: canvasSettings.fontFamily,
         fontSize: canvasSettings.fontSize,
-        showLegend: true,
-        legendTop: "bottom",
-        legendLeft: "center",
-        legendOrient: "horizontal",
-        barShowBackground: false,
-        barBackgroundColor: "#f3f4f6",
-        barAxisOrientation: "vertical",
-        barStackEnabled: false,
-        lineShowLabels: false,
-        lineSmooth: false,
-        lineStep: false,
-        lineArea: false,
       } as LineChartSettings | BarChartSettings;
     }
 
@@ -1036,15 +1028,6 @@ export const ChartWorkspace: React.FC<{
     return output;
   };
 
-  const getMaxAnimationDuration = () => {
-    if (charts.length === 0) return 1000;
-    return charts.reduce((max, chart) => {
-      const duration =
-        getChartSettings(chart.instanceId, chart.type).animationDuration ||
-        1000;
-      return Math.max(max, duration);
-    }, 1000);
-  };
 
   const handleRemoveAll = () => {
     charts.forEach((chart) => removeChart(chart.id));
@@ -1083,8 +1066,37 @@ export const ChartWorkspace: React.FC<{
     setSelectedChartInstanceId,
   ]);
 
+  const triggerStaggeredPlayback = useCallback(() => {
+    // Cancel any in-progress timers from a previous playback
+    playbackTimersRef.current.forEach(clearTimeout);
+    playbackTimersRef.current = [];
+
+    // Hide every chart immediately; each will reveal at its own startMs
+    setHiddenChartIds(new Set(charts.map((c) => c.instanceId)));
+
+    charts.forEach((chart, idx) => {
+      const clip = chartEntities?.[chart.instanceId]?.timelineClip;
+      const startMs = clip?.startMs ?? 0;
+
+      // Stagger by 2ms per chart so React doesn't batch the state updates
+      const t = setTimeout(() => {
+        setHiddenChartIds((prev) => {
+          const next = new Set(prev);
+          next.delete(chart.instanceId);
+          return next;
+        });
+        setReanimateSignal({
+          instanceId: chart.instanceId,
+          key: Date.now() + idx,
+        });
+      }, startMs + idx * 2);
+
+      playbackTimersRef.current.push(t);
+    });
+  }, [charts, chartEntities]);
+
   const handleRefreshAll = () => {
-    setReanimateAllKey(Date.now());
+    triggerStaggeredPlayback();
   };
 
   const handleCaptureAll = async () => {
@@ -1096,8 +1108,11 @@ export const ChartWorkspace: React.FC<{
 
     setIsCapturingAll(true);
     try {
-      const durationMs = getMaxAnimationDuration() + 500;
-      setReanimateAllKey(Date.now());
+      const totalMs = persistedCanvasSettings.timelineTotalMs ?? 10000;
+      const durationMs = totalMs + 500;
+
+      // Hide all charts so they reveal at their proper timeline positions
+      setHiddenChartIds(new Set(charts.map((c) => c.instanceId)));
 
       await new Promise((r) =>
         requestAnimationFrame(() => requestAnimationFrame(r)),
@@ -1145,6 +1160,26 @@ export const ChartWorkspace: React.FC<{
 
       recorder.start();
       requestAnimationFrame(tick);
+
+      // Schedule each chart to reveal and animate at its timeline startMs
+      playbackTimersRef.current.forEach(clearTimeout);
+      playbackTimersRef.current = [];
+      charts.forEach((chart, idx) => {
+        const clip = chartEntities?.[chart.instanceId]?.timelineClip;
+        const startMs = clip?.startMs ?? 0;
+        const t = setTimeout(() => {
+          setHiddenChartIds((prev) => {
+            const next = new Set(prev);
+            next.delete(chart.instanceId);
+            return next;
+          });
+          setReanimateSignal({
+            instanceId: chart.instanceId,
+            key: Date.now() + idx,
+          });
+        }, startMs + idx * 2);
+        playbackTimersRef.current.push(t);
+      });
 
       await new Promise<void>((resolve) => {
         recorder.onstop = () => {
@@ -1857,8 +1892,9 @@ export const ChartWorkspace: React.FC<{
                   key={c.id}
                   data={c}
                   reanimateSignal={reanimateSignal}
-                  reanimateAllKey={reanimateAllKey}
                   settings={getChartSettings(c.instanceId, c.type)}
+                  timelineClip={chartEntities?.[c.instanceId]?.timelineClip}
+                  isHidden={hiddenChartIds.has(c.instanceId)}
                   chartData={chartDataMap[c.instanceId]}
                   onSelectChart={onSelectChart}
                   position={chartPositionMap[c.instanceId] || { x: 20, y: 20 }}

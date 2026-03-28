@@ -7,8 +7,6 @@ export interface CommonChartSettingsTabContentProps {
   chartLabel: string;
   title: string;
   setTitle: (v: string) => void;
-  animationInput: string;
-  onAnimationChange: (value: string) => void;
   fontSizeInput: string;
   onFontSizeChange: (value: string) => void;
   backgroundColor: string;
@@ -21,8 +19,6 @@ export const CommonChartSettingsTabContent: FC<
   chartLabel,
   title,
   setTitle,
-  animationInput,
-  onAnimationChange,
   fontSizeInput,
   onFontSizeChange,
   backgroundColor,
@@ -43,23 +39,6 @@ export const CommonChartSettingsTabContent: FC<
           placeholder="Enter chart title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-        />
-      </div>
-      <div>
-        <Label
-          htmlFor="settings-animation"
-          className="mb-1 block text-sm font-medium"
-        >
-          Animation (ms)
-        </Label>
-        <Input
-          id="settings-animation"
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          value={animationInput}
-          placeholder="1000"
-          onChange={(e) => onAnimationChange(e.target.value)}
         />
       </div>
       <div>

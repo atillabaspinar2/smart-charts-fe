@@ -179,8 +179,6 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
             setLegendOrient={setLegendOrient}
             title={title ?? ""}
             setTitle={setTitle ?? (() => {})}
-            animationInput={animationInput}
-            handleAnimationChange={handleAnimationChange}
             fontSize={fontSize}
             setFontSize={setFontSize}
             backgroundColor={backgroundColor ?? "#fff"}
@@ -213,8 +211,6 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
             setLegendOrient={setLegendOrient}
             title={title ?? ""}
             setTitle={setTitle ?? (() => {})}
-            animationInput={animationInput}
-            handleAnimationChange={handleAnimationChange}
             fontSize={fontSize}
             setFontSize={setFontSize}
             backgroundColor={backgroundColor ?? "#fff"}
@@ -241,8 +237,6 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
             setLegendOrient={setLegendOrient}
             title={title ?? ""}
             setTitle={setTitle ?? (() => {})}
-            animationInput={animationInput}
-            handleAnimationChange={handleAnimationChange}
             fontSize={fontSize}
             setFontSize={setFontSize}
             backgroundColor={backgroundColor ?? "#fff"}
@@ -254,8 +248,6 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
           <CanvasSettingsPanel
             title={title ?? ""}
             setTitle={setTitle ?? (() => {})}
-            animationInput={animationInput}
-            handleAnimationChange={handleAnimationChange}
             fontFamily={fontFamily ?? "Noto Sans"}
             setFontFamily={setFontFamily ?? (() => {})}
             backgroundColor={backgroundColor ?? "#fff"}

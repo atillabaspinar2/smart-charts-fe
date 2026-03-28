@@ -9,6 +9,11 @@ import type {
 import type { AnyAnnotation } from "@/hooks/useAnnotation";
 import { indexedDbStorage } from "./indexedDbStorage";
 
+export type TimelineClip = {
+  startMs: number;
+  endMs: number;
+};
+
 export type ChartEntity = {
   id: number; // ChartItemData.id
   instanceId: string;
@@ -18,6 +23,8 @@ export type ChartEntity = {
   chartData: ChartData | null;
   /** Single source of truth: line, bar, pie, or map settings (see ChartSettingsUnion). */
   chartSettings: ChartSettingsUnion | null;
+  /** Timeline clip for this chart instance. Drives animationDuration for line/bar/pie. */
+  timelineClip?: TimelineClip;
 
   annotations: AnyAnnotation[];
 };
@@ -49,6 +56,11 @@ type WorkspaceChartsState = {
     workspaceId: string,
     instanceId: string,
     annotations: AnyAnnotation[],
+  ) => void;
+  upsertChartTimelineClip: (
+    workspaceId: string,
+    instanceId: string,
+    clip: TimelineClip,
   ) => void;
 };
 
@@ -152,6 +164,23 @@ export const useWorkspaceChartsStore = create<WorkspaceChartsState>()(
                   ...current,
                   chartSettings: settings,
                 },
+              },
+            },
+          };
+        });
+      },
+
+      upsertChartTimelineClip: (workspaceId, instanceId, clip) => {
+        set((state) => {
+          const byWs = state.chartsByWorkspaceId[workspaceId] ?? {};
+          const current = byWs[instanceId];
+          if (!current) return state;
+          return {
+            chartsByWorkspaceId: {
+              ...state.chartsByWorkspaceId,
+              [workspaceId]: {
+                ...byWs,
+                [instanceId]: { ...current, timelineClip: clip },
               },
             },
           };
