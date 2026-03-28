@@ -1,5 +1,4 @@
 import React from "react";
-import { exportMapChartDataToCSV } from "../../utils/spreadsheetExport";
 import type { MapChartData } from "../chartTypes";
 import {
   Select,
@@ -68,18 +67,6 @@ export const MapChartDataPanel: React.FC<Props> = ({
   return (
     <div className="space-y-3 p-4">
       <div className="flex items-center gap-2 mb-2">
-        <button
-          type="button"
-          className="rounded bg-blue-500 text-white px-3 py-1 text-xs font-medium hover:bg-blue-600"
-          onClick={() =>
-            exportMapChartDataToCSV(
-              mapRowsToMapChartData(series),
-              `${data.mapName || "map"}-data.csv`,
-            )
-          }
-        >
-          Export
-        </button>
         <label className="block mb-1 text-sm font-medium">Map:</label>
         <Select
           value={data.mapName}
