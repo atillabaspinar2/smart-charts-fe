@@ -328,6 +328,14 @@ export const DataGrid: FC<DataGridProps> = ({
     <div
       ref={gridRef}
       className="overflow-x-auto rounded-md border border-border bg-card shadow-sm"
+      onBlur={(e) => {
+        // Flush the grid snapshot to the draft when focus leaves the entire grid
+        // (not when moving between cells within the grid)
+        if (!gridRef.current?.contains(e.relatedTarget as Node)) {
+          const { categories: nextCats, series: nextSeries } = collectGridSnapshot();
+          applyGridChange(nextCats, nextSeries);
+        }
+      }}
     >
       <Table
         className=""

@@ -110,6 +110,8 @@ export const ChartWorkspace: React.FC<{
   const upsertAnnotations = useWorkspaceChartsStore(
     (s) => s.upsertAnnotations,
   );
+  const upsertChartDraftData = useWorkspaceChartsStore((s) => s.upsertChartDraftData);
+  const clearChartDraftData = useWorkspaceChartsStore((s) => s.clearChartDraftData);
   const [pendingRemoval, setPendingRemoval] = useState<
     { mode: "single"; chartId: number } | { mode: "all" } | null
   >(null);
@@ -166,12 +168,6 @@ export const ChartWorkspace: React.FC<{
   const [chartDataMap, setChartDataMap] = useState<Record<string, ChartData>>(
     {},
   );
-  const [chartDataDraftMap, setChartDataDraftMap] = useState<
-    Record<string, ChartData>
-  >({});
-  const [chartDataDraftDirtyMap, setChartDataDraftDirtyMap] = useState<
-    Record<string, boolean>
-  >({});
   const [chartSettingsMap, setChartSettingsMap] = useState<
     Record<
       string,
@@ -411,14 +407,6 @@ export const ChartWorkspace: React.FC<{
           ...prev,
           [chart.instanceId]: entity.chartData as ChartData,
         }));
-        setChartDataDraftMap((prev) => ({
-          ...prev,
-          [chart.instanceId]: entity.chartData as ChartData,
-        }));
-        setChartDataDraftDirtyMap((prev) => ({
-          ...prev,
-          [chart.instanceId]: false,
-        }));
       }
 
       if (entity.chartSettings && !chartSettingsMap[chart.instanceId]) {
@@ -453,27 +441,12 @@ export const ChartWorkspace: React.FC<{
       ...prev,
       [instanceId]: nextData,
     }));
-    setChartDataDraftMap((prev) => ({
-      ...prev,
-      [instanceId]: nextData,
-    }));
-    setChartDataDraftDirtyMap((prev) => ({
-      ...prev,
-      [instanceId]: false,
-    }));
-
     upsertChartData(workspaceId, instanceId, nextData);
+    clearChartDraftData(workspaceId, instanceId);
   };
 
   const updateChartDataDraft = (instanceId: string, nextData: ChartData) => {
-    setChartDataDraftMap((prev) => ({
-      ...prev,
-      [instanceId]: nextData,
-    }));
-    setChartDataDraftDirtyMap((prev) => ({
-      ...prev,
-      [instanceId]: true,
-    }));
+    upsertChartDraftData(workspaceId, instanceId, nextData);
   };
 
   const getThemeColor = useCallback(
@@ -1566,16 +1539,16 @@ export const ChartWorkspace: React.FC<{
       null
     : null;
 
-  /** Draft/map state can lag one frame behind persisted store after refresh; use entity chartData as fallback. */
+  /** Draft from persisted store takes priority; falls back to committed local map, then stored entity. */
   const resolvedPanelChartData = useMemo((): ChartData | undefined => {
     if (!selectedChartInstanceId) return undefined;
-    const draft = chartDataDraftMap[selectedChartInstanceId];
+    const entity = chartEntities?.[selectedChartInstanceId];
+    const draft = entity?.draftChartData;
     const map = chartDataMap[selectedChartInstanceId];
-    const stored = chartEntities?.[selectedChartInstanceId]?.chartData;
-    return draft ?? map ?? (stored ?? undefined);
+    const stored = entity?.chartData;
+    return (draft ?? map ?? stored) ?? undefined;
   }, [
     selectedChartInstanceId,
-    chartDataDraftMap,
     chartDataMap,
     chartEntities,
   ]);
@@ -1667,8 +1640,9 @@ export const ChartWorkspace: React.FC<{
   const dataPanelHeaderRight = (
     <div className="flex items-center gap-1">
       <Tooltip content="Export CSV">
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => {
             if (!selectedChartInstanceId) return;
             const data = chartDataMap[selectedChartInstanceId];
@@ -1676,53 +1650,51 @@ export const ChartWorkspace: React.FC<{
           }}
           data-no-panel-drag="true"
           aria-label="Export chart data as CSV"
-          className="rounded bg-white/20 px-2 py-1 text-xs font-medium text-zinc-100 hover:bg-white/30 disabled:opacity-50"
           disabled={!selectedChartInstanceId}
         >
           Export
-        </button>
+        </Button>
       </Tooltip>
-      <Tooltip content="Apply Changes">
-        <button
-          type="button"
+      <Tooltip content="Discard unsaved changes">
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => {
             if (!selectedChartInstanceId) return;
-            const appliedData = dataPanelApplyHandlerRef.current?.() ?? null;
-
-            if (appliedData) {
-              updateChartData(selectedChartInstanceId, appliedData, {
-                reanimate: true,
-              });
-              return;
-            }
-
-            const draft = chartDataDraftMap[selectedChartInstanceId];
-            const isDirty = chartDataDraftDirtyMap[selectedChartInstanceId];
-
-            if (draft && isDirty) {
-              updateChartData(selectedChartInstanceId, draft, {
-                reanimate: true,
-              });
-              return;
-            }
-
-            setReanimateSignal({
-              instanceId: selectedChartInstanceId,
-              key: Date.now(),
-            });
+            clearChartDraftData(workspaceId, selectedChartInstanceId);
           }}
           data-no-panel-drag="true"
-          aria-label="Apply chart animation"
-          title="Apply"
-          className="rounded bg-white/20 px-2 py-1 text-xs font-medium text-zinc-100 hover:bg-white/30 disabled:opacity-50"
-          disabled={!selectedChartInstanceId}
+          aria-label="Discard changes"
+          disabled={!selectedChartInstanceId || !chartEntities?.[selectedChartInstanceId]?.draftChartData}
+        >
+          Discard
+        </Button>
+      </Tooltip>
+      <Tooltip content="Apply Changes">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (!selectedChartInstanceId) return;
+            const snapshotData = dataPanelApplyHandlerRef.current?.() ?? null;
+            const draft = snapshotData ?? chartEntities?.[selectedChartInstanceId]?.draftChartData ?? null;
+            if (draft) {
+              updateChartData(selectedChartInstanceId, draft, { reanimate: true });
+            } else {
+              setReanimateSignal({ instanceId: selectedChartInstanceId, key: Date.now() });
+            }
+          }}
+          data-no-panel-drag="true"
+          aria-label="Apply chart data"
+          disabled={!selectedChartInstanceId || !chartEntities?.[selectedChartInstanceId]?.draftChartData}
         >
           Apply
-        </button>
+        </Button>
       </Tooltip>
-      <Tooltip content={dataPanelMode === "fixed-up" ? "move down" : "move up"}>
-        <button
-          type="button"
+      <Tooltip content={dataPanelMode === "fixed-up" ? "Move down" : "Move up"}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={() =>
             setDataPanelMode((prev) => {
               if (prev === "fixed-up") return "grid";
@@ -1731,22 +1703,13 @@ export const ChartWorkspace: React.FC<{
             })
           }
           data-no-panel-drag="true"
-          aria-label={
-            dataPanelMode === "fixed-up"
-              ? "Move data panel down"
-              : "Move data panel up"
-          }
-          title={dataPanelMode === "fixed-up" ? "move down" : "move up"}
-          className="rounded p-1 hover:bg-white/20"
+          aria-label={dataPanelMode === "fixed-up" ? "Move data panel down" : "Move data panel up"}
         >
           <HugeiconsIcon
-            icon={
-              dataPanelMode === "fixed-up" ? ArrowDown01Icon : ArrowUp01Icon
-            }
+            icon={dataPanelMode === "fixed-up" ? ArrowDown01Icon : ArrowUp01Icon}
             size={16}
-            className="text-zinc-100"
           />
-        </button>
+        </Button>
       </Tooltip>
     </div>
   );
@@ -1770,7 +1733,7 @@ export const ChartWorkspace: React.FC<{
 
     if (!selectedChartInstanceId) return;
     const current =
-      (chartDataDraftMap[selectedChartInstanceId] as MapChartData) ||
+      (chartEntities?.[selectedChartInstanceId]?.draftChartData as MapChartData) ||
       (chartDataMap[selectedChartInstanceId] as MapChartData) ||
       (chartEntities?.[selectedChartInstanceId]?.chartData as MapChartData | undefined);
     if (current && current.mapName !== mapName) {
@@ -2325,7 +2288,14 @@ export const ChartWorkspace: React.FC<{
       {dataPanelMode === "grid" && (
         <div ref={gridDataPanelRef} className="md:col-span-2 relative z-30">
           <PanelView
-            title="Chart Data"
+            title={
+              <span className="flex items-center gap-2">
+                Chart Data
+                {selectedChartInstanceId && !!chartEntities?.[selectedChartInstanceId]?.draftChartData && (
+                  <span className="text-[10px] font-medium text-amber-600 normal-case tracking-normal">• unsaved</span>
+                )}
+              </span>
+            }
             headerRight={dataPanelHeaderRight}
             onHeaderMouseDown={handleDataPanelHeaderMouseDown}
             bodyClassName="p-2"
@@ -2337,7 +2307,14 @@ export const ChartWorkspace: React.FC<{
 
       {dataPanelMode === "fixed-up" && (
         <PanelView
-          title="Chart Data"
+          title={
+            <span className="flex items-center gap-2">
+              Chart Data
+              {selectedChartInstanceId && !!chartEntities?.[selectedChartInstanceId]?.draftChartData && (
+                <span className="text-[10px] font-medium text-amber-600 normal-case tracking-normal">• unsaved</span>
+              )}
+            </span>
+          }
           className="fixed bottom-0 z-9000"
           bodyClassName="h-[calc(100%-2.5rem)] overflow-y-auto"
           style={{

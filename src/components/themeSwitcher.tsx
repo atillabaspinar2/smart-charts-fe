@@ -1,6 +1,7 @@
 import { Moon02Icon, PaintBoardIcon, Sun03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useTheme, type ThemeName } from "./theme-provider";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,25 +37,25 @@ export const ThemeSwitcher: React.FC = () => {
 
   return (
     <div className="flex items-center gap-1">
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="lg"
         onClick={toggleMode}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border-0 bg-transparent p-0 text-zinc-100 transition-colors hover:text-zinc-300 cursor-pointer"
         aria-label={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
         title={`Switch to ${mode === "dark" ? "light" : "dark"} mode`}
       >
-        <HugeiconsIcon icon={mode === "dark" ? Moon02Icon : Sun03Icon} size={20} />
-      </button>
+        <HugeiconsIcon icon={mode === "dark" ? Moon02Icon : Sun03Icon} size={24} />
+      </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border-0 bg-transparent p-0 text-zinc-100 transition-colors hover:text-zinc-300 cursor-pointer"
+          <Button
+            variant="ghost"
+            size="lg"
             aria-label="Open theme switcher"
             title="Switch theme"
           >
             <HugeiconsIcon icon={PaintBoardIcon} size={24} />
-          </button>
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {themes.map((theme) => (
