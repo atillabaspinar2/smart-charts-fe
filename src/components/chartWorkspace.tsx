@@ -1144,13 +1144,18 @@ export const ChartWorkspace: React.FC<{
   };
 
   const handleCaptureAll = async () => {
-    if (!isAuthenticated) {
-      setAuthModal("signin");
-      return;
-    }
-    if (charts.length === 0 || isCapturingAll) return;
+    // disable auth check in development mode
+    if (process.env.NODE_ENV === "development") {
+      setIsCapturingAll(true);
+        return;
+    } 
+      if (!isAuthenticated) {
+        setAuthModal("signin");
+        return;
+      }
+      if (charts.length === 0 || isCapturingAll) return;
+    
 
-    setIsCapturingAll(true);
     try {
       const totalMs = persistedCanvasSettings.timelineTotalMs ?? 10000;
       const durationMs = totalMs + 500;
@@ -1243,6 +1248,10 @@ export const ChartWorkspace: React.FC<{
   };
 
   const handleDownloadAll = () => {
+    if (process.env.NODE_ENV === "development") {
+      setIsCapturingAll(true);
+        return;
+    } 
     if (!isAuthenticated) {
       setAuthModal("signin");
       return;
@@ -2191,6 +2200,27 @@ export const ChartWorkspace: React.FC<{
             })()}
             setLineArea={(value) =>
               updateChartSettings(selectedChartInstanceId, { lineArea: value })
+            }
+            lineStack={(() => {
+              const settings = getChartSettings(selectedChartInstanceId, selectedChart?.type);
+              return "lineStack" in settings ? (settings as any).lineStack : undefined;
+            })()}
+            setLineStack={(value) =>
+              updateChartSettings(selectedChartInstanceId, { lineStack: value })
+            }
+            lineSymbol={(() => {
+              const settings = getChartSettings(selectedChartInstanceId, selectedChart?.type);
+              return "lineSymbol" in settings ? (settings as any).lineSymbol : undefined;
+            })()}
+            setLineSymbol={(value) =>
+              updateChartSettings(selectedChartInstanceId, { lineSymbol: value })
+            }
+            lineSymbolSize={(() => {
+              const settings = getChartSettings(selectedChartInstanceId, selectedChart?.type);
+              return "lineSymbolSize" in settings ? (settings as any).lineSymbolSize : undefined;
+            })()}
+            setLineSymbolSize={(value) =>
+              updateChartSettings(selectedChartInstanceId, { lineSymbolSize: value })
             }
             selectedChartType={
               charts.find((c) => c.instanceId === selectedChartInstanceId)?.type

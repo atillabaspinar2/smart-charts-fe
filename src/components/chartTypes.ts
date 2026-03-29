@@ -30,12 +30,25 @@ export interface ChartSettingsBase {
   legendOrient: "horizontal" | "vertical";
 }
 
+export type LineSymbol =
+  | "circle"
+  | "rect"
+  | "roundRect"
+  | "triangle"
+  | "diamond"
+  | "pin"
+  | "arrow"
+  | "none";
+
 // Line chart specific settings
 export interface LineChartSettings extends ChartSettingsBase {
   lineShowLabels: boolean;
   lineSmooth: boolean;
   lineStep: boolean;
   lineArea: boolean;
+  lineStack: boolean;
+  lineSymbol: LineSymbol;
+  lineSymbolSize: number;
 }
 
 // Map charts specific settings
@@ -145,6 +158,9 @@ export const defaultLineChartSettings: LineChartSettings = {
   lineSmooth: false,
   lineStep: false,
   lineArea: false,
+  lineStack: false,
+  lineSymbol: "circle",
+  lineSymbolSize: 4,
 };
 
 export const defaultBarChartSettings: BarChartSettings = {

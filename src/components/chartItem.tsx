@@ -502,6 +502,9 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           ),
           smooth: settings.lineSmooth,
           step: settings.lineStep ? "end" : false,
+          stack: settings.lineStack ? "total" : undefined,
+          symbol: settings.lineSymbol ?? "circle",
+          symbolSize: settings.lineSymbolSize ?? 4,
           endLabel: showEndValueLabels
             ? {
                 show: true,

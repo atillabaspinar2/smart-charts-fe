@@ -9,6 +9,7 @@ import { LineChartStylesTabContent } from "./LineChartStylesTabContent";
 import { CommonLegendTabContent } from "./CommonLegendTabContent";
 import { CommonChartSettingsTabContent } from "./CommonChartSettingsTabContent";
 import type { DataOrientation } from "../../utils/spreadsheetImport";
+import type { LineSymbol } from "../chartTypes";
 
 export interface LineChartSettingsPanelProps {
   activeChartAccordionItem: string;
@@ -23,6 +24,12 @@ export interface LineChartSettingsPanelProps {
   setLineStep?: (value: boolean) => void;
   lineArea?: boolean;
   setLineArea?: (value: boolean) => void;
+  lineStack?: boolean;
+  setLineStack?: (value: boolean) => void;
+  lineSymbol?: LineSymbol;
+  setLineSymbol?: (value: LineSymbol) => void;
+  lineSymbolSize?: number;
+  setLineSymbolSize?: (value: number) => void;
   // Legend tab
   showLegend: boolean;
   setShowLegend: (v: boolean) => void;
@@ -54,6 +61,12 @@ export const LineChartSettingsPanel: FC<LineChartSettingsPanelProps> = ({
   setLineStep,
   lineArea,
   setLineArea,
+  lineStack,
+  setLineStack,
+  lineSymbol,
+  setLineSymbol,
+  lineSymbolSize,
+  setLineSymbolSize,
   showLegend,
   setShowLegend,
   legendTop,
@@ -92,6 +105,12 @@ export const LineChartSettingsPanel: FC<LineChartSettingsPanelProps> = ({
           setLineStep={setLineStep}
           lineArea={lineArea}
           setLineArea={setLineArea}
+          lineStack={lineStack}
+          setLineStack={setLineStack}
+          lineSymbol={lineSymbol}
+          setLineSymbol={setLineSymbol}
+          lineSymbolSize={lineSymbolSize}
+          setLineSymbolSize={setLineSymbolSize}
         />
       </AccordionContent>
     </AccordionItem>
