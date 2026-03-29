@@ -182,6 +182,7 @@ export const ChartWorkspace: React.FC<{
   const [reanimateSignal, setReanimateSignal] =
     useState<ReanimateSignal | null>(null);
   const [hiddenChartIds, setHiddenChartIds] = useState<Set<string>>(new Set());
+  const [fadedOutChartIds, setFadedOutChartIds] = useState<Set<string>>(new Set());
   const playbackTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [animBarKey, setAnimBarKey] = useState(0);
   const [animBarDurationMs, setAnimBarDurationMs] = useState(1000);
@@ -1020,6 +1021,7 @@ export const ChartWorkspace: React.FC<{
     chartItems.forEach((item) => {
       // Skip charts that are hidden (waiting for their timeline startMs)
       if ((item as HTMLElement).style.visibility === "hidden") return;
+      if ((item as HTMLElement).dataset.fadedOut === "true") return;
 
       const sourceCanvas = item.querySelector(
         "canvas",
@@ -1099,12 +1101,16 @@ export const ChartWorkspace: React.FC<{
     suppressBarSignalCountRef.current = charts.length;
     startProgressBar(totalMs);
 
-    // Hide every chart immediately; each will reveal at its own startMs
+    // Hide every chart initially; each reveals at its own startMs
     setHiddenChartIds(new Set(charts.map((c) => c.instanceId)));
+    // Clear any leftover fade-outs from a previous playback
+    setFadedOutChartIds(new Set());
 
     charts.forEach((chart, idx) => {
-      const clip = chartEntities?.[chart.instanceId]?.timelineClip;
+      const entity = chartEntities?.[chart.instanceId];
+      const clip = entity?.timelineClip;
       const startMs = clip?.startMs ?? 0;
+      const endMs = clip?.endMs ?? totalMs;
 
       // Stagger by 2ms per chart so React doesn't batch the state updates
       const t = setTimeout(() => {
@@ -1120,7 +1126,21 @@ export const ChartWorkspace: React.FC<{
       }, startMs + idx * 2);
 
       playbackTimersRef.current.push(t);
+
+      // Schedule fade-out after the clip ends (if hideAfterAnimation is set)
+      if (entity?.hideAfterAnimation) {
+        const fadeTimer = setTimeout(() => {
+          setFadedOutChartIds((prev) => new Set([...prev, chart.instanceId]));
+        }, endMs + idx * 2);
+        playbackTimersRef.current.push(fadeTimer);
+      }
     });
+
+    // After full canvas animation, restore all faded-out charts (screen only)
+    const restoreTimer = setTimeout(() => {
+      setFadedOutChartIds(new Set());
+    }, totalMs + 700);
+    playbackTimersRef.current.push(restoreTimer);
   }, [charts, chartEntities, persistedCanvasSettings.timelineTotalMs, startProgressBar]);
 
   // Show progress bar for single-chart reanimate (skip signals from batch playback)
@@ -1144,15 +1164,10 @@ export const ChartWorkspace: React.FC<{
   };
 
   const handleCaptureAll = async () => {
-    // disable auth check in development mode
-    if (process.env.NODE_ENV === "development") {
-      setIsCapturingAll(true);
-        return;
-    } 
-      if (!isAuthenticated) {
+/*       if (!isAuthenticated) {
         setAuthModal("signin");
         return;
-      }
+      } */
       if (charts.length === 0 || isCapturingAll) return;
     
 
@@ -1213,9 +1228,12 @@ export const ChartWorkspace: React.FC<{
       // Schedule each chart to reveal and animate at its timeline startMs
       playbackTimersRef.current.forEach(clearTimeout);
       playbackTimersRef.current = [];
+      setFadedOutChartIds(new Set());
       charts.forEach((chart, idx) => {
-        const clip = chartEntities?.[chart.instanceId]?.timelineClip;
+        const entity = chartEntities?.[chart.instanceId];
+        const clip = entity?.timelineClip;
         const startMs = clip?.startMs ?? 0;
+        const endMs = clip?.endMs ?? totalMs;
         const t = setTimeout(() => {
           setHiddenChartIds((prev) => {
             const next = new Set(prev);
@@ -1228,6 +1246,14 @@ export const ChartWorkspace: React.FC<{
           });
         }, startMs + idx * 2);
         playbackTimersRef.current.push(t);
+
+        // Fade out after clip ends (included in video, no restore at the end)
+        if (entity?.hideAfterAnimation) {
+          const fadeTimer = setTimeout(() => {
+            setFadedOutChartIds((prev) => new Set([...prev, chart.instanceId]));
+          }, endMs + idx * 2);
+          playbackTimersRef.current.push(fadeTimer);
+        }
       });
 
       await new Promise<void>((resolve) => {
@@ -1244,18 +1270,17 @@ export const ChartWorkspace: React.FC<{
       console.error("Canvas capture failed", err);
     } finally {
       setIsCapturingAll(false);
+      // Restore faded-out charts on screen after the video has been saved
+      // (this restoration is intentionally not part of the recorded video)
+      setFadedOutChartIds(new Set());
     }
   };
 
   const handleDownloadAll = () => {
-    if (process.env.NODE_ENV === "development") {
-      setIsCapturingAll(true);
-        return;
-    } 
-    if (!isAuthenticated) {
+/*     if (!isAuthenticated) {
       setAuthModal("signin");
       return;
-    }
+    } */
     const snapshotCanvas = buildCanvasSnapshot();
     if (!snapshotCanvas) return;
 
@@ -1977,6 +2002,7 @@ export const ChartWorkspace: React.FC<{
                   settings={getChartSettings(c.instanceId, c.type)}
                   timelineClip={chartEntities?.[c.instanceId]?.timelineClip}
                   isHidden={hiddenChartIds.has(c.instanceId)}
+                  isFadedOut={fadedOutChartIds.has(c.instanceId)}
                   chartData={chartDataMap[c.instanceId]}
                   onSelectChart={onSelectChart}
                   position={chartPositionMap[c.instanceId] || { x: 20, y: 20 }}

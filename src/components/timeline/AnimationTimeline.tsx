@@ -2,12 +2,14 @@ import React, { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useWorkspaceLayoutStore } from "@/store/workspaceLayoutStore";
 import { useWorkspaceChartsStore } from "@/store/workspaceChartsStore";
 import type { TimelineClip } from "@/store/workspaceChartsStore"; // used in applyDuration
 import {
   ROW_HEIGHT,
   LABEL_WIDTH,
+  CHECKBOX_COL_WIDTH,
   RULER_HEIGHT,
   TRACK_PAD,
   CLIP_COLORS,
@@ -49,6 +51,7 @@ export default function AnimationTimeline() {
   const {
     chartsByWorkspaceId,
     upsertChartTimelineClip,
+    upsertChartHideAfterAnimation,
   } = useWorkspaceChartsStore();
 
   const chartMap = chartsByWorkspaceId[activeWorkspaceId] ?? {};
@@ -164,6 +167,14 @@ export default function AnimationTimeline() {
         {/* Ruler */}
         <div className="flex shrink-0 border-b border-border" style={{ height: RULER_HEIGHT }}>
           <div className="shrink-0 bg-muted border-r border-border" style={{ width: LABEL_WIDTH }} />
+          {/* Checkbox column header */}
+          <div
+            className="shrink-0 flex items-center justify-center bg-muted border-r border-border"
+            style={{ width: CHECKBOX_COL_WIDTH, height: RULER_HEIGHT }}
+            title="Hide after animation"
+          >
+            <span className="text-[8px] font-medium text-muted-foreground leading-tight text-center select-none">↓</span>
+          </div>
           <div
             ref={laneCallbackRef}
             className="relative flex-1 bg-muted/50"
@@ -187,6 +198,8 @@ export default function AnimationTimeline() {
         {/* Canvas row */}
         <div className="flex border-b border-border" style={{ height: ROW_HEIGHT }}>
           <RowLabel label="Canvas" />
+          {/* Empty checkbox cell to align columns */}
+          <div className="shrink-0 border-r border-border bg-muted/30" style={{ width: CHECKBOX_COL_WIDTH }} />
           <div className="relative flex-1 bg-background">
             {ticks.map(({ ms, px }) => (
               <div key={ms} className="absolute top-0 bottom-0 w-px bg-border/30" style={{ left: TRACK_PAD + px }} />
@@ -214,6 +227,23 @@ export default function AnimationTimeline() {
           return (
             <div key={entity.instanceId} className="flex border-b border-border last:border-b-0" style={{ height: ROW_HEIGHT }}>
               <RowLabel label={label} />
+              {/* Hide-after-animation checkbox */}
+              <div
+                className="shrink-0 flex items-center justify-center border-r border-border bg-muted/30"
+                style={{ width: CHECKBOX_COL_WIDTH }}
+                title="Hide after animation"
+              >
+                <Checkbox
+                  checked={!!entity.hideAfterAnimation}
+                  onCheckedChange={(checked) =>
+                    upsertChartHideAfterAnimation(
+                      activeWorkspaceId,
+                      entity.instanceId,
+                      !!checked,
+                    )
+                  }
+                />
+              </div>
               <div className="relative flex-1 bg-background">
                 {ticks.map(({ ms, px }) => (
                   <div key={ms} className="absolute top-0 bottom-0 w-px bg-border/30" style={{ left: TRACK_PAD + px }} />
@@ -238,7 +268,7 @@ export default function AnimationTimeline() {
         {dragLinePx !== null && (
           <div
             className="absolute top-0 pointer-events-none z-20"
-            style={{ left: LABEL_WIDTH + dragLinePx, height: gridHeight }}
+            style={{ left: LABEL_WIDTH + CHECKBOX_COL_WIDTH + dragLinePx, height: gridHeight }}
           >
             <div className="flex flex-col items-center">
               <svg width="10" height="8" viewBox="0 0 10 8" className="fill-primary">

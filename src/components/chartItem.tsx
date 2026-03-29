@@ -35,6 +35,8 @@ interface ChartItemProps {
   timelineClip?: { startMs: number; endMs: number };
   /** When true, the chart container is hidden (waiting for its timeline startMs). */
   isHidden?: boolean;
+  /** When true, the chart fades out (animation finished, still within canvas duration). */
+  isFadedOut?: boolean;
   chartData?: ChartData;
   onSelectChart: (instanceId: string) => void;
   position: { x: number; y: number };
@@ -63,6 +65,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     settings,
     timelineClip,
     isHidden = false,
+    isFadedOut = false,
     chartData,
     onSelectChart,
     position,
@@ -825,8 +828,11 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           height: `${size.height}px`,
           zIndex,
           visibility: isHidden ? "hidden" : "visible",
-          pointerEvents: isHidden ? "none" : "auto",
+          pointerEvents: isHidden || isFadedOut ? "none" : "auto",
+          opacity: isFadedOut ? 0 : 1,
+          transition: "opacity 0.6s ease",
         }}
+        data-faded-out={isFadedOut ? "true" : undefined}
       >
         {type === "map" && chartData && chartData.type === "map" ? (
           <MapChart

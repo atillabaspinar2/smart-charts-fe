@@ -25,6 +25,8 @@ export type ChartEntity = {
   chartSettings: ChartSettingsUnion | null;
   /** Timeline clip for this chart instance. Drives animationDuration for line/bar/pie. */
   timelineClip?: TimelineClip;
+  /** When true the chart fades out after its animation completes during canvas playback. */
+  hideAfterAnimation?: boolean;
 
   annotations: AnyAnnotation[];
 };
@@ -61,6 +63,11 @@ type WorkspaceChartsState = {
     workspaceId: string,
     instanceId: string,
     clip: TimelineClip,
+  ) => void;
+  upsertChartHideAfterAnimation: (
+    workspaceId: string,
+    instanceId: string,
+    hideAfterAnimation: boolean,
   ) => void;
 };
 
@@ -181,6 +188,23 @@ export const useWorkspaceChartsStore = create<WorkspaceChartsState>()(
               [workspaceId]: {
                 ...byWs,
                 [instanceId]: { ...current, timelineClip: clip },
+              },
+            },
+          };
+        });
+      },
+
+      upsertChartHideAfterAnimation: (workspaceId, instanceId, hideAfterAnimation) => {
+        set((state) => {
+          const byWs = state.chartsByWorkspaceId[workspaceId] ?? {};
+          const current = byWs[instanceId];
+          if (!current) return state;
+          return {
+            chartsByWorkspaceId: {
+              ...state.chartsByWorkspaceId,
+              [workspaceId]: {
+                ...byWs,
+                [instanceId]: { ...current, hideAfterAnimation },
               },
             },
           };
