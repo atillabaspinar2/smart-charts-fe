@@ -9,6 +9,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ColorPicker } from "../ui/colorpicker";
+import { Button } from "../ui/button";
+import { Card } from "../ui/card";
 
 // Base type for all settings panels
 export interface BaseSettingsPanelProps {
@@ -49,10 +51,11 @@ export const CanvasSettingsPanel: FC<CanvasSettingsPanelProps> = ({
   DEFAULT_THEME_SELECT_VALUE,
 }) => (
   <>
-    <div className="mb-4">
+  <div className="space-y-4 pb-3">
+    <div className="space-y-1.5">
       <Label
         htmlFor="settings-title"
-        className="mb-1 block text-sm font-medium"
+        className="text-xs"
       >
         Title
       </Label>
@@ -64,8 +67,8 @@ export const CanvasSettingsPanel: FC<CanvasSettingsPanelProps> = ({
         onChange={(e) => setTitle(e.target.value)}
       />
     </div>
-    <div className="mb-4">
-      <Label className="mb-1 block text-sm font-medium">Font Family</Label>
+    <div className="space-y-1.5 flex items-center justify-between">
+      <Label className="text-xs">Font Family</Label>
       <Select value={fontFamily} onValueChange={setFontFamily}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Select font family" />
@@ -79,17 +82,14 @@ export const CanvasSettingsPanel: FC<CanvasSettingsPanelProps> = ({
         </SelectContent>
       </Select>
     </div>
-    <div className="mb-4">
-      <Label className="mb-1 block text-sm font-medium">Background Color</Label>
+    <div className="space-y-1.5 flex items-center justify-between">
+      <Label className="text-xs ">Background Color</Label>
       <div className="flex items-center gap-3">
         <ColorPicker color={backgroundColor} onChange={setBackgroundColor} />
-        <span className="text-sm text-gray-600 uppercase">
-          {backgroundColor}
-        </span>
       </div>
     </div>
-    <div className="mb-4">
-      <Label className="mb-1 block text-sm font-medium">Media Format</Label>
+    <div className="space-y-1.5 flex items-center justify-between">
+      <Label className="text-xs">Media Format</Label>
       <Select value={mediaType} onValueChange={setMediaType}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Select media format" />
@@ -100,8 +100,8 @@ export const CanvasSettingsPanel: FC<CanvasSettingsPanelProps> = ({
         </SelectContent>
       </Select>
     </div>
-    <div className="mb-4">
-      <Label className="mb-1 block text-sm font-medium">Chart Theme</Label>
+    <div className="space-y-1.5 flex items-center justify-between">
+      <Label className="text-xs">Chart Theme</Label>
       <Select
         value={workspaceTheme ? workspaceTheme : DEFAULT_THEME_SELECT_VALUE}
         onValueChange={(theme) =>
@@ -124,18 +124,19 @@ export const CanvasSettingsPanel: FC<CanvasSettingsPanelProps> = ({
       </Select>
     </div>
     {onApplyThemeColorsToAll && (
-      <div className="mb-4 rounded-md border border-border bg-background p-3">
+      <Card className="p-3">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="text-sm font-medium">Series Colors</p>
-          <button className="btn btn-sm" onClick={onApplyThemeColorsToAll}>
+          <p className="text-xs">Series Colors</p>
+          <Button  onClick={onApplyThemeColorsToAll}>
             Apply to All Charts
-          </button>
+          </Button>
         </div>
         <p className="text-xs text-muted-foreground">
           Applies the current theme palette and background to all charts on the
           canvas.
         </p>
-      </div>
+      </Card>
     )}
+    </div>
   </>
 );

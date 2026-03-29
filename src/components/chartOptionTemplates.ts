@@ -10,11 +10,14 @@ export const lineOptions = {
   yAxis: {
     type: "value",
   },
+  
   series: [
     {
       name: '2015',
       type: 'line',
       stack: true,
+     // symbol: 'none', //'circle', 'rect', 'roundRect', 'triangle', 'diamond', 'pin', 'arrow', 'none'
+     // symbolSize: 15,
       areaStyle: {},
       emphasis: {
         focus: 'series'

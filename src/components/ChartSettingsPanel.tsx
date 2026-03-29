@@ -78,6 +78,12 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
     setLineStep = () => {},
     lineArea = false,
     setLineArea = () => {},
+    lineStack = false,
+    setLineStack = () => {},
+    lineSymbol = "circle",
+    setLineSymbol = () => {},
+    lineSymbolSize = 4,
+    setLineSymbolSize = () => {},
     pieSettings,
     setPieSettings,
     mapSettings,
@@ -169,6 +175,12 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
             setLineStep={setLineStep}
             lineArea={lineArea}
             setLineArea={setLineArea}
+            lineStack={lineStack}
+            setLineStack={setLineStack}
+            lineSymbol={lineSymbol}
+            setLineSymbol={setLineSymbol}
+            lineSymbolSize={lineSymbolSize}
+            setLineSymbolSize={setLineSymbolSize}
             showLegend={showLegend}
             setShowLegend={setShowLegend}
             legendTop={legendTop}

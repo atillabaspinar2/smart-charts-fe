@@ -1,7 +1,27 @@
 import type { FC } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { DataOrientation } from "@/utils/spreadsheetImport";
+import type { LineSymbol } from "../chartTypes";
+
+const SYMBOL_OPTIONS: { value: LineSymbol; label: string }[] = [
+  { value: "circle", label: "Circle" },
+  { value: "rect", label: "Rectangle" },
+  { value: "roundRect", label: "Rounded Rect" },
+  { value: "triangle", label: "Triangle" },
+  { value: "diamond", label: "Diamond" },
+  { value: "pin", label: "Pin" },
+  { value: "arrow", label: "Arrow" },
+  { value: "none", label: "None" },
+];
 
 export interface LineChartStylesTabContentProps {
   dataOrientation?: DataOrientation;
@@ -14,6 +34,12 @@ export interface LineChartStylesTabContentProps {
   setLineStep?: (value: boolean) => void;
   lineArea?: boolean;
   setLineArea?: (value: boolean) => void;
+  lineStack?: boolean;
+  setLineStack?: (value: boolean) => void;
+  lineSymbol?: LineSymbol;
+  setLineSymbol?: (value: LineSymbol) => void;
+  lineSymbolSize?: number;
+  setLineSymbolSize?: (value: number) => void;
 }
 
 export const LineChartStylesTabContent: FC<LineChartStylesTabContentProps> = ({
@@ -27,40 +53,24 @@ export const LineChartStylesTabContent: FC<LineChartStylesTabContentProps> = ({
   setLineStep,
   lineArea = false,
   setLineArea,
+  lineStack = false,
+  setLineStack,
+  lineSymbol = "circle",
+  setLineSymbol,
+  lineSymbolSize = 4,
+  setLineSymbolSize,
 }) => {
   return (
     <div className="space-y-4 pb-3">
       {dataOrientation && setDataOrientation && (
-        <div>
-          <p className="mb-2 text-sm font-medium">Data Orientation</p>
-          <div className="inline-flex overflow-hidden rounded-md border border-border">
-            <button
-              type="button"
-              className={`px-3 py-1.5 text-xs font-medium ${
-                dataOrientation === "columns-as-series"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-background text-foreground hover:bg-muted"
-              }`}
-              onClick={() => setDataOrientation("columns-as-series")}
-            >
-              Columns as Series
-            </button>
-            <button
-              type="button"
-              className={`border-l border-border px-3 py-1.5 text-xs font-medium ${
-                dataOrientation === "rows-as-series"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-background text-foreground hover:bg-muted"
-              }`}
-              onClick={() => setDataOrientation("rows-as-series")}
-            >
-              Rows as Series
-            </button>
-          </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Columns mode: first column values are x-axis labels. Rows mode:
-            first row values are x-axis labels.
-          </p>
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Columns as Series</Label>
+          <Switch
+            checked={dataOrientation === "columns-as-series"}
+            onCheckedChange={(checked) =>
+              setDataOrientation(checked ? "columns-as-series" : "rows-as-series")
+            }
+          />
         </div>
       )}
 
@@ -69,20 +79,54 @@ export const LineChartStylesTabContent: FC<LineChartStylesTabContentProps> = ({
         <Switch checked={lineShowLabels} onCheckedChange={setLineShowLabels} />
       </div>
 
-      <div className="space-y-3">
-        <p className="text-sm font-medium">Series Style</p>
+      <div className="flex items-center justify-between">
+        <Label className="text-xs">Smooth</Label>
+        <Switch checked={lineSmooth} onCheckedChange={setLineSmooth} />
+      </div>
+      <div className="flex items-center justify-between">
+        <Label className="text-xs">Step</Label>
+        <Switch checked={lineStep} onCheckedChange={setLineStep} />
+      </div>
+      <div className="flex items-center justify-between">
+        <Label className="text-xs">Area</Label>
+        <Switch checked={lineArea} onCheckedChange={setLineArea} />
+      </div>
+      <div className="flex items-center justify-between">
+        <Label className="text-xs">Stack</Label>
+        <Switch checked={lineStack} onCheckedChange={setLineStack} />
+      </div>
+
+      <div className="flex items-center justify-between">
+        <Label className="text-xs">Symbol</Label>
+        <Select
+          value={lineSymbol}
+          onValueChange={(v) => setLineSymbol?.(v as LineSymbol)}
+        >
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {SYMBOL_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <Label className="text-xs">Smooth</Label>
-          <Switch checked={lineSmooth} onCheckedChange={setLineSmooth} />
+          <Label className="text-xs">Symbol Size</Label>
+          <span className="text-xs text-muted-foreground">{lineSymbolSize}</span>
         </div>
-        <div className="flex items-center justify-between">
-          <Label className="text-xs">Step</Label>
-          <Switch checked={lineStep} onCheckedChange={setLineStep} />
-        </div>
-        <div className="flex items-center justify-between">
-          <Label className="text-xs">Area</Label>
-          <Switch checked={lineArea} onCheckedChange={setLineArea} />
-        </div>
+        <Slider
+          min={0}
+          max={100}
+          step={1}
+          value={[lineSymbolSize]}
+          onValueChange={([v]) => setLineSymbolSize?.(v)}
+        />
       </div>
     </div>
   );

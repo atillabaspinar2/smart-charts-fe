@@ -31,6 +31,17 @@ export const BarChartStylesTabContent: FC<BarChartStylesTabContentProps> = ({
 }) => {
   return (
     <div className="space-y-4 pb-3">
+            {dataOrientation && setDataOrientation && (
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Columns as Series</Label>
+          <Switch
+            checked={dataOrientation === "columns-as-series"}
+            onCheckedChange={(checked) =>
+              setDataOrientation(checked ? "columns-as-series" : "rows-as-series")
+            }
+          />
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <Label className="text-xs">Show Bar Background</Label>
         <Switch
@@ -39,8 +50,8 @@ export const BarChartStylesTabContent: FC<BarChartStylesTabContentProps> = ({
         />
       </div>
 
-      <div>
-        <Label className="mb-1 block text-sm font-medium">
+      <div className="flex items-center justify-between">
+        <Label className="mb-1 block text-xs">
           Bar Background Color
         </Label>
         <div className="flex items-center gap-3">
@@ -48,10 +59,6 @@ export const BarChartStylesTabContent: FC<BarChartStylesTabContentProps> = ({
             color={barBackgroundColor}
             onChange={(color) => setBarBackgroundColor(color)}
           />
-
-          <span className="text-sm text-gray-600 uppercase">
-            {barBackgroundColor}
-          </span>
         </div>
       </div>
 
@@ -91,43 +98,7 @@ export const BarChartStylesTabContent: FC<BarChartStylesTabContentProps> = ({
         />
       </div>
 
-      {dataOrientation && setDataOrientation && (
-        <div>
-          <p className="mb-2 text-sm font-medium">Data Orientation</p>
-          <div className="inline-flex overflow-hidden rounded-md border border-border">
-            <button
-              type="button"
-              className={`px-3 py-1.5 text-xs font-medium ${
-                dataOrientation === "columns-as-series"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-background text-foreground hover:bg-muted"
-              }`}
-              onClick={() => setDataOrientation("columns-as-series")}
-            >
-              Columns as Series
-            </button>
-            <button
-              type="button"
-              className={`border-l border-border px-3 py-1.5 text-xs font-medium ${
-                dataOrientation === "rows-as-series"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-background text-foreground hover:bg-muted"
-              }`}
-              onClick={() => setDataOrientation("rows-as-series")}
-            >
-              Rows as Series
-            </button>
-          </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Columns mode: first column values are x-axis labels. Rows mode:
-            first row values are x-axis labels.
-          </p>
-        </div>
-      )}
 
-      <p className="text-xs text-muted-foreground">
-        Horizontal orientation maps x-axis to value and y-axis to category data.
-      </p>
     </div>
   );
 };

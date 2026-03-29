@@ -26,10 +26,10 @@ export const CommonChartSettingsTabContent: FC<
 }) => {
   return (
     <div className="space-y-4 pb-3">
-      <div>
+      <div className="flex items-center justify-between">
         <Label
           htmlFor="settings-title"
-          className="mb-1 block text-sm font-medium"
+          className="mb-1 block text-xs font-medium"
         >
           {chartLabel} Title
         </Label>
@@ -44,7 +44,7 @@ export const CommonChartSettingsTabContent: FC<
       <div>
         <Label
           htmlFor="settings-font-size"
-          className="mb-1 block text-sm font-medium"
+          className="mb-1 block text-xs font-medium"
         >
           Font Size (px)
         </Label>
@@ -58,8 +58,8 @@ export const CommonChartSettingsTabContent: FC<
           onChange={(e) => onFontSizeChange(e.target.value)}
         />
       </div>
-      <div>
-        <Label className="mb-1 block text-sm font-medium">
+      <div className="flex items-center justify-between">
+        <Label className="mb-1 block text-xs font-medium">
           Background Color
         </Label>
         <div className="flex items-center gap-3">
@@ -67,9 +67,7 @@ export const CommonChartSettingsTabContent: FC<
             color={backgroundColor}
             onChange={(color) => setBackgroundColor(color)}
           />
-          <span className="text-sm text-gray-600 uppercase">
-            {backgroundColor}
-          </span>
+         
         </div>
       </div>
     </div>
