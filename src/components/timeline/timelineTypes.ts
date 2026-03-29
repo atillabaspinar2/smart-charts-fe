@@ -2,6 +2,7 @@
 
 export const ROW_HEIGHT = 36;
 export const LABEL_WIDTH = 140;
+export const CHECKBOX_COL_WIDTH = 36; // "hide after animation" checkbox column
 export const RULER_HEIGHT = 30;
 /** Horizontal padding inside every track lane so the first/last tick labels are never clipped. */
 export const TRACK_PAD = 10;
