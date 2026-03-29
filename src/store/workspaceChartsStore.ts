@@ -21,6 +21,8 @@ export type ChartEntity = {
   initialPosition?: { x: number; y: number };
 
   chartData: ChartData | null;
+  /** Persisted draft — data edited in the panel but not yet applied. Survives page refresh. */
+  draftChartData?: ChartData | null;
   /** Single source of truth: line, bar, pie, or map settings (see ChartSettingsUnion). */
   chartSettings: ChartSettingsUnion | null;
   /** Timeline clip for this chart instance. Drives animationDuration for line/bar/pie. */
@@ -69,6 +71,12 @@ type WorkspaceChartsState = {
     instanceId: string,
     hideAfterAnimation: boolean,
   ) => void;
+  upsertChartDraftData: (
+    workspaceId: string,
+    instanceId: string,
+    data: ChartData,
+  ) => void;
+  clearChartDraftData: (workspaceId: string, instanceId: string) => void;
 };
 
 const makeEmptyEntity = (
@@ -205,6 +213,40 @@ export const useWorkspaceChartsStore = create<WorkspaceChartsState>()(
               [workspaceId]: {
                 ...byWs,
                 [instanceId]: { ...current, hideAfterAnimation },
+              },
+            },
+          };
+        });
+      },
+
+      upsertChartDraftData: (workspaceId, instanceId, data) => {
+        set((state) => {
+          const byWs = state.chartsByWorkspaceId[workspaceId] ?? {};
+          const current = byWs[instanceId];
+          if (!current) return state;
+          return {
+            chartsByWorkspaceId: {
+              ...state.chartsByWorkspaceId,
+              [workspaceId]: {
+                ...byWs,
+                [instanceId]: { ...current, draftChartData: data },
+              },
+            },
+          };
+        });
+      },
+
+      clearChartDraftData: (workspaceId, instanceId) => {
+        set((state) => {
+          const byWs = state.chartsByWorkspaceId[workspaceId] ?? {};
+          const current = byWs[instanceId];
+          if (!current) return state;
+          return {
+            chartsByWorkspaceId: {
+              ...state.chartsByWorkspaceId,
+              [workspaceId]: {
+                ...byWs,
+                [instanceId]: { ...current, draftChartData: null },
               },
             },
           };

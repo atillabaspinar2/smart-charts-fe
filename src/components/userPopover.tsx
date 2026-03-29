@@ -5,6 +5,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 export const UserPopover: React.FC<{
   user: { fullName: string; email: string };
@@ -14,13 +15,10 @@ export const UserPopover: React.FC<{
     <div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            className="rounded px-4 text-xs text-zinc-100 hover:text-zinc-300 cursor-pointer"
-          >
-            <span className="block">Signed in as</span>
+          <Button variant="ghost" size="sm" className="flex-col h-auto py-1 leading-tight">
+            <span className="block text-[10px] text-muted-foreground">Signed in as</span>
             <span className="block">{user.fullName}</span>
-          </button>
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onSelect={() => {}}>My Charts</DropdownMenuItem>
