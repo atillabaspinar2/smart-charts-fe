@@ -45,6 +45,7 @@ type WorkspaceChartsState = {
     initialPosition?: { x: number; y: number },
   ) => ChartItemData;
   removeChart: (workspaceId: string, chartId: number) => void;
+  deleteWorkspaceCharts: (workspaceId: string) => void;
 
   upsertChartData: (
     workspaceId: string,
@@ -141,6 +142,15 @@ export const useWorkspaceChartsStore = create<WorkspaceChartsState>()(
               [workspaceId]: next,
             },
           };
+        });
+      },
+
+      deleteWorkspaceCharts: (workspaceId) => {
+        set((state) => {
+          if (!state.chartsByWorkspaceId[workspaceId]) return state;
+          const next = { ...state.chartsByWorkspaceId };
+          delete next[workspaceId];
+          return { chartsByWorkspaceId: next };
         });
       },
 
