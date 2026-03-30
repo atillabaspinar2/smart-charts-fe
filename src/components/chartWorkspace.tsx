@@ -99,6 +99,7 @@ export const ChartWorkspace: React.FC<{
 }) => {
   const { isAuthenticated } = useAuth();
   const workspaceId = useWorkspaceLayoutStore((s) => s.activeWorkspaceId);
+  const workspaces = useWorkspaceLayoutStore((s) => s.workspaces);
   const chartsStoreHydrated = useWorkspaceChartsStore((s) => s.hasHydrated);
   const chartEntities = useWorkspaceChartsStore(
     (s) => s.chartsByWorkspaceId[workspaceId],
@@ -393,6 +394,10 @@ export const ChartWorkspace: React.FC<{
   const [chartDataOrientationMap, setChartDataOrientationMap] = useState<
     Record<string, DataOrientation>
   >({});
+
+  const activeWorkspaceName = useMemo(() => {
+    return workspaces.find((w) => w.id === workspaceId)?.name ?? "Workspace";
+  }, [workspaces, workspaceId]);
 
   // Hydrate persisted chart content once (per workspace) so refresh restores charts.
   useEffect(() => {
@@ -1137,10 +1142,6 @@ export const ChartWorkspace: React.FC<{
   };
 
   const handleCaptureAll = async () => {
-/*       if (!isAuthenticated) {
-        setAuthModal("signin");
-        return;
-      } */
       if (charts.length === 0 || isCapturingAll) return;
     
 
@@ -1250,10 +1251,6 @@ export const ChartWorkspace: React.FC<{
   };
 
   const handleDownloadAll = () => {
-/*     if (!isAuthenticated) {
-      setAuthModal("signin");
-      return;
-    } */
     const snapshotCanvas = buildCanvasSnapshot();
     if (!snapshotCanvas) return;
 
@@ -1895,7 +1892,7 @@ export const ChartWorkspace: React.FC<{
                 value="workspace"
                 className="h-6 flex-none rounded-t-md rounded-b-none border-b-0 px-3 py-0 focus-visible:ring-0"
               >
-                Workspace
+                {activeWorkspaceName}
               </TabsTrigger>
               <TabsTrigger
                 value="timeline"

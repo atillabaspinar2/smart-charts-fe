@@ -22,7 +22,18 @@ const TOKEN_KEY = "chartstudio_token";
 const USER_KEY = "chartstudio_user";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const isDev = Boolean(import.meta.env?.DEV);
+  const devUser = useMemo<AuthUser>(
+    () => ({
+      id: 0,
+      fullName: "Dev User",
+      email: "dev@chartstudio.local",
+    }),
+    [],
+  );
+
   const [user, setUser] = useState<AuthUser | null>(() => {
+    if (Boolean(import.meta.env?.DEV)) return devUser;
     const stored = localStorage.getItem(USER_KEY);
     return stored ? (JSON.parse(stored) as AuthUser) : null;
   });
@@ -41,6 +52,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signup = useCallback(
     async (fullName: string, email: string, password: string) => {
+      if (isDev) {
+        // In development we bypass remote auth to avoid login/signup friction.
+        persist({ ...devUser, fullName: fullName || devUser.fullName, email: email || devUser.email }, "dev-token");
+        return;
+      }
       const { user: newUser, accessToken } = await authApi.signup({
         fullName,
         email,
@@ -48,24 +64,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       persist(newUser, accessToken);
     },
-    [],
+    [devUser, isDev],
   );
 
   const signin = useCallback(async (email: string, password: string) => {
+    if (isDev) {
+      persist({ ...devUser, email: email || devUser.email }, "dev-token");
+      return;
+    }
     const { user: loggedInUser, accessToken } = await authApi.signin({
       email,
       password,
     });
     persist(loggedInUser, accessToken);
-  }, []);
+  }, [devUser, isDev]);
 
   const logout = useCallback(async () => {
+    if (isDev) {
+      // Keep dev user signed in so dev flows never get blocked.
+      persist(devUser, "dev-token");
+      return;
+    }
     const token = localStorage.getItem(TOKEN_KEY);
     if (token) {
       await authApi.logout(token).catch(() => {});
     }
     clear();
-  }, []);
+  }, [devUser, isDev]);
 
   const value = useMemo(
     () => ({ user, isAuthenticated: !!user, signup, signin, logout }),

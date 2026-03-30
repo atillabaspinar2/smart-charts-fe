@@ -6,11 +6,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { WorkspacesDialog } from "@/components/WorkspacesDialog";
 
 export const UserPopover: React.FC<{
   user: { fullName: string; email: string };
   signOut: () => void;
 }> = ({ user, signOut }) => {
+  const [workspacesOpen, setWorkspacesOpen] = useState(false);
+
   return (
     <div>
       <DropdownMenu>
@@ -21,7 +25,14 @@ export const UserPopover: React.FC<{
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => {}}>My Charts</DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              setWorkspacesOpen(true);
+            }}
+          >
+            My Workspaces
+          </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => {}}>Settings</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -34,6 +45,8 @@ export const UserPopover: React.FC<{
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <WorkspacesDialog open={workspacesOpen} onOpenChange={setWorkspacesOpen} />
     </div>
   );
 };
