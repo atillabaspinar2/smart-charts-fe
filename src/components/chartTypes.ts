@@ -145,7 +145,7 @@ export interface PieChartData {
 }
 
 export const defaultLineChartSettings: LineChartSettings = {
-  animationDuration: 1000,
+  animationDuration: 4000,
   backgroundColor: "#ffffff",
   title: "",
   fontFamily: "Inter, sans-serif",
@@ -164,7 +164,7 @@ export const defaultLineChartSettings: LineChartSettings = {
 };
 
 export const defaultBarChartSettings: BarChartSettings = {
-  animationDuration: 1000,
+  animationDuration: 4000,
   backgroundColor: "#ffffff",
   title: "",
   fontFamily: "Inter, sans-serif",
@@ -180,7 +180,7 @@ export const defaultBarChartSettings: BarChartSettings = {
 };
 
 export const defaultPieChartSettings: PieChartSettings = {
-  animationDuration: 1000,
+  animationDuration: 4000,
   backgroundColor: "#ffffff",
   title: "",
   fontFamily: "Inter, sans-serif",

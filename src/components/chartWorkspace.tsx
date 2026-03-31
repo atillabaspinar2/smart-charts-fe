@@ -1978,37 +1978,45 @@ export const ChartWorkspace: React.FC<{
                   />
                 </div>
               )}
-              {orderedCharts.map((c) => (
-                <ChartItem
-                  key={c.id}
-                  data={c}
-                  reanimateSignal={reanimateSignal}
-                  settings={getChartSettings(c.instanceId, c.type)}
-                  timelineClip={chartEntities?.[c.instanceId]?.timelineClip}
-                  isHidden={hiddenChartIds.has(c.instanceId)}
-                  isFadedOut={fadedOutChartIds.has(c.instanceId)}
-                  chartData={chartDataMap[c.instanceId]}
-                  onSelectChart={onSelectChart}
-                  position={chartPositionMap[c.instanceId] || { x: 20, y: 20 }}
-                  size={chartSizeMap[c.instanceId] || defaultChartSize}
-                  onMove={moveChart}
-                  onResize={resizeChart}
-                  zIndex={
-                    selectedChartInstanceId === c.instanceId
-                      ? CHART_Z_INDEX_SELECTED
-                      : Math.min(
-                          CHART_Z_INDEX_MAX,
-                          Math.max(
-                            1,
-                            chartStackOrder.indexOf(c.instanceId) + 1,
-                          ),
-                        )
-                  }
-                  onExpandToFullWidth={() =>
-                    handleExpandChartToFullWidth(c.instanceId)
-                  }
-                  onMoveToTop={() => moveChartToTop(c.instanceId)}
-                  onMoveUp={() => moveChartForward(c.instanceId)}
+              {orderedCharts.map((c) => {
+                const entity = chartEntities?.[c.instanceId];
+                const clip =
+                  entity?.timelineClip ?? {
+                    startMs: 0,
+                    endMs: Math.min(4000, canvasSettings.timelineTotalMs),
+                  };
+
+                return (
+                  <ChartItem
+                    key={c.id}
+                    data={c}
+                    reanimateSignal={reanimateSignal}
+                    settings={getChartSettings(c.instanceId, c.type)}
+                    timelineClip={clip}
+                    isHidden={hiddenChartIds.has(c.instanceId)}
+                    isFadedOut={fadedOutChartIds.has(c.instanceId)}
+                    chartData={chartDataMap[c.instanceId]}
+                    onSelectChart={onSelectChart}
+                    position={chartPositionMap[c.instanceId] || { x: 20, y: 20 }}
+                    size={chartSizeMap[c.instanceId] || defaultChartSize}
+                    onMove={moveChart}
+                    onResize={resizeChart}
+                    zIndex={
+                      selectedChartInstanceId === c.instanceId
+                        ? CHART_Z_INDEX_SELECTED
+                        : Math.min(
+                            CHART_Z_INDEX_MAX,
+                            Math.max(
+                              1,
+                              chartStackOrder.indexOf(c.instanceId) + 1,
+                            ),
+                          )
+                    }
+                    onExpandToFullWidth={() =>
+                      handleExpandChartToFullWidth(c.instanceId)
+                    }
+                    onMoveToTop={() => moveChartToTop(c.instanceId)}
+                    onMoveUp={() => moveChartForward(c.instanceId)}
                   onMoveDown={() => moveChartBackward(c.instanceId)}
                   onMoveToBottom={() => moveChartToBottom(c.instanceId)}
                   isSelected={selectedChartInstanceId === c.instanceId}
@@ -2028,7 +2036,8 @@ export const ChartWorkspace: React.FC<{
                     )
                   }
                 />
-              ))}
+                );
+              })}
             </div>
           </TabsContent>
 
