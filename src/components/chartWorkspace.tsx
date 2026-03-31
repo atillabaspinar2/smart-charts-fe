@@ -1160,8 +1160,29 @@ export const ChartWorkspace: React.FC<{
       if (!snapshotCanvas) return;
 
       const stream = snapshotCanvas.captureStream(30);
-      const mimeType = "video/webm; codecs=vp9";
-      const recorder = new MediaRecorder(stream, { mimeType });
+      // Choose mime type based on selected mediaType, with graceful fallback if unsupported.
+      let mimeType =
+        mediaType === "mp4"
+          ? "video/mp4; codecs=avc1.42E01E,mp4a.40.2"
+          : "video/webm; codecs=vp9";
+      if (typeof MediaRecorder !== "undefined") {
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          const fallbackWebm = "video/webm; codecs=vp9";
+          const fallbackVp8 = "video/webm; codecs=vp8";
+          if (MediaRecorder.isTypeSupported(fallbackWebm)) {
+            mimeType = fallbackWebm;
+          } else if (MediaRecorder.isTypeSupported(fallbackVp8)) {
+            mimeType = fallbackVp8;
+          } else {
+            // Let browser choose; some environments ignore explicit mimeType anyway.
+            mimeType = "";
+          }
+        }
+      }
+      const recorder =
+        mimeType && typeof MediaRecorder !== "undefined"
+          ? new MediaRecorder(stream, { mimeType })
+          : new MediaRecorder(stream);
       const chunks: BlobPart[] = [];
 
       recorder.ondataavailable = (e) => {
@@ -1232,8 +1253,11 @@ export const ChartWorkspace: React.FC<{
 
       await new Promise<void>((resolve) => {
         recorder.onstop = () => {
-          const blob = new Blob(chunks, { type: mimeType });
-          downloadBlob(blob, "canvas-video.webm");
+          const ext = mediaType === "mp4" ? "mp4" : "webm";
+          const type =
+            mimeType || (ext === "mp4" ? "video/mp4" : "video/webm");
+          const blob = new Blob(chunks, { type });
+          downloadBlob(blob, `canvas-video.${ext}`);
           resolve();
         };
         setTimeout(() => {
