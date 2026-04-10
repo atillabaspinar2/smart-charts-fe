@@ -32,8 +32,8 @@ export const AboutDialog: React.FC<{
               <section>
                 <h3 className="font-semibold text-base mb-1">Importing Data</h3>
                 <p className="text-muted-foreground mb-2">
-                  Each chart accepts data imported as a <strong>CSV</strong> or <strong>JSON</strong> file.
-                  Files must follow the structure expected by the chart type:
+                  Each chart accepts data imported as a <strong>CSV</strong> or <strong>Excel</strong> file (<code className="bg-muted rounded px-1">.xls</code>, <code className="bg-muted rounded px-1">.xlsx</code>).
+                  The first worksheet is used for Excel files. Files must follow the structure expected by the chart type:
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                   <li><strong>Line / Bar:</strong> first column is the category axis; subsequent columns are numeric series values. The first row must be headers (used as series names).</li>
@@ -100,7 +100,7 @@ export const AboutDialog: React.FC<{
                 <h3 className="font-semibold text-base mb-1">Features</h3>
                 <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                   <li><strong>Multiple chart types</strong> — Line, Bar, Pie, and Map charts on a shared canvas.</li>
-                  <li><strong>Data import &amp; export</strong> — Load data from CSV or JSON; export back to CSV at any time.</li>
+                  <li><strong>Data import &amp; export</strong> — Load data from CSV or Excel; export back to CSV at any time.</li>
                   <li><strong>Animation timeline</strong> — Precisely control when each chart appears and how long it animates using a visual drag-and-drop timeline editor.</li>
                   <li><strong>Style customization</strong> — Full control over colors, fonts, legends, axes, and chart-specific visual options.</li>
                   <li><strong>Theme support</strong> — Switch between light and dark mode and multiple color themes instantly.</li>
