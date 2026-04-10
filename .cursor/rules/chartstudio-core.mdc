@@ -1,0 +1,14 @@
+---
+description: Chart Studio — project identity, commands, non-goals
+alwaysApply: true
+---
+
+# Chart Studio (frontend)
+
+- **Stack:** React 19, TypeScript, Vite 7, Tailwind 4, Zustand, ECharts (`echarts-for-react`), Radix, TanStack Table. Path alias: `@/` → `src/`.
+- **Persistence:** Workspace and chart state use Zustand + IndexedDB (`src/store/`). Do not assume a server for chart data unless the task is explicitly about `VITE_API_URL` / auth.
+- **Spreadsheet import/export:** Implemented with SheetJS in `src/utils/spreadsheetImport.ts` and `spreadsheetExport.ts`. User-facing import is **CSV/Excel only**, not arbitrary JSON files—do not document or implement JSON import for spreadsheet data without an explicit product decision.
+- **Scope:** Prefer minimal, task-focused diffs. Do not refactor `chartWorkspace.tsx` or other large files unless the task requires it.
+- **Verify:** After non-trivial changes, suggest or run `npm run lint`; use `npm run build` when types/imports may be wrong.
+
+When unsure about UX or data formats, check `README.md` or `src/components/aboutDialog.tsx` before guessing.

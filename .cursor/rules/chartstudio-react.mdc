@@ -1,0 +1,31 @@
+---
+description: React/TS conventions for Chart Studio src/
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# React & TypeScript (`src/`)
+
+## Components
+
+- Use **functional components** and hooks. Follow patterns in `src/components/` (e.g. `PanelView`, existing chart panels).
+- UI primitives live under `src/components/ui/`; prefer reusing them over ad-hoc markup.
+- Icons: project uses `@hugeicons/react` and sometimes `lucide-react`—follow imports in nearby files.
+
+## State
+
+- Global workspace/chart state: `useWorkspaceChartsStore`, `useWorkspaceLayoutStore` from `src/store/`. Persisted fields must go through existing store actions / `upsert*` helpers where applicable.
+- Local UI state: `useState` / `useRef` in the component; do not lift to Zustand without a clear need.
+
+## Types & data
+
+- Chart data and settings types: `src/components/chartTypes.ts`. Keep discriminated unions (`type: "line" | "bar" | …`) consistent when extending.
+- ECharts options are built from typed data + settings; see `chartItem.tsx` and option templates in `chartOptionTemplates.ts`.
+
+## Style
+
+- Tailwind utility classes; `clsx` / `tailwind-merge` where class names are merged. Match spacing and panel styling of parent components.
+
+## Imports
+
+- Use `@/` for `src/` imports (see `vite.config.ts` alias). Keep import order consistent with surrounding files.
