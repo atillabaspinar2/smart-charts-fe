@@ -43,6 +43,15 @@ export type LineSymbol =
 // Line chart specific settings
 export interface LineChartSettings extends ChartSettingsBase {
   lineShowLabels: boolean;
+  /** Hand-drawn stroke via Rough.js (linear segments; use without area/stack for MVP). */
+  lineSketchEnabled?: boolean;
+  /**
+   * Single UI control (0–100): drives roughness, bowing, and stroke width together
+   * for a visible sketch effect. See `intensityToRoughSketchParams` in roughLineSeries.
+   */
+  lineSketchIntensity?: number;
+  /** @deprecated Prefer `lineSketchIntensity`; kept for migrating old IndexedDB settings. */
+  lineSketchRoughness?: number;
   lineSmooth: boolean;
   lineStep: boolean;
   lineArea: boolean;
@@ -72,6 +81,10 @@ export interface BarChartSettings extends ChartSettingsBase {
   barBackgroundColor: string;
   barAxisOrientation: "vertical" | "horizontal";
   barStackEnabled: boolean;
+  /** Hand-drawn bars via Rough.js (custom series). */
+  barSketchEnabled?: boolean;
+  /** 0–100 sketch strength (shared semantics with line sketch intensity). */
+  barSketchIntensity?: number;
 }
 
 // Pie chart specific settings (extends base)
@@ -83,6 +96,9 @@ export interface PieChartSettings extends ChartSettingsBase {
   borderWidth: number;
   roseType: "area" | false;
   showLabel: boolean;
+  /** Hand-drawn pie slices via Rough.js (normal pie only; not rose/funnel). */
+  pieSketchEnabled?: boolean;
+  pieSketchIntensity?: number;
 }
 
 /** Persisted per-chart settings (discriminated by chart `type` + interface shape). */
@@ -155,6 +171,8 @@ export const defaultLineChartSettings: LineChartSettings = {
   legendLeft: "center",
   legendOrient: "horizontal",
   lineShowLabels: false,
+  lineSketchEnabled: false,
+  lineSketchIntensity: 50,
   lineSmooth: false,
   lineStep: false,
   lineArea: false,
@@ -177,6 +195,8 @@ export const defaultBarChartSettings: BarChartSettings = {
   barBackgroundColor: "#eee",
   barAxisOrientation: "vertical",
   barStackEnabled: false,
+  barSketchEnabled: false,
+  barSketchIntensity: 50,
 };
 
 export const defaultPieChartSettings: PieChartSettings = {
@@ -196,6 +216,8 @@ export const defaultPieChartSettings: PieChartSettings = {
   borderWidth: 0,
   roseType: "area",
   showLabel: false,
+  pieSketchEnabled: false,
+  pieSketchIntensity: 50,
 };
 
 export const defaultMapChartSettings: MapChartSettings = {

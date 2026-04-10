@@ -30,6 +30,10 @@ export interface LineChartSettingsPanelProps {
   setLineSymbol?: (value: LineSymbol) => void;
   lineSymbolSize?: number;
   setLineSymbolSize?: (value: number) => void;
+  lineSketchEnabled?: boolean;
+  setLineSketchEnabled?: (value: boolean) => void;
+  lineSketchIntensity?: number;
+  setLineSketchIntensity?: (value: number) => void;
   // Legend tab
   showLegend: boolean;
   setShowLegend: (v: boolean) => void;
@@ -67,6 +71,10 @@ export const LineChartSettingsPanel: FC<LineChartSettingsPanelProps> = ({
   setLineSymbol,
   lineSymbolSize,
   setLineSymbolSize,
+  lineSketchEnabled,
+  setLineSketchEnabled,
+  lineSketchIntensity,
+  setLineSketchIntensity,
   showLegend,
   setShowLegend,
   legendTop,
@@ -111,6 +119,10 @@ export const LineChartSettingsPanel: FC<LineChartSettingsPanelProps> = ({
           setLineSymbol={setLineSymbol}
           lineSymbolSize={lineSymbolSize}
           setLineSymbolSize={setLineSymbolSize}
+          lineSketchEnabled={lineSketchEnabled}
+          setLineSketchEnabled={setLineSketchEnabled}
+          lineSketchIntensity={lineSketchIntensity}
+          setLineSketchIntensity={setLineSketchIntensity}
         />
       </AccordionContent>
     </AccordionItem>

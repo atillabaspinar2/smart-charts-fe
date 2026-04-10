@@ -32,6 +32,10 @@ import {
   type DataOrientation,
 } from "../utils/spreadsheetImport";
 import {
+  resolveLineSketchIntensity,
+  resolveSketchIntensity,
+} from "@/utils/roughLineSeries";
+import {
   type BarChartData,
   type ChartData,
   type ChartItemData,
@@ -105,7 +109,7 @@ export const ChartWorkspace: React.FC<{
   pendingMobileChartType,
   onPlaceMobileChartType,
   onCancelMobileChartPlacement,
-  setAuthModal,
+  setAuthModal: _setAuthModal,
 }) => {
   const { isAuthenticated } = useAuth();
   const workspaceId = useWorkspaceLayoutStore((s) => s.activeWorkspaceId);
@@ -977,24 +981,15 @@ export const ChartWorkspace: React.FC<{
     const container = containerRef.current;
     if (!container) return null;
 
-    const chartItems = Array.from(container.children) as HTMLDivElement[];
+    const chartItems = Array.from(container.children).filter(
+      (el): el is HTMLDivElement =>
+        el instanceof HTMLElement && el.hasAttribute("data-instance-id"),
+    );
     if (chartItems.length === 0) return null;
 
-    const containerRect = container.getBoundingClientRect();
-    let maxRight = 0;
-    let maxBottom = 0;
-
-    chartItems.forEach((item) => {
-      const itemRect = item.getBoundingClientRect();
-      const right = itemRect.right - containerRect.left + container.scrollLeft;
-      const bottom = itemRect.bottom - containerRect.top + container.scrollTop;
-      maxRight = Math.max(maxRight, right);
-      maxBottom = Math.max(maxBottom, bottom);
-    });
-
-    const width = Math.max(container.clientWidth, Math.ceil(maxRight));
-    const height = Math.max(container.clientHeight, Math.ceil(maxBottom));
-    if (width <= 0 || height <= 0) return null;
+    /** Match the visible workspace (#chart-canvas) only. Fixed client size stays stable across sketch motion (no per-frame inflate). */
+    const width = Math.max(1, container.clientWidth);
+    const height = Math.max(1, container.clientHeight);
 
     const output = document.createElement("canvas");
     output.width = width;
@@ -1006,10 +1001,12 @@ export const ChartWorkspace: React.FC<{
     ctx.fillStyle = canvasSettings.backgroundColor;
     ctx.fillRect(0, 0, width, height);
 
+    const containerRect = container.getBoundingClientRect();
+
     chartItems.forEach((item) => {
       // Skip charts that are hidden (waiting for their timeline startMs)
-      if ((item as HTMLElement).style.visibility === "hidden") return;
-      if ((item as HTMLElement).dataset.fadedOut === "true") return;
+      if (item.style.visibility === "hidden") return;
+      if (item.dataset.fadedOut === "true") return;
 
       const sourceCanvas = item.querySelector(
         "canvas",
@@ -1022,7 +1019,17 @@ export const ChartWorkspace: React.FC<{
       const w = item.offsetWidth;
       const h = item.offsetHeight;
 
-      ctx.drawImage(sourceCanvas, x, y, w, h);
+      ctx.drawImage(
+        sourceCanvas,
+        0,
+        0,
+        sourceCanvas.width,
+        sourceCanvas.height,
+        x,
+        y,
+        w,
+        h,
+      );
     });
 
     return output;
@@ -1972,6 +1979,7 @@ export const ChartWorkspace: React.FC<{
                 height: `${containerSize.height}px`,
                 backgroundColor: canvasSettings.backgroundColor,
                 isolation: "isolate",
+                containerType: "size",
                 cursor:
                   isMobileMode && pendingMobileChartType
                     ? "crosshair"
@@ -2200,6 +2208,31 @@ export const ChartWorkspace: React.FC<{
                 barStackEnabled: value,
               })
             }
+            barSketchEnabled={(() => {
+              const settings = getChartSettings(
+                selectedChartInstanceId,
+                selectedChart?.type,
+              );
+              return "barSketchEnabled" in settings
+                ? Boolean((settings as BarChartSettings).barSketchEnabled)
+                : false;
+            })()}
+            setBarSketchEnabled={(value) =>
+              updateChartSettings(selectedChartInstanceId, {
+                barSketchEnabled: value,
+              })
+            }
+            barSketchIntensity={resolveSketchIntensity(
+              getChartSettings(
+                selectedChartInstanceId,
+                selectedChart?.type,
+              ) as BarChartSettings,
+            )}
+            setBarSketchIntensity={(value) =>
+              updateChartSettings(selectedChartInstanceId, {
+                barSketchIntensity: Math.min(100, Math.max(0, value)),
+              })
+            }
             lineShowLabels={(() => {
               const settings = getChartSettings(selectedChartInstanceId, selectedChart?.type);
               return "lineShowLabels" in settings
@@ -2254,6 +2287,31 @@ export const ChartWorkspace: React.FC<{
             })()}
             setLineSymbolSize={(value) =>
               updateChartSettings(selectedChartInstanceId, { lineSymbolSize: value })
+            }
+            lineSketchEnabled={(() => {
+              const settings = getChartSettings(
+                selectedChartInstanceId,
+                selectedChart?.type,
+              );
+              return "lineSketchEnabled" in settings
+                ? Boolean((settings as LineChartSettings).lineSketchEnabled)
+                : false;
+            })()}
+            setLineSketchEnabled={(value) =>
+              updateChartSettings(selectedChartInstanceId, {
+                lineSketchEnabled: value,
+              })
+            }
+            lineSketchIntensity={resolveLineSketchIntensity(
+              getChartSettings(
+                selectedChartInstanceId,
+                selectedChart?.type,
+              ) as LineChartSettings,
+            )}
+            setLineSketchIntensity={(value) =>
+              updateChartSettings(selectedChartInstanceId, {
+                lineSketchIntensity: Math.min(100, Math.max(0, value)),
+              })
             }
             selectedChartType={
               charts.find((c) => c.instanceId === selectedChartInstanceId)?.type

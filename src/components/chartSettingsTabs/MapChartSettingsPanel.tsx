@@ -14,8 +14,6 @@ export interface MapChartSettingsPanelProps {
   setActiveChartAccordionItem: (item: string) => void;
   title: string;
   setTitle: (v: string) => void;
-  animationInput: string;
-  handleAnimationChange: (v: string) => void;
   fontSize: number;
   setFontSize: (v: number) => void;
   backgroundColor: string;
@@ -29,8 +27,6 @@ const MapChartSettingsPanel: React.FC<MapChartSettingsPanelProps> = ({
   setActiveChartAccordionItem,
   title,
   setTitle,
-  animationInput,
-  handleAnimationChange,
   fontSize,
   setFontSize,
   backgroundColor,
@@ -67,8 +63,6 @@ const MapChartSettingsPanel: React.FC<MapChartSettingsPanelProps> = ({
             chartLabel="Map"
             title={title}
             setTitle={setTitle}
-            animationInput={animationInput}
-            onAnimationChange={handleAnimationChange}
             fontSizeInput={String(fontSize)}
             onFontSizeChange={(v) => setFontSize(Number(v))}
             backgroundColor={backgroundColor}

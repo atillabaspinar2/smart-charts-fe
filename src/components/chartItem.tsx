@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import debounce from "lodash/debounce";
-import { recordCanvas } from "./record";
+import { recordChartContainer } from "./record";
 import {
   type ChartData,
   type ChartItemData,
@@ -16,6 +16,28 @@ import {
   type MapChartData,
 } from "./chartTypes";
 import { getOptionsByType } from "./chartOptionTemplates";
+import {
+  ECHARTS_DEFAULT_COLOR_PALETTE,
+  getThemePalette,
+} from "@/assets/themes/registerThemes";
+import {
+  buildRoughBarCustomSeries,
+  buildRoughPieCustomSeries,
+  getRoughBarValueAxisExtent,
+} from "@/utils/roughBarPieSeries";
+import {
+  buildRoughLineCustomSeries,
+  getRoughLineYAxisExtent,
+  resolveLineSketchIntensity,
+  resolveSketchIntensity,
+  roughSeedFromInstanceId,
+} from "@/utils/roughLineSeries";
+import {
+  cancelSketchContainerMotion,
+  playSketchContainerEnter,
+  playSketchContainerExit,
+} from "@/utils/sketchChartContainerMotion";
+import type { JSAnimation } from "animejs";
 import { ChartContextMenu } from "./chartContextMenu";
 import { MapChart } from "./MapChart";
 import { colorRanges } from "./mapChartOptions";
@@ -35,7 +57,7 @@ interface ChartItemProps {
   timelineClip?: { startMs: number; endMs: number };
   /** When true, the chart container is hidden (waiting for its timeline startMs). */
   isHidden?: boolean;
-  /** When true, the chart fades out (animation finished, still within canvas duration). */
+  /** When true, the chart is visually de-emphasized after its clip (timeline “hide after animation”). */
   isFadedOut?: boolean;
   chartData?: ChartData;
   onSelectChart: (instanceId: string) => void;
@@ -95,6 +117,46 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         ? timelineClip.endMs - timelineClip.startMs
         : (settings.animationDuration ?? 1000);
 
+    const isRoughLineSketch =
+      type === "line" &&
+      chartData?.type === "line" &&
+      "lineSketchEnabled" in settings &&
+      Boolean((settings as LineChartSettings).lineSketchEnabled);
+
+    const isRoughBarSketch =
+      type === "bar" &&
+      chartData?.type === "bar" &&
+      "barSketchEnabled" in settings &&
+      Boolean((settings as BarChartSettings).barSketchEnabled);
+
+    const isRoughPieSketch =
+      type === "pie" &&
+      chartData?.type === "pie" &&
+      (() => {
+        const ps = settings as PieChartSettings;
+        return (
+          Boolean(ps.pieSketchEnabled) &&
+          ps.chartType === "pie" &&
+          ps.roseType === false
+        );
+      })();
+
+    const isSketchMotionChart =
+      isRoughLineSketch || isRoughBarSketch || isRoughPieSketch;
+
+    /** Remount ECharts when pie sketch vs non-sketch layout diverges (avoids merged `series` + `grid` leftovers). */
+    const pieEchartsRemountKey =
+      type === "pie" && chartData?.type === "pie"
+        ? (() => {
+            const ps = settings as PieChartSettings;
+            const sketchRoughPie =
+              Boolean(ps.pieSketchEnabled) &&
+              ps.chartType === "pie" &&
+              ps.roseType === false;
+            return sketchRoughPie ? "sk" : "std";
+          })()
+        : "";
+
     const containerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<any>(null);
     const mapChartRef = useRef<any>(null);
@@ -107,6 +169,26 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     const reanimateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const lastAppliedReanimateKeyRef = useRef<number>(0);
     const echartsInstanceRef = useRef<any>(null);
+    const sketchMotionRef = useRef<JSAnimation | null>(null);
+    const prevIsFadedOutRef = useRef(isFadedOut);
+    const [sketchPostExitHidden, setSketchPostExitHidden] = useState(false);
+    /**
+     * Sketch pie: one custom series draws all slices, so legend toggles data items (not whole
+     * series like bar sketch). Persist selection in React — echarts-for-react reapplies `option`
+     * on every render and would wipe a lone `setOption` from a legend handler.
+     */
+    const [pieSketchLegendSelected, setPieSketchLegendSelected] = useState<
+      Record<string, boolean> | undefined
+    >(undefined);
+
+    const pieDataFingerprint =
+      chartData?.type === "pie"
+        ? chartData.data.map((d) => `${d.name}\0${d.value}`).join("|")
+        : "";
+
+    useEffect(() => {
+      setPieSketchLegendSelected(undefined);
+    }, [data.instanceId, pieDataFingerprint, isRoughPieSketch]);
 
     // annotations (line-only for step 1)
     const {
@@ -258,6 +340,15 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     }, [persistResizeDebounced]);
 
     const reanimateChart = () => {
+      if (isSketchMotionChart && containerRef.current) {
+        cancelSketchContainerMotion(sketchMotionRef.current);
+        sketchMotionRef.current = playSketchContainerEnter(
+          containerRef.current,
+          animationDurationMs,
+        );
+        return;
+      }
+
       const inst: any =
         echartsInstanceRef.current ??
         chartRef.current?.getEchartsInstance?.() ??
@@ -293,12 +384,73 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     }, [reanimateSignal, data.instanceId]);
 
     useEffect(() => {
+      if (!isSketchMotionChart) return;
+      const wasFaded = prevIsFadedOutRef.current;
+      prevIsFadedOutRef.current = isFadedOut;
+      if (!wasFaded && isFadedOut && containerRef.current) {
+        setSketchPostExitHidden(false);
+        cancelSketchContainerMotion(sketchMotionRef.current);
+        sketchMotionRef.current = playSketchContainerExit(
+          containerRef.current,
+          animationDurationMs,
+          () => setSketchPostExitHidden(true),
+        );
+      }
+      if (wasFaded && !isFadedOut) {
+        setSketchPostExitHidden(false);
+        if (containerRef.current) {
+          cancelSketchContainerMotion(sketchMotionRef.current);
+          sketchMotionRef.current = playSketchContainerEnter(
+            containerRef.current,
+            animationDurationMs,
+          );
+        }
+      }
+    }, [isSketchMotionChart, isFadedOut, animationDurationMs]);
+
+    useEffect(() => {
+      return () => {
+        cancelSketchContainerMotion(sketchMotionRef.current);
+        sketchMotionRef.current = null;
+      };
+    }, []);
+
+    useEffect(() => {
+      if (!isSketchMotionChart) {
+        setSketchPostExitHidden(false);
+        cancelSketchContainerMotion(sketchMotionRef.current);
+        sketchMotionRef.current = null;
+      }
+    }, [isSketchMotionChart]);
+
+    useEffect(() => {
       return () => {
         if (dragRafRef.current !== null) {
           cancelAnimationFrame(dragRafRef.current);
         }
       };
     }, []);
+
+    const opts: any = getOptionsByType(type);
+    const hasTheme = Boolean(theme);
+    const shouldUseSeriesColor = (
+      colorSource: "theme" | "custom" | undefined,
+      color: string,
+    ) => {
+      if (!hasTheme) return true;
+      if (colorSource === "custom") return true;
+      if (colorSource === "theme") return false;
+      return color.length > 0;
+    };
+    const effectiveBackgroundColor = (() => {
+      if (type === "map") {
+        const bg = (settings as MapChartSettings).backgroundColor?.trim() ?? "";
+        return bg === "" ? "#ffffff" : bg;
+      }
+      return hasTheme && settings.backgroundColor === "#ffffff"
+        ? undefined
+        : settings.backgroundColor;
+    })();
 
     const startRecording = async () => {
       reanimateChart();
@@ -311,13 +463,15 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         echartsInstance = mapChartRef.current.getEchartsInstance();
       }
       const canvas = echartsInstance?.getDom()?.querySelector("canvas");
+      const host = containerRef.current;
 
-      if (canvas) {
+      if (canvas && host) {
         setIsRecording(true);
         try {
           const buffer = 500;
           const durationMs = animationDurationMs + buffer;
-          await recordCanvas(canvas, durationMs, mediaType);
+          const recordBg = effectiveBackgroundColor || "#ffffff";
+          await recordChartContainer(host, recordBg, durationMs, mediaType);
         } catch (err) {
           console.error("Recording failed", err);
         } finally {
@@ -342,27 +496,6 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         link.click();
       }
     };
-
-    const opts: any = getOptionsByType(type);
-    const hasTheme = Boolean(theme);
-    const shouldUseSeriesColor = (
-      colorSource: "theme" | "custom" | undefined,
-      color: string,
-    ) => {
-      if (!hasTheme) return true;
-      if (colorSource === "custom") return true;
-      if (colorSource === "theme") return false;
-      return color.length > 0;
-    };
-    const effectiveBackgroundColor = (() => {
-      if (type === "map") {
-        const bg = (settings as MapChartSettings).backgroundColor?.trim() ?? "";
-        return bg === "" ? "#ffffff" : bg;
-      }
-      return hasTheme && settings.backgroundColor === "#ffffff"
-        ? undefined
-        : settings.backgroundColor;
-    })();
 
     // For map charts, ensure option.series[0].map is set to chartData.mapName and inject style panel settings
     let chartOption = {
@@ -492,67 +625,111 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         data: categories,
       };
       chartOption.yAxis = opts.yAxis || { type: "value" };
-      chartOption.series = chartData.series.map((series, index) => {
-        const templateSeries = Array.isArray(opts.series)
-          ? opts.series[index] || opts.series[0] || {}
-          : {};
-        return {
-          ...templateSeries,
-          type: "line",
-          name: series.name || `Series ${index + 1}`,
-          data: categories.map(
-            (_, valueIndex) => series.values[valueIndex] ?? null,
-          ),
-          smooth: settings.lineSmooth,
-          step: settings.lineStep ? "end" : false,
-          stack: settings.lineStack ? "total" : undefined,
-          symbol: settings.lineSymbol ?? "circle",
-          symbolSize: settings.lineSymbolSize ?? 4,
-          endLabel: showEndValueLabels
-            ? {
-                show: true,
-                valueAnimation: animateOnNextMount,
-                formatter: (params: any) =>
-                  `${params.seriesName}: ${params.value ?? ""}`,
-              }
-            : { show: false },
-          labelLayout: showEndValueLabels
-            ? { moveOverlap: "shiftY" }
-            : undefined,
-          emphasis: showEndValueLabels
-            ? {
-                focus: "series",
-                label: {
-                  show: true,
-                },
-              }
-            : undefined,
-          lineStyle: shouldUseSeriesColor(series.colorSource, series.color)
-            ? {
-                ...(templateSeries.lineStyle || {}),
-                color: series.color,
-              }
-            : templateSeries.lineStyle,
-          itemStyle: shouldUseSeriesColor(series.colorSource, series.color)
-            ? {
-                ...(templateSeries.itemStyle || {}),
-                color: series.color,
-              }
-            : templateSeries.itemStyle,
-          areaStyle: settings.lineArea
-            ? {
-                ...(templateSeries.areaStyle || {}),
-                ...(shouldUseSeriesColor(series.colorSource, series.color)
-                  ? { color: series.color }
-                  : {}),
-                opacity: 0.2,
-              }
-            : undefined,
-          // Animation duration driven by timeline clip for this chart instance
-          animation: animateOnNextMount,
-          animationDuration: animateOnNextMount ? animationDurationMs : 0,
+
+      const useRoughSketch = Boolean(settings.lineSketchEnabled);
+
+      if (useRoughSketch) {
+        chartOption.series = buildRoughLineCustomSeries({
+          categories,
+          lineArea: settings.lineArea,
+          lineStack: settings.lineStack,
+          roughSeed: roughSeedFromInstanceId(data.instanceId),
+          series: chartData.series.map((series, index) => {
+            const templateSeries = Array.isArray(opts.series)
+              ? opts.series[index] || opts.series[0] || {}
+              : {};
+            const strokeColor = shouldUseSeriesColor(
+              series.colorSource,
+              series.color,
+            )
+              ? series.color
+              : (templateSeries.lineStyle?.color ?? series.color);
+            return {
+              name: series.name || `Series ${index + 1}`,
+              values: series.values,
+              color: strokeColor,
+            };
+          }),
+          intensity: resolveLineSketchIntensity(settings),
+        }) as any;
+        // Custom series encode raw y; ECharts would scale to raw max only. Stack (and
+        // area baseline 0) need the same numeric extent as built-in line/area series.
+        const ext = getRoughLineYAxisExtent(
+          chartData.series,
+          categories.length,
+          settings.lineStack,
+          settings.lineArea,
+        );
+        chartOption.yAxis = {
+          ...(typeof chartOption.yAxis === "object" && chartOption.yAxis !== null
+            ? chartOption.yAxis
+            : { type: "value" }),
+          min: ext.min,
+          max: ext.max,
         };
-      });
+      } else {
+        chartOption.series = chartData.series.map((series, index) => {
+          const templateSeries = Array.isArray(opts.series)
+            ? opts.series[index] || opts.series[0] || {}
+            : {};
+          return {
+            ...templateSeries,
+            type: "line",
+            name: series.name || `Series ${index + 1}`,
+            data: categories.map(
+              (_, valueIndex) => series.values[valueIndex] ?? null,
+            ),
+            smooth: settings.lineSmooth,
+            step: settings.lineStep ? "end" : false,
+            stack: settings.lineStack ? "total" : undefined,
+            symbol: settings.lineSymbol ?? "circle",
+            symbolSize: settings.lineSymbolSize ?? 4,
+            endLabel: showEndValueLabels
+              ? {
+                  show: true,
+                  valueAnimation: animateOnNextMount,
+                  formatter: (params: any) =>
+                    `${params.seriesName}: ${params.value ?? ""}`,
+                }
+              : { show: false },
+            labelLayout: showEndValueLabels
+              ? { moveOverlap: "shiftY" }
+              : undefined,
+            emphasis: showEndValueLabels
+              ? {
+                  focus: "series",
+                  label: {
+                    show: true,
+                  },
+                }
+              : undefined,
+            lineStyle: shouldUseSeriesColor(series.colorSource, series.color)
+              ? {
+                  ...(templateSeries.lineStyle || {}),
+                  color: series.color,
+                }
+              : templateSeries.lineStyle,
+            itemStyle: shouldUseSeriesColor(series.colorSource, series.color)
+              ? {
+                  ...(templateSeries.itemStyle || {}),
+                  color: series.color,
+                }
+              : templateSeries.itemStyle,
+            areaStyle: settings.lineArea
+              ? {
+                  ...(templateSeries.areaStyle || {}),
+                  ...(shouldUseSeriesColor(series.colorSource, series.color)
+                    ? { color: series.color }
+                    : {}),
+                  opacity: 0.2,
+                }
+              : undefined,
+            // Animation duration driven by timeline clip for this chart instance
+            animation: animateOnNextMount,
+            animationDuration: animateOnNextMount ? animationDurationMs : 0,
+          };
+        });
+      }
     }
 
     if (
@@ -593,34 +770,82 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             type: "value",
           };
 
-      chartOption.series = chartData.series.map((series, index) => {
-        const templateSeries = Array.isArray(opts.series)
-          ? opts.series[index] || opts.series[0] || {}
-          : {};
-        return {
-          ...templateSeries,
-          type: "bar",
-          name: series.name || `Series ${index + 1}`,
-          data: categories.map(
-            (_, valueIndex) => series.values[valueIndex] ?? null,
-          ),
-          itemStyle: shouldUseSeriesColor(series.colorSource, series.color)
-            ? {
-                ...(templateSeries.itemStyle || {}),
-                color: series.color,
-              }
-            : templateSeries.itemStyle,
-          showBackground: settings.barShowBackground,
-          backgroundStyle: {
-            ...(templateSeries.backgroundStyle || {}),
-            color: settings.barBackgroundColor,
-          },
-          stack: settings.barStackEnabled ? "x" : undefined,
-          // Animation duration driven by timeline clip for this chart instance
-          animation: animateOnNextMount,
-          animationDuration: animateOnNextMount ? animationDurationMs : 0,
-        };
-      });
+      const useRoughBarSketch = Boolean(settings.barSketchEnabled);
+
+      if (useRoughBarSketch) {
+        const seriesForRough = chartData.series.map((series, index) => {
+          const templateSeries = Array.isArray(opts.series)
+            ? opts.series[index] || opts.series[0] || {}
+            : {};
+          const fillColor = shouldUseSeriesColor(series.colorSource, series.color)
+            ? series.color
+            : ((templateSeries.itemStyle as { color?: string } | undefined)
+                ?.color ?? series.color);
+          return {
+            name: series.name || `Series ${index + 1}`,
+            values: series.values,
+            color: fillColor,
+          };
+        });
+        chartOption.series = buildRoughBarCustomSeries({
+          categories,
+          series: seriesForRough,
+          intensity: resolveSketchIntensity(settings),
+          roughSeed: roughSeedFromInstanceId(data.instanceId),
+          barStack: settings.barStackEnabled,
+          horizontal: isHorizontalBar,
+        }) as any;
+        const ext = getRoughBarValueAxisExtent(
+          chartData.series.map((s) => ({ values: s.values })),
+          categories.length,
+          settings.barStackEnabled,
+        );
+        if (isHorizontalBar) {
+          chartOption.xAxis = {
+            ...(typeof chartOption.xAxis === "object" && chartOption.xAxis !== null
+              ? chartOption.xAxis
+              : { type: "value" }),
+            min: ext.min,
+            max: ext.max,
+          };
+        } else {
+          chartOption.yAxis = {
+            ...(typeof chartOption.yAxis === "object" && chartOption.yAxis !== null
+              ? chartOption.yAxis
+              : { type: "value" }),
+            min: ext.min,
+            max: ext.max,
+          };
+        }
+      } else {
+        chartOption.series = chartData.series.map((series, index) => {
+          const templateSeries = Array.isArray(opts.series)
+            ? opts.series[index] || opts.series[0] || {}
+            : {};
+          return {
+            ...templateSeries,
+            type: "bar",
+            name: series.name || `Series ${index + 1}`,
+            data: categories.map(
+              (_, valueIndex) => series.values[valueIndex] ?? null,
+            ),
+            itemStyle: shouldUseSeriesColor(series.colorSource, series.color)
+              ? {
+                  ...(templateSeries.itemStyle || {}),
+                  color: series.color,
+                }
+              : templateSeries.itemStyle,
+            showBackground: settings.barShowBackground,
+            backgroundStyle: {
+              ...(templateSeries.backgroundStyle || {}),
+              color: settings.barBackgroundColor,
+            },
+            stack: settings.barStackEnabled ? "x" : undefined,
+            animation: animateOnNextMount,
+            animationDuration: animateOnNextMount ? animationDurationMs : 0,
+          };
+        });
+      }
     }
 
     if (type === "pie") {
@@ -639,6 +864,11 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       const legendSliceNames = Array.isArray(pieSeriesData)
         ? pieSeriesData.map((d: { name?: string }) => String(d?.name ?? ""))
         : [];
+      /** Same root `color` cycle as line/bar: explicit palette so sketch ↔ normal pie stay aligned (Rough needs hex per slice). */
+      const pieBaseColors = theme
+        ? getThemePalette(theme)
+        : ECHARTS_DEFAULT_COLOR_PALETTE;
+      chartOption.color = pieBaseColors;
       chartOption.legend = {
         ...baseLegend,
         show: pieLegend.showLegend,
@@ -652,42 +882,145 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         data: legendSliceNames,
       };
 
-      chartOption.series = [
-        {
-          ...templateSeries,
-          type: ps.chartType,
-          name:
-            chartData?.type === "pie"
-              ? chartData.seriesName || templateSeries.name
-              : templateSeries.name,
-          ...(ps.chartType === "pie"
-            ? {
-                radius: [`${ps.innerRadius}%`, `${ps.outerRadius}%`],
-                padAngle: ps.padAngle,
-                roseType: ps.roseType,
-              }
+      const useRoughPieSketch =
+        Boolean(ps.pieSketchEnabled) &&
+        ps.chartType === "pie" &&
+        ps.roseType === false &&
+        chartData?.type === "pie";
+
+      if (useRoughPieSketch) {
+        chartOption.tooltip = { ...(opts.tooltip || {}), trigger: "item" };
+        chartOption.grid = {
+          left: "4%",
+          right: "4%",
+          top: pieLegend.legendTop === "top" ? "18%" : "4%",
+          bottom: pieLegend.legendTop === "bottom" ? "18%" : "4%",
+          containLabel: true,
+        };
+        chartOption.xAxis = {
+          type: "value",
+          show: false,
+          min: 0,
+          max: 1,
+        };
+        chartOption.yAxis = {
+          type: "value",
+          show: false,
+          min: 0,
+          max: 1,
+        };
+        const slices = chartData.data.map((point, idx) => ({
+          name: point.name,
+          value: point.value,
+          color: pieBaseColors[idx % pieBaseColors.length],
+        }));
+        const pieSliceLegendOpacity = (name: string) =>
+          pieSketchLegendSelected && pieSketchLegendSelected[name] === false
+            ? 0
+            : 1;
+        const roughPie = buildRoughPieCustomSeries({
+          slices,
+          intensity: resolveSketchIntensity(ps),
+          roughSeed: roughSeedFromInstanceId(data.instanceId),
+          innerRadiusPct: ps.innerRadius,
+          outerRadiusPct: ps.outerRadius,
+          padAngleDeg: ps.padAngle,
+          borderWidth: ps.borderWidth,
+          sliceLegendOpacity: pieSliceLegendOpacity,
+        });
+        const pieSeriesName =
+          chartData.seriesName ||
+          (templateSeries.name as string | undefined) ||
+          "Pie";
+        /**
+         * Same legend layout as bar (`baseLegend` + position + `data`). Canvas often omits legend
+         * for a lone `custom` series; a zero-radius `pie` shares slice names/colors so ECharts
+         * draws legend markers and keeps legend ↔ data item selection in sync with the Rough layer.
+         */
+        chartOption.legend = {
+          ...baseLegend,
+          show: pieLegend.showLegend,
+          orient: pieLegend.legendOrient,
+          ...(pieLegend.legendTop === "top" ? { top: 12 } : { bottom: 12 }),
+          ...(pieLegend.legendLeft === "left"
+            ? { left: 12 }
+            : pieLegend.legendLeft === "right"
+              ? { right: 12 }
+              : { left: "center" }),
+          data: legendSliceNames,
+          itemWidth: 12,
+          itemHeight: 12,
+          ...(pieSketchLegendSelected
+            ? { selected: pieSketchLegendSelected }
             : {}),
-          avoidLabelOverlap: false,
-          itemStyle: {
-            ...(templateSeries.itemStyle || {}),
-            borderWidth: ps.borderWidth,
+        };
+        chartOption.series = [
+          {
+            type: "pie",
+            name: `${pieSeriesName}-legendHost`,
+            radius: ["0%", "0%"],
+            center: ["50%", "50%"],
+            silent: true,
+            animation: false,
+            data: slices.map((s) => ({
+              name: s.name,
+              value: s.value <= 0 ? 1e-9 : s.value,
+              itemStyle: {
+                color: s.color,
+                opacity: pieSliceLegendOpacity(s.name),
+              },
+            })),
+            label: { show: false },
+            labelLine: { show: false },
+            emphasis: { scale: false, label: { show: false } },
+            tooltip: { show: false },
+            legendHoverLink: true,
+            z: 1,
           },
-          label: { show: ps.showLabel, position: "inside" },
-          emphasis: {
-            label: {
-              show: ps.showLabel,
-              position: "inside",
-              fontSize: 12,
-              fontWeight: "bold",
+          {
+            ...roughPie,
+            name: pieSeriesName,
+            legendHoverLink: true,
+            z: 10,
+          },
+        ];
+      } else {
+        chartOption.series = [
+          {
+            ...templateSeries,
+            type: ps.chartType,
+            name:
+              chartData?.type === "pie"
+                ? chartData.seriesName || templateSeries.name
+                : templateSeries.name,
+            ...(ps.chartType === "pie"
+              ? {
+                  radius: [`${ps.innerRadius}%`, `${ps.outerRadius}%`],
+                  padAngle: ps.padAngle,
+                  roseType: ps.roseType,
+                }
+              : {}),
+            avoidLabelOverlap: false,
+            itemStyle: {
+              ...(templateSeries.itemStyle || {}),
+              borderWidth: ps.borderWidth,
             },
+            label: { show: ps.showLabel, position: "inside" },
+            emphasis: {
+              label: {
+                show: ps.showLabel,
+                position: "inside",
+                fontSize: 12,
+                fontWeight: "bold",
+              },
+            },
+            labelLine: { show: false },
+            data: pieSeriesData,
+            animation: animateOnNextMount,
+            animationDuration: animateOnNextMount ? animationDurationMs : 0,
           },
-          labelLine: { show: false },
-          data: pieSeriesData,
-          // Animation duration driven by timeline clip for this chart instance
-          animation: animateOnNextMount,
-          animationDuration: animateOnNextMount ? animationDurationMs : 0,
-        },
-      ];
+        ];
+      }
     }
 
     // merge annotations into option.graphic
@@ -821,16 +1154,21 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           onSelectChart(data.instanceId);
         }}
         className={`group absolute h-75 w-100 cursor-move resize overflow-auto border border-border bg-card text-card-foreground ${chartHighlighted}`}
+        data-sketch-chart={isSketchMotionChart ? "true" : undefined}
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,
           width: `${size.width}px`,
           height: `${size.height}px`,
           zIndex,
-          visibility: isHidden ? "hidden" : "visible",
+          visibility:
+            isHidden ||
+            (isSketchMotionChart && isFadedOut && sketchPostExitHidden)
+              ? "hidden"
+              : "visible",
           pointerEvents: isHidden || isFadedOut ? "none" : "auto",
-          opacity: isFadedOut ? 0 : 1,
-          transition: "opacity 0.6s ease",
+          opacity: isSketchMotionChart ? 1 : isFadedOut ? 0 : 1,
+          transition: isSketchMotionChart ? "none" : "opacity 0.6s ease",
         }}
         data-faded-out={isFadedOut ? "true" : undefined}
       >
@@ -844,32 +1182,45 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             theme={theme || undefined}
           />
         ) : (
-          <ReactECharts
-            ref={chartRef}
-            key={`${type}-${recordKey}-${id}-${theme || "default"}`}
-            option={chartOption}
-            replaceMerge={["graphic"]}
-            // @ts-ignore: preserveDrawingBuffer is valid for the underlying canvas
-            opts={{ renderer: "canvas", preserveDrawingBuffer: true }}
-            theme={theme || undefined}
-            onChartReady={(instance: any) => {
-              echartsInstanceRef.current = instance;
-              attachZrDeselectHandlers(instance);
-            }}
-            onEvents={{
-              click: (params: any) => {
-                // Click on empty plot area clears annotation selection
-                if (params?.componentType !== "graphic") {
-                  clearSelection();
-                }
-              },
-            }}
-            style={{
-              width: "100%",
-              height: "100%",
-              background: effectiveBackgroundColor || "transparent",
-            }}
-          />
+          <div style={{ width: "100%", height: "100%" }}>
+            <ReactECharts
+              ref={chartRef}
+              key={`${type}-${recordKey}-${id}-${theme || "default"}${pieEchartsRemountKey ? `-${pieEchartsRemountKey}` : ""}`}
+              option={chartOption}
+              replaceMerge={["graphic", "series"]}
+              // @ts-ignore: preserveDrawingBuffer is valid for the underlying canvas
+              opts={{ renderer: "canvas", preserveDrawingBuffer: true }}
+              theme={theme || undefined}
+              onChartReady={(instance: any) => {
+                echartsInstanceRef.current = instance;
+                attachZrDeselectHandlers(instance);
+              }}
+              onEvents={{
+                ...(isRoughPieSketch
+                  ? {
+                      legendselectchanged: (params: {
+                        selected?: Record<string, boolean>;
+                      }) => {
+                        if (params.selected) {
+                          setPieSketchLegendSelected({ ...params.selected });
+                        }
+                      },
+                    }
+                  : {}),
+                click: (params: any) => {
+                  // Click on empty plot area clears annotation selection
+                  if (params?.componentType !== "graphic") {
+                    clearSelection();
+                  }
+                },
+              }}
+              style={{
+                width: "100%",
+                height: "100%",
+                background: effectiveBackgroundColor || "transparent",
+              }}
+            />
+          </div>
         )}
 
         {selectedAnnotation && (
