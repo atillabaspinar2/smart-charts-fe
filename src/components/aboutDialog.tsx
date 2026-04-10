@@ -72,6 +72,9 @@ export const AboutDialog: React.FC<{
                 <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                   <li>Select a chart on the canvas, then open the <strong>Styles</strong> tab in the right panel.</li>
                   <li>Adjust title, font, colors, legend position, and chart-specific options (smooth lines, stacked bars, donut radius, etc.).</li>
+                  <li>
+                    <strong>Sketchy</strong> (line, bar, and normal pie only): turn on a hand-drawn look and use <strong>Sketch intensity</strong> to control how rough it appears. On the animation timeline, sketch charts use a different motion than the default chart animation.
+                  </li>
                   <li>For map charts, choose color range from the dropdown menu.</li>
                   <li>Canvas-level settings (background color, workspace title, font) are available when no chart is selected.</li>
                   <li>The global theme and color scheme can be changed from the top toolbar.</li>
@@ -103,6 +106,7 @@ export const AboutDialog: React.FC<{
                   <li><strong>Data import &amp; export</strong> — Load data from CSV or Excel; export back to CSV at any time.</li>
                   <li><strong>Animation timeline</strong> — Precisely control when each chart appears and how long it animates using a visual drag-and-drop timeline editor.</li>
                   <li><strong>Style customization</strong> — Full control over colors, fonts, legends, axes, and chart-specific visual options.</li>
+                  <li><strong>Sketch style</strong> — Optional hand-drawn line, bar, and pie charts with adjustable intensity; works with the animation timeline.</li>
                   <li><strong>Theme support</strong> — Switch between light and dark mode and multiple color themes instantly.</li>
                   <li><strong>Video export</strong> — Capture the entire animated canvas as a WebM video, respecting all timeline positions.</li>
                   <li><strong>Image export</strong> — Download any individual chart as a PNG.</li>
