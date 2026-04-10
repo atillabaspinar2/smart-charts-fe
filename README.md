@@ -10,6 +10,7 @@ Chart Studio is a browser-based data visualization studio for building, animatin
 - **Data** — Import **CSV** or **Excel** (`.xls`, `.xlsx`) per chart; edit values in the **Data** table and apply changes; export the current series as CSV.
 - **Animation timeline** — Set total canvas duration, place each chart on a visual timeline, and preview the full sequence (**Animate all**). Charts stay hidden until their clip starts.
 - **Styles** — Per-chart options (titles, fonts, colors, legend, axes, chart-specific settings). When nothing is selected, edit canvas-level background, workspace title, and fonts. Global app theme and light/dark mode live in the header.
+- **Sketch style (optional)** — For line, bar, and normal pie charts, enable **Sketchy** in the Styles tab for a hand-drawn look and adjust **Sketch intensity**. Playback on the animation timeline uses a different motion than the default chart animation.
 - **Export** — Record the animated canvas as **WebM** (timeline-aware) and download individual charts as **PNG**.
 - **Responsive layout** — On touch devices, pick a chart type from the sidebar, then tap the canvas to place it.
 
@@ -54,7 +55,7 @@ Use **Export** from the chart menu to download the current data as CSV.
 
 ### Styles and theme
 
-- Select a chart, then use the **Styles** tab in the right panel for colors, fonts, legend, and type-specific options (for example smooth lines, stacked bars, map color scale).
+- Select a chart, then use the **Styles** tab in the right panel for colors, fonts, legend, and type-specific options (for example smooth lines, stacked bars, sketch style, map color scale).
 - With no chart selected, adjust canvas background and workspace title/fonts.
 - Use the header controls for **theme** and **light / dark / system** appearance.
 
