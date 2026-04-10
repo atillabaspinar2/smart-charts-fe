@@ -17,6 +17,22 @@ export const DEFAULT_THEME_COLORS = [
   "#7c3aed",
 ];
 
+/**
+ * ECharts built-in default `option.color` cycle (no `theme` prop). Use for custom render paths
+ * so colors match normal line/bar/pie series when workspace theme is "Default".
+ */
+export const ECHARTS_DEFAULT_COLOR_PALETTE = [
+  "#5470c6",
+  "#91cc75",
+  "#fac858",
+  "#ee6666",
+  "#73c0de",
+  "#3ba272",
+  "#fc8452",
+  "#9a60b4",
+  "#ea7ccc",
+];
+
 const THEME_PROJECTS_RAW = [
   chalkProjectRaw,
   darkProjectRaw,

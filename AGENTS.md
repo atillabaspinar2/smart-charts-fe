@@ -31,6 +31,7 @@ Run from this directory (`chartstudioFE/`):
 ## Product facts (avoid doc drift)
 
 - **Data import:** CSV or Excel (`.csv`, `.xls`, `.xlsx`) only; first sheet for Excel. See `README.md` and `src/components/aboutDialog.tsx` for formats.
+- **Sketch style (Rough.js):** Optional hand-drawn look for **line** (`lineSketchEnabled`, `lineSketchIntensity`), **bar** (`barSketchEnabled`, `barSketchIntensity`), and **pie** (`pieSketchEnabled`, `pieSketchIntensity`; normal pie only, not rose/funnel). Line supports **Area** and **Stack**; bar supports **Stack**; pie uses theme palette colors. Implementation: `roughLineSeries.ts`, `roughBarPieSeries.ts`, `chartItem.tsx`. ECharts does not animate custom `renderItem` paths; **Animate** / **Animate all** / timeline **drive anime.js on the chart root div** (`sketchChartContainerMotion.ts`), stretched to the timeline clip duration. `#chart-canvas` uses `container-type: size` for `cqh` motion.
 - Charts: line, bar, pie, map; annotations (line, circle, text, image). Optional auth UI exists when API is configured.
 
 ## What agents should do

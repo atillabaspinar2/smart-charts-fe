@@ -23,6 +23,10 @@ export interface BarChartSettingsPanelProps {
   setBarAxisOrientation: (value: "vertical" | "horizontal") => void;
   barStackEnabled: boolean;
   setBarStackEnabled: (value: boolean) => void;
+  barSketchEnabled?: boolean;
+  setBarSketchEnabled?: (value: boolean) => void;
+  barSketchIntensity?: number;
+  setBarSketchIntensity?: (value: number) => void;
   // Legend tab
   showLegend: boolean;
   setShowLegend: (v: boolean) => void;
@@ -54,6 +58,10 @@ export const BarChartSettingsPanel: FC<BarChartSettingsPanelProps> = ({
   setBarAxisOrientation,
   barStackEnabled,
   setBarStackEnabled,
+  barSketchEnabled,
+  setBarSketchEnabled,
+  barSketchIntensity,
+  setBarSketchIntensity,
   showLegend,
   setShowLegend,
   legendTop,
@@ -84,6 +92,10 @@ export const BarChartSettingsPanel: FC<BarChartSettingsPanelProps> = ({
         <BarChartStylesTabContent
           dataOrientation={dataOrientation}
           setDataOrientation={setDataOrientation}
+          barSketchEnabled={barSketchEnabled}
+          setBarSketchEnabled={setBarSketchEnabled}
+          barSketchIntensity={barSketchIntensity}
+          setBarSketchIntensity={setBarSketchIntensity}
           barShowBackground={barShowBackground}
           setBarShowBackground={setBarShowBackground}
           barBackgroundColor={barBackgroundColor}

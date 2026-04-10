@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import { SKETCH_ANIMATION_HINT } from "@/components/chartSettingsTabs/sketchAnimationHint";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -13,8 +14,57 @@ export const PieChartStylesTabContent: FC<PieChartStylesTabContentProps> = ({
   pieSettings,
   setPieSettings,
 }) => {
+  const pieSketchEligible =
+    pieSettings.chartType === "pie" && pieSettings.roseType === false;
+  const pieIntensity = Number.isFinite(pieSettings.pieSketchIntensity ?? NaN)
+    ? Math.min(100, Math.max(0, pieSettings.pieSketchIntensity ?? 50))
+    : 50;
+
   return (
     <div className="space-y-4 pb-3">
+      {pieSketchEligible && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Sketchy</Label>
+            <Switch
+              checked={Boolean(pieSettings.pieSketchEnabled)}
+              onCheckedChange={(checked) =>
+                setPieSettings({ pieSketchEnabled: checked })
+              }
+            />
+          </div>
+          {pieSettings.pieSketchEnabled && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Sketch intensity</Label>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {pieIntensity}
+                </span>
+              </div>
+              <Slider
+                min={0}
+                max={100}
+                step={1}
+                value={[pieIntensity]}
+                onValueChange={([v]) =>
+                  setPieSettings({ pieSketchIntensity: v })
+                }
+              />
+            </div>
+          )}
+          {pieSettings.pieSketchEnabled && (
+            <p className="text-[11px] text-muted-foreground leading-snug">
+              {SKETCH_ANIMATION_HINT}
+            </p>
+          )}
+        </div>
+      )}
+      {!pieSketchEligible && pieSettings.chartType === "pie" && (
+        <p className="text-[11px] text-muted-foreground leading-snug">
+          Switch Style to Normal (not Rose) to enable sketchy pie.
+        </p>
+      )}
+
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label className="text-xs">Inner Radius</Label>

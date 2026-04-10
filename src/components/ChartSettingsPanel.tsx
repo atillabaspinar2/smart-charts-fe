@@ -70,6 +70,10 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
     setBarAxisOrientation = () => {},
     barStackEnabled = false,
     setBarStackEnabled = () => {},
+    barSketchEnabled = false,
+    setBarSketchEnabled = () => {},
+    barSketchIntensity = 50,
+    setBarSketchIntensity = () => {},
     lineShowLabels = false,
     setLineShowLabels = () => {},
     lineSmooth = false,
@@ -84,6 +88,10 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
     setLineSymbol = () => {},
     lineSymbolSize = 4,
     setLineSymbolSize = () => {},
+    lineSketchEnabled = false,
+    setLineSketchEnabled = () => {},
+    lineSketchIntensity = 50,
+    setLineSketchIntensity = () => {},
     pieSettings,
     setPieSettings,
     mapSettings,
@@ -98,11 +106,6 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
 
   const [activeChartAccordionItem, setActiveChartAccordionItem] =
     useState<string>("");
-
-  const handleAnimationChange = (value: string = "1000") => {
-    if (!/^\d*$/.test(value)) return;
-    setAnimationInput(value);
-  };
 
   const FONT_FAMILIES = ["Noto Sans", "Georgia", "Courier New", "Trebuchet MS"];
   const DEFAULT_THEME_SELECT_VALUE = "__default_theme__";
@@ -149,8 +152,6 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
             setActiveChartAccordionItem={setActiveChartAccordionItem}
             title={title ?? ""}
             setTitle={setTitle ?? (() => {})}
-            animationInput={animationInput}
-            handleAnimationChange={handleAnimationChange}
             fontSize={fontSize}
             setFontSize={setFontSize}
             backgroundColor={backgroundColor ?? "#fff"}
@@ -181,6 +182,10 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
             setLineSymbol={setLineSymbol}
             lineSymbolSize={lineSymbolSize}
             setLineSymbolSize={setLineSymbolSize}
+            lineSketchEnabled={lineSketchEnabled}
+            setLineSketchEnabled={setLineSketchEnabled}
+            lineSketchIntensity={lineSketchIntensity}
+            setLineSketchIntensity={setLineSketchIntensity}
             showLegend={showLegend}
             setShowLegend={setShowLegend}
             legendTop={legendTop}
@@ -213,6 +218,10 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
             setBarAxisOrientation={setBarAxisOrientation}
             barStackEnabled={barStackEnabled}
             setBarStackEnabled={setBarStackEnabled}
+            barSketchEnabled={barSketchEnabled}
+            setBarSketchEnabled={setBarSketchEnabled}
+            barSketchIntensity={barSketchIntensity}
+            setBarSketchIntensity={setBarSketchIntensity}
             showLegend={showLegend}
             setShowLegend={setShowLegend}
             legendTop={legendTop}
