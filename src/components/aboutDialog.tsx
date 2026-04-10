@@ -41,7 +41,7 @@ export const AboutDialog: React.FC<{
                   <li><strong>Map:</strong> two columns — <code className="bg-muted rounded px-1">name</code> (region/country) and <code className="bg-muted rounded px-1">value</code> (numeric).</li>
                 </ul>
                 <p className="text-muted-foreground mt-2">
-                  Click the chart's context menu (⋯ button on hover) and choose <strong>Import</strong> to load your file. Invalid rows are skipped automatically.
+                  Click the chart's context menu (⋯ button on hover) and choose <strong>Import</strong> to load your file. Invalid rows are skipped automatically. The chart title is set from the file name (without extension).
                 </p>
               </section>
 
