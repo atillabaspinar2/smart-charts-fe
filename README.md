@@ -34,7 +34,7 @@ Imports use a **tabular** file: **CSV** or **Excel** (`.xls` / `.xlsx`). The fil
 | **Pie** | Two columns: `name` and `value`. |
 | **Map** | Two columns: `name` (region or country) and `value` (number). |
 
-The first worksheet in an Excel workbook is read. Empty rows are skipped when building the chart from the sheet.
+The first worksheet in an Excel workbook is read. Empty rows are skipped when building the chart from the sheet. After a successful import, the chart **title** is set from the file name without its extension (for example `Regional sales Q1.xlsx` becomes `Regional sales Q1`).
 
 ### Edit data
 

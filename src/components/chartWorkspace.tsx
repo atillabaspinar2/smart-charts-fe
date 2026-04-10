@@ -73,6 +73,16 @@ const DATA_PANEL_HEADER_HEIGHT = 40;
 const CHART_Z_INDEX_MAX = 90;
 const CHART_Z_INDEX_SELECTED = 95;
 
+/** Chart title from import: file basename without the last extension (`Q1 sales.xlsx` → `Q1 sales`). */
+function fileNameStemForTitle(fileName: string): string {
+  const t = fileName.trim();
+  if (!t) return "";
+  const dot = t.lastIndexOf(".");
+  if (dot <= 0) return t;
+  const stem = t.slice(0, dot).trim();
+  return stem || t;
+}
+
 export const ChartWorkspace: React.FC<{
   charts: ChartItemData[];
   addChart: (type: string, initialPosition?: { x: number; y: number }) => void;
@@ -1547,6 +1557,10 @@ export const ChartWorkspace: React.FC<{
       }
 
       updateChartData(selected.instanceId, nextData, { reanimate: true });
+      const titleFromFile = fileNameStemForTitle(file.name);
+      if (titleFromFile) {
+        updateChartSettings(selected.instanceId, { title: titleFromFile });
+      }
     } catch (error) {
       console.error("Failed to import spreadsheet", error);
       window.alert(
