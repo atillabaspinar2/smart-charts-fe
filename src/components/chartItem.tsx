@@ -39,6 +39,7 @@ import {
   playSketchContainerEnter,
   playSketchContainerExit,
 } from "@/utils/sketchChartContainerMotion";
+import { drawExportWatermark } from "@/utils/videoWatermark";
 import {
   applyBodyFontSizeToEChartsOption,
   CHART_BODY_DEFAULT_FONT_SIZE,
@@ -512,7 +513,16 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         ?.getDom()
         ?.querySelector("canvas");
       if (canvas) {
-        const url = canvas.toDataURL("image/png");
+        const w = canvas.width;
+        const h = canvas.height;
+        const out = document.createElement("canvas");
+        out.width = w;
+        out.height = h;
+        const ctx = out.getContext("2d");
+        if (!ctx) return;
+        ctx.drawImage(canvas, 0, 0);
+        drawExportWatermark(ctx, w, h);
+        const url = out.toDataURL("image/png");
         const link = document.createElement("a");
         link.href = url;
         link.download = `chart-${id}.png`;

@@ -1,3 +1,5 @@
+import { drawExportWatermark } from "@/utils/videoWatermark";
+
 /**
  * Composite one video frame: chart card background + ECharts canvas at the correct offset.
  * Uses layout-sized output so CSS transforms (e.g. anime.js sketch slide) are captured; the
@@ -114,6 +116,7 @@ export const recordChartContainer = (
         if (!frame || !ctx) return;
         ctx.clearRect(0, 0, compositeCanvas.width, compositeCanvas.height);
         ctx.drawImage(frame, 0, 0);
+        drawExportWatermark(ctx, compositeCanvas.width, compositeCanvas.height);
       };
 
       const startedAt = performance.now();
