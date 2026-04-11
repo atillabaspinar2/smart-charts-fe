@@ -66,6 +66,8 @@ export interface MapChartSettings extends ChartSettingsBase {
   regionColor?: string;
   animationDelayUpdateValue?: number;
   showLabel?: boolean;
+  /** When true, show numeric value on regions (alone or next to the region name). */
+  showMapValues?: boolean;
   labelFontColor?: string;
   labelFontSize?: number;
   visualMapColorRange?: string; // Optional custom color range for visualMap
@@ -73,6 +75,9 @@ export interface MapChartSettings extends ChartSettingsBase {
     left: string;
     top: string;
   };
+  /** Hand-drawn regions via Rough.js (geo + custom series). */
+  mapSketchEnabled?: boolean;
+  mapSketchIntensity?: number;
 }
 
 // Bar chart specific settings
@@ -225,6 +230,7 @@ export const defaultMapChartSettings: MapChartSettings = {
   regionColor: "#c23531",
   animationDelayUpdateValue: 20,
   showLabel: false,
+  showMapValues: false,
   labelFontColor: "#000",
   labelFontSize: 10,
   animationDuration: 0,
@@ -236,6 +242,8 @@ export const defaultMapChartSettings: MapChartSettings = {
   legendTop: "bottom",
   legendLeft: "left",
   legendOrient: "vertical",
+  mapSketchEnabled: false,
+  mapSketchIntensity: 50,
 };
 
 export type ChartData =

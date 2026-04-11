@@ -36,6 +36,39 @@ export const colorRanges: { [key: string]: string[] } = {
   Red: ["#fef2f2", "#991b1b"],
 };
 
+/** Map series / geo label template: `{b}` region name, `{c}` value. */
+export function mapSeriesLabelFormatter(
+  showLabel: boolean,
+  showMapValues: boolean,
+): string {
+  if (showLabel && showMapValues) return "{b} {c}";
+  if (showLabel) return "{b}";
+  if (showMapValues) return "{c}";
+  return "{b}";
+}
+
+/** Sketch geo labels (no series context): same semantics as {@link mapSeriesLabelFormatter}. */
+export function formatMapGeoLabelText(
+  regionName: string,
+  value: number | undefined,
+  showLabel: boolean,
+  showMapValues: boolean,
+): string {
+  const valueStr =
+    value !== undefined && value !== null && !Number.isNaN(Number(value))
+      ? String(value)
+      : "";
+  if (!showLabel && !showMapValues) return "";
+  if (showLabel && showMapValues) {
+    const parts: string[] = [];
+    if (regionName) parts.push(regionName);
+    if (valueStr) parts.push(valueStr);
+    return parts.join(" ");
+  }
+  if (showLabel) return regionName;
+  return valueStr;
+}
+
 export const defaultMapOptions = (mapName?: string) => {
   // Default to 'countries' if not provided
   const effectiveMapName = mapName || "countries";
