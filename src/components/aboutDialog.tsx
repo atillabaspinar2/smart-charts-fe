@@ -108,7 +108,7 @@ export const AboutDialog: React.FC<{
                   <li><strong>Style customization</strong> — Full control over colors, fonts, legends, axes, and chart-specific visual options.</li>
                   <li><strong>Sketch style</strong> — Optional hand-drawn line, bar, and pie charts with adjustable intensity; works with the animation timeline.</li>
                   <li><strong>Theme support</strong> — Switch between light and dark mode and multiple color themes instantly.</li>
-                  <li><strong>Video export</strong> — Capture the entire animated canvas as a WebM video, respecting all timeline positions.</li>
+                  <li><strong>Video export</strong> — Capture the entire animated canvas as WebM or MP4 (your choice in canvas settings), respecting all timeline positions.</li>
                   <li><strong>Image export</strong> — Download any individual chart as a PNG.</li>
                   <li><strong>Annotations</strong> — Add shapes, lines, and text overlays directly on charts.</li>
                   <li><strong>Persistent workspaces</strong> — All charts, data, settings, and timeline clips are saved automatically in your browser.</li>

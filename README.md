@@ -2,6 +2,8 @@
 
 Chart Studio is a browser-based data visualization studio for building, animating, and exporting charts without writing code. This repository is the **frontend** (React + Vite): a shared canvas of interactive charts powered by [Apache ECharts](https://echarts.apache.org/), with local persistence in the browser.
 
+Opening the app shows a **landing page** (features, demo videos, tech credits) with **Open Chart Studio** to enter the editor at **`/app`**. The workspace URL is bookmarkable.
+
 ## Features
 
 - **Chart types** — Line, bar, pie, and map charts on one canvas.
@@ -11,7 +13,7 @@ Chart Studio is a browser-based data visualization studio for building, animatin
 - **Animation timeline** — Set total canvas duration, place each chart on a visual timeline, and preview the full sequence (**Animate all**). Charts stay hidden until their clip starts.
 - **Styles** — Per-chart options (titles, fonts, colors, legend, axes, chart-specific settings). When nothing is selected, edit canvas-level background, workspace title, and fonts. Global app theme and light/dark mode live in the header.
 - **Sketch style (optional)** — For line, bar, and normal pie charts, enable **Sketchy** in the Styles tab for a hand-drawn look and adjust **Sketch intensity**. Playback on the animation timeline uses a different motion than the default chart animation.
-- **Export** — Record the animated canvas as **WebM** (timeline-aware) and download individual charts as **PNG**.
+- **Export** — Record the animated canvas as **WebM** or **MP4** (timeline-aware; format in canvas settings) and download individual charts as **PNG**.
 - **Responsive layout** — On touch devices, pick a chart type from the sidebar, then tap the canvas to place it.
 
 Optional **Sign in / Sign up** is available when a backend API is configured (see [Local development](#local-development)).
@@ -101,7 +103,7 @@ cp .env.example .env
 
 ### Tech stack (high level)
 
-React 19, TypeScript, Vite, Tailwind CSS, Zustand, TanStack Table, ECharts (`echarts-for-react`), Radix UI primitives, and client-side persistence via IndexedDB.
+React 19, TypeScript, Vite, Tailwind CSS, React Router, Zustand, TanStack Table, ECharts (`echarts-for-react`), Rough.js, anime.js, Radix UI primitives, and client-side persistence via IndexedDB.
 
 ---
 

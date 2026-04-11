@@ -21,7 +21,7 @@ Run from this directory (`chartstudioFE/`):
 
 ## Layout (where things live)
 
-- `src/App.tsx` — Shell: header, sidebar, workspace.
+- `src/App.tsx` — `react-router-dom` routes: `/` marketing intro (`src/pages/IntroPage.tsx`), `/app` workspace (header + sidebar + `ChartWorkspace` via `src/pages/WorkspacePage.tsx`). Shared `src/components/AppHeader.tsx`.
 - `src/components/chartWorkspace.tsx` — Main canvas, import/export, timeline, chart wiring (large file).
 - `src/components/chartItem.tsx`, `chartTypes.ts` — Chart instances and typed data/settings.
 - `src/store/workspaceChartsStore.ts`, `workspaceLayoutStore.ts` — Zustand + IndexedDB persistence.
