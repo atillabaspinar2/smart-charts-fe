@@ -114,6 +114,7 @@ export const PieChartDataPanel: FC<PieChartDataPanelProps> = ({
     <DataGrid
       categories={categories}
       series={gridSeries}
+      showSeriesColor={false}
       onCategoriesChange={handleCategoriesChange}
       onSeriesChange={handleSeriesChange}
       onDataChange={handleDataChange}

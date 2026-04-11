@@ -95,6 +95,7 @@ export const MapChartDataPanel: React.FC<Props> = ({
         <DataGrid
           categories={categories}
           series={series}
+          showSeriesColor={false}
           onCategoriesChange={() => {}}
           onSeriesChange={(rows) => {
             onChange(mapRowsToMapChartData(rows));

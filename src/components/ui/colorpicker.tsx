@@ -58,18 +58,33 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
     };
   }, [debouncedEmit]);
 
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const next = e.target.value;
     setLocalColor(next);
     debouncedEmit(next);
   };
 
+  /**
+   * Native `<input type="color">` often blurs when the system color UI opens; flushing
+   * immediately would sync parent state and re-render, which closes the picker. Only flush
+   * after focus has actually left this input (not when it returns on the next frame).
+   */
   const handleBlur = () => {
-    debouncedEmit.flush();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (inputRef.current && document.activeElement === inputRef.current) {
+          return;
+        }
+        debouncedEmit.flush();
+      });
+    });
   };
 
   return (
     <input
+      ref={inputRef}
       type="color"
       aria-label={ariaLabel}
       title={title}

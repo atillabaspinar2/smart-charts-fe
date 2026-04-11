@@ -37,6 +37,11 @@ interface DataGridProps {
   ) => void;
   themeColors?: string[];
   minSeries?: number;
+  /**
+   * Line/bar charts: per-series color in the grid. Map uses visualMap; pie uses theme/slice
+   * styling — omit the color column for those types.
+   */
+  showSeriesColor?: boolean;
 }
 
 export const DataGrid: FC<DataGridProps> = ({
@@ -48,6 +53,7 @@ export const DataGrid: FC<DataGridProps> = ({
   registerApplyHandler,
   themeColors = DEFAULT_THEME_COLORS,
   minSeries = 1,
+  showSeriesColor = true,
 }) => {
   const gridRef = useRef<HTMLDivElement>(null);
   const categoriesRef = useRef(categories);
@@ -60,6 +66,15 @@ export const DataGrid: FC<DataGridProps> = ({
   useEffect(() => {
     seriesRef.current = series;
   }, [series]);
+
+  const onCategoriesChangeRef = useRef(onCategoriesChange);
+  const onSeriesChangeRef = useRef(onSeriesChange);
+  const onDataChangeRef = useRef(onDataChange);
+  useEffect(() => {
+    onCategoriesChangeRef.current = onCategoriesChange;
+    onSeriesChangeRef.current = onSeriesChange;
+    onDataChangeRef.current = onDataChange;
+  }, [onCategoriesChange, onSeriesChange, onDataChange]);
 
   const collectGridSnapshot = useCallback(() => {
     const gridElement = gridRef.current;
@@ -115,15 +130,15 @@ export const DataGrid: FC<DataGridProps> = ({
 
   const applyGridChange = useCallback(
     (nextCategories: string[], nextSeries: GridSeriesRow[]) => {
-      if (onDataChange) {
-        onDataChange(nextCategories, nextSeries);
+      const batch = onDataChangeRef.current;
+      if (batch) {
+        batch(nextCategories, nextSeries);
         return;
       }
-
-      onCategoriesChange(nextCategories);
-      onSeriesChange(nextSeries);
+      onCategoriesChangeRef.current(nextCategories);
+      onSeriesChangeRef.current(nextSeries);
     },
-    [onCategoriesChange, onDataChange, onSeriesChange],
+    [],
   );
 
   const addCategory = useCallback(() => {
@@ -178,7 +193,7 @@ export const DataGrid: FC<DataGridProps> = ({
     const nextIndex = currentSeries.length;
     const themeColorIndex = getNextThemeColorIndex();
     const color = themeColors[themeColorIndex % themeColors.length];
-    onSeriesChange([
+    onSeriesChangeRef.current([
       ...currentSeries,
       {
         id: `series-${Date.now()}-${nextIndex}`,
@@ -189,34 +204,27 @@ export const DataGrid: FC<DataGridProps> = ({
         values: Array.from({ length: currentCategories.length }, () => 0),
       },
     ]);
-  }, [
-    collectGridSnapshot,
-    getNextThemeColorIndex,
-    onSeriesChange,
-    themeColors,
-  ]);
+  }, [collectGridSnapshot, getNextThemeColorIndex, themeColors]);
 
   const removeSeries = useCallback(
     (id: string) => {
       const currentSeries = collectGridSnapshot().series;
       if (currentSeries.length <= minSeries) return;
-      onSeriesChange(currentSeries.filter((row) => row.id !== id));
+      onSeriesChangeRef.current(currentSeries.filter((row) => row.id !== id));
     },
-    [collectGridSnapshot, minSeries, onSeriesChange],
+    [collectGridSnapshot, minSeries],
   );
 
-  const commitSeriesColor = useCallback(
-    (rowIndex: number, nextColor: string) => {
-      const current = seriesRef.current;
-      const next = current.map((row, i) =>
-        i === rowIndex
-          ? { ...row, color: nextColor, colorSource: "custom" as const }
-          : row,
-      );
-      onSeriesChange(next);
-    },
-    [onSeriesChange],
-  );
+  /** Stable identity — must not depend on parent callback refs or `columns` remounts every render and the native color picker closes. */
+  const commitSeriesColor = useCallback((rowIndex: number, nextColor: string) => {
+    const current = seriesRef.current;
+    const next = current.map((row, i) =>
+      i === rowIndex
+        ? { ...row, color: nextColor, colorSource: "custom" as const }
+        : row,
+    );
+    onSeriesChangeRef.current(next);
+  }, []);
 
   useEffect(() => {
     if (!registerApplyHandler) return;
@@ -234,15 +242,17 @@ export const DataGrid: FC<DataGridProps> = ({
         const rowIndex = row.index;
         return (
           <div className="flex items-center gap-2">
-            <ColorPicker
-              color={rowData.color}
-              onChange={(c) => commitSeriesColor(rowIndex, c)}
-              className="size-6"
-              aria-label={`Color for ${rowData.name}`}
-              title={`Color for ${rowData.name}`}
-              data-grid-kind="series-color"
-              data-row-index={rowIndex}
-            />
+            {showSeriesColor && (
+              <ColorPicker
+                color={rowData.color}
+                onChange={(c) => commitSeriesColor(rowIndex, c)}
+                className="size-6"
+                aria-label={`Color for ${rowData.name}`}
+                title={`Color for ${rowData.name}`}
+                data-grid-kind="series-color"
+                data-row-index={rowIndex}
+              />
+            )}
             <input
               data-grid-kind="series-name"
               data-row-index={rowIndex}
@@ -263,7 +273,7 @@ export const DataGrid: FC<DataGridProps> = ({
           </div>
         );
       },
-      size: 240,
+      size: showSeriesColor ? 240 : 200,
     };
 
     const categoryColumns: ColumnDef<GridSeriesRow>[] = categories.map(
@@ -325,19 +335,20 @@ export const DataGrid: FC<DataGridProps> = ({
     return [seriesColumn, ...categoryColumns, addColumn];
   }, [
     addCategory,
-    addSeries,
     categories,
     commitSeriesColor,
     minSeries,
     removeCategory,
     removeSeries,
     series.length,
+    showSeriesColor,
   ]);
 
   const table = useReactTable({
     data: series,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getRowId: (row) => row.id,
   });
 
   return (
@@ -345,17 +356,25 @@ export const DataGrid: FC<DataGridProps> = ({
       ref={gridRef}
       className="overflow-x-auto rounded-md border border-border bg-card shadow-sm"
       onBlur={(e) => {
-        // Flush the grid snapshot to the draft when focus leaves the entire grid
-        // (not when moving between cells within the grid)
-        if (!gridRef.current?.contains(e.relatedTarget as Node)) {
+        // Flush when focus leaves the grid (not when moving between cells). Native
+        // `<input type="color">` UIs are often outside the DOM tree, so `relatedTarget`
+        // is null — defer and skip while focus is still inside the grid (e.g. color input).
+        if (gridRef.current?.contains(e.relatedTarget as Node)) return;
+
+        window.setTimeout(() => {
+          if (!gridRef.current) return;
+          if (gridRef.current.contains(document.activeElement)) return;
+
           const { categories: nextCats, series: nextSeries } = collectGridSnapshot();
           applyGridChange(nextCats, nextSeries);
-        }
+        }, 0);
       }}
     >
       <Table
         className=""
-        style={{ minWidth: `${260 + categories.length * 100}px` }}
+        style={{
+          minWidth: `${(showSeriesColor ? 260 : 220) + categories.length * 100}px`,
+        }}
       >
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
