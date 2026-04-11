@@ -1,46 +1,17 @@
 import "./App.css";
 
-import { ChartWorkspace } from "./components/chartWorkspace";
 import { useEffect, useState } from "react";
+import { Routes, Route, Navigate, Link } from "react-router-dom";
 import { Modal } from "./components/UILibrary/Modal";
 import { AuthForm } from "./components/signupForm";
-import { UserMenu } from "./components/userMenu";
-import { Sidebar } from "./components/sidebar";
-import { AuthProvider } from "./context/AuthContext";
-import logo from "./assets/logo.svg";
 import { AboutDialog } from "./components/aboutDialog";
-import { useWorkspaceLayoutStore } from "@/store/workspaceLayoutStore";
-import { useWorkspaceChartsStore } from "@/store/workspaceChartsStore";
-
+import { AuthProvider } from "./context/AuthContext";
+import { AppHeader } from "./components/AppHeader";
+import { IntroPage } from "./pages/IntroPage";
+import { WorkspacePage } from "./pages/WorkspacePage";
+import { Button } from "./components/ui/button";
 function App() {
-  const activeWorkspaceId = useWorkspaceLayoutStore(
-    (s) => s.activeWorkspaceId,
-  );
-  const chartEntities = useWorkspaceChartsStore(
-    (s) => s.chartsByWorkspaceId[activeWorkspaceId],
-  );
-  const charts = Object.values(chartEntities ?? {}).map((c) => ({
-    id: c.id,
-    instanceId: c.instanceId,
-    type: c.type,
-    initialPosition: c.initialPosition,
-  }));
-
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
-
-  const addChart = (
-    chartType: string,
-    initialPosition?: { x: number; y: number },
-  ) => {
-    useWorkspaceChartsStore.getState().addChart(
-      activeWorkspaceId,
-      chartType,
-      initialPosition,
-    );
-  };
-  const removeChart = (id: number) => {
-    useWorkspaceChartsStore.getState().removeChart(activeWorkspaceId, id);
-  };
   const [authModal, setAuthModal] = useState<"signup" | "signin" | null>(null);
   const [isCoarsePointer, setIsCoarsePointer] = useState(false);
   const [pendingMobileChartType, setPendingMobileChartType] = useState<
@@ -66,93 +37,65 @@ function App() {
 
   return (
     <AuthProvider>
-      <div className="grid h-screen grid-cols-[64px_1fr] grid-rows-[auto_1fr] gap-0 bg-background text-foreground">
-        {/* Header */}
-        <header className="col-span-2 shadow-lg bg-zinc-950 text-zinc-100">
-          <div className="px-4 py-1 flex items-center justify-between relative">
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <img
-                src={logo}
-                alt="smart-charts logo"
-                className="h-13.5 w-13.5 cursor-pointer"
-                onClick={() => window.location.reload()}
+      {authModal && (
+        <Modal isOpen={!!authModal} onClose={() => setAuthModal(null)}>
+          <AuthForm
+            initialMode={authModal}
+            onSuccess={() => setAuthModal(null)}
+          />
+        </Modal>
+      )}
+
+      {aboutDialogOpen && (
+        <AboutDialog
+          isOpen={aboutDialogOpen}
+          onClose={() => setAboutDialogOpen(false)}
+        />
+      )}
+
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <div className="grid h-screen min-h-0 w-full grid-rows-[auto_minmax(0,1fr)] gap-0 bg-background text-foreground">
+              <AppHeader
+                isCoarsePointer={isCoarsePointer}
+                headerMenuOpen={headerMenuOpen}
+                setHeaderMenuOpen={setHeaderMenuOpen}
+                openAuthModal={setAuthModal}
+                endAdornment={
+                  <Button asChild size="lg" className="text-xs shrink-0">
+                    <Link to="/app">Open Chart Studio</Link>
+                  </Button>
+                }
               />
-              <span>Chart Studio</span>
-            </h1>
-            {isCoarsePointer ? (
-              <div className="relative">
-                <button
-                  type="button"
-                  aria-label={headerMenuOpen ? "Close menu" : "Open menu"}
-                  onClick={() => setHeaderMenuOpen((v) => !v)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800 text-xl font-medium text-zinc-100 ring-1 ring-inset ring-zinc-700 shadow-sm transition hover:bg-zinc-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400"
-                >
-                  {headerMenuOpen ? "✕" : "☰"}
-                </button>
-                {headerMenuOpen && (
-                  <div className="absolute right-0 top-full z-[10002] mt-2 min-w-52 rounded-xl bg-zinc-900 p-1 ring-1 ring-zinc-700 shadow-lg backdrop-blur">
-                    <UserMenu
-                      openAuthModal={(mode) => {
-                        setAuthModal(mode);
-                        setHeaderMenuOpen(false);
-                      }}
-                      stacked
-                    />
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="right-6 top-4">
-                <UserMenu openAuthModal={setAuthModal} />
-              </div>
-            )}
-          </div>
-        </header>
-        {authModal && (
-          <Modal isOpen={!!authModal} onClose={() => setAuthModal(null)}>
-            <AuthForm
-              initialMode={authModal}
-              onSuccess={() => setAuthModal(null)}
-            />
-          </Modal>
-        )}
-
-        {aboutDialogOpen && (
-          <AboutDialog
-            isOpen={aboutDialogOpen}
-            onClose={() => setAboutDialogOpen(false)}
-          />
-        )}
-
-        {/* Sidebar */}
-        <aside className="shadow-md bg-zinc-900 text-zinc-100 h-full row-span-2 flex flex-col">
-          <nav className="flex-1 flex flex-col p-2 h-full">
-            <Sidebar
-              isMobileMode={isCoarsePointer}
-              setAboutOpen={setAboutDialogOpen}
-              pendingMobileChartType={pendingMobileChartType}
-              onSelectMobileChartType={setPendingMobileChartType}
-            />
-          </nav>
-        </aside>
-
-        {/* Main Content Area */}
-        <main className="overflow-y-auto bg-background p-2 text-foreground">
-          <ChartWorkspace
-            charts={charts}
-            addChart={addChart}
-            removeChart={removeChart}
-            isMobileMode={isCoarsePointer}
-            setAuthModal={setAuthModal}
-            pendingMobileChartType={pendingMobileChartType}
-            onPlaceMobileChartType={(type, position) => {
-              addChart(type, position);
-              setPendingMobileChartType(null);
-            }}
-            onCancelMobileChartPlacement={() => setPendingMobileChartType(null)}
-          />
-        </main>
-      </div>
+              <IntroPage onOpenAbout={() => setAboutDialogOpen(true)} />
+            </div>
+          }
+        />
+        <Route
+          path="/app"
+          element={
+            <div className="grid h-screen min-h-0 w-full grid-cols-[64px_1fr] grid-rows-[auto_minmax(0,1fr)] gap-0 bg-background text-foreground">
+              <AppHeader
+                className="col-span-2"
+                isCoarsePointer={isCoarsePointer}
+                headerMenuOpen={headerMenuOpen}
+                setHeaderMenuOpen={setHeaderMenuOpen}
+                openAuthModal={setAuthModal}
+              />
+              <WorkspacePage
+                isCoarsePointer={isCoarsePointer}
+                pendingMobileChartType={pendingMobileChartType}
+                setPendingMobileChartType={setPendingMobileChartType}
+                setAuthModal={setAuthModal}
+                setAboutDialogOpen={setAboutDialogOpen}
+              />
+            </div>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </AuthProvider>
   );
 }
