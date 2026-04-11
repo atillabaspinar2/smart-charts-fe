@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ColorPicker } from "@/components/ui/colorpicker";
 import type { SeriesColorSource } from "../chartTypes";
 
 export interface GridSeriesRow {
@@ -204,6 +205,19 @@ export const DataGrid: FC<DataGridProps> = ({
     [collectGridSnapshot, minSeries, onSeriesChange],
   );
 
+  const commitSeriesColor = useCallback(
+    (rowIndex: number, nextColor: string) => {
+      const current = seriesRef.current;
+      const next = current.map((row, i) =>
+        i === rowIndex
+          ? { ...row, color: nextColor, colorSource: "custom" as const }
+          : row,
+      );
+      onSeriesChange(next);
+    },
+    [onSeriesChange],
+  );
+
   useEffect(() => {
     if (!registerApplyHandler) return;
 
@@ -220,13 +234,14 @@ export const DataGrid: FC<DataGridProps> = ({
         const rowIndex = row.index;
         return (
           <div className="flex items-center gap-2">
-            <input
+            <ColorPicker
+              color={rowData.color}
+              onChange={(c) => commitSeriesColor(rowIndex, c)}
+              className="size-6"
+              aria-label={`Color for ${rowData.name}`}
+              title={`Color for ${rowData.name}`}
               data-grid-kind="series-color"
               data-row-index={rowIndex}
-              type="color"
-              defaultValue={rowData.color}
-              className="size-6 shrink-0 cursor-pointer rounded border border-input bg-background p-0.5"
-              title={`Color for ${rowData.name}`}
             />
             <input
               data-grid-kind="series-name"
@@ -310,12 +325,13 @@ export const DataGrid: FC<DataGridProps> = ({
     return [seriesColumn, ...categoryColumns, addColumn];
   }, [
     addCategory,
+    addSeries,
     categories,
+    commitSeriesColor,
     minSeries,
     removeCategory,
     removeSeries,
     series.length,
-    addSeries,
   ]);
 
   const table = useReactTable({

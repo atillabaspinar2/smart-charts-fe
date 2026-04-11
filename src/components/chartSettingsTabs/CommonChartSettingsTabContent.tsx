@@ -70,6 +70,8 @@ export const CommonChartSettingsTabContent: FC<
           <ColorPicker
             color={titleFontColor}
             onChange={setTitleFontColor}
+            aria-label="Title font color"
+            title="Title font color"
           />
         </div>
       </div>
@@ -81,6 +83,8 @@ export const CommonChartSettingsTabContent: FC<
           <ColorPicker
             color={backgroundColor}
             onChange={setBackgroundColor}
+            aria-label="Chart background color"
+            title="Chart background color"
           />
         </div>
       </div>

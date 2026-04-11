@@ -90,13 +90,23 @@ export const CanvasSettingsPanel: FC<CanvasSettingsPanelProps> = ({
     {typeof titleFontColor === "string" && setTitleFontColor && (
       <div className="flex items-center justify-between gap-2">
         <Label className="text-xs shrink-0">Default chart title color</Label>
-        <ColorPicker color={titleFontColor} onChange={setTitleFontColor} />
+        <ColorPicker
+          color={titleFontColor}
+          onChange={setTitleFontColor}
+          aria-label="Default chart title color"
+          title="Default chart title color"
+        />
       </div>
     )}
     <div className="space-y-1.5 flex items-center justify-between">
       <Label className="text-xs ">Background Color</Label>
       <div className="flex items-center gap-3">
-        <ColorPicker color={backgroundColor} onChange={setBackgroundColor} />
+        <ColorPicker
+          color={backgroundColor}
+          onChange={setBackgroundColor}
+          aria-label="Canvas background color"
+          title="Canvas background color"
+        />
       </div>
     </div>
     <div className="space-y-1.5 flex items-center justify-between">
