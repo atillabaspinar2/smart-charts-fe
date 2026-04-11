@@ -9,6 +9,7 @@ import { BarChartStylesTabContent } from "./BarChartStylesTabContent";
 import { CommonLegendTabContent } from "./CommonLegendTabContent";
 import { CommonChartSettingsTabContent } from "./CommonChartSettingsTabContent";
 import type { DataOrientation } from "../../utils/spreadsheetImport";
+import type { SketchTypographyPresetId } from "../chartTypes";
 
 export interface BarChartSettingsPanelProps {
   activeChartAccordionItem: string;
@@ -27,6 +28,8 @@ export interface BarChartSettingsPanelProps {
   setBarSketchEnabled?: (value: boolean) => void;
   barSketchIntensity?: number;
   setBarSketchIntensity?: (value: number) => void;
+  sketchTypographyPreset?: SketchTypographyPresetId;
+  setSketchTypographyPreset?: (value: SketchTypographyPresetId) => void;
   // Legend tab
   showLegend: boolean;
   setShowLegend: (v: boolean) => void;
@@ -41,6 +44,8 @@ export interface BarChartSettingsPanelProps {
   setTitle: (v: string) => void;
   fontSize: number;
   setFontSize: (v: number) => void;
+  titleFontColor: string;
+  setTitleFontColor: (v: string) => void;
   backgroundColor: string;
   setBackgroundColor: (v: string) => void;
 }
@@ -62,6 +67,8 @@ export const BarChartSettingsPanel: FC<BarChartSettingsPanelProps> = ({
   setBarSketchEnabled,
   barSketchIntensity,
   setBarSketchIntensity,
+  sketchTypographyPreset,
+  setSketchTypographyPreset,
   showLegend,
   setShowLegend,
   legendTop,
@@ -74,6 +81,8 @@ export const BarChartSettingsPanel: FC<BarChartSettingsPanelProps> = ({
   setTitle,
   fontSize,
   setFontSize,
+  titleFontColor,
+  setTitleFontColor,
   backgroundColor,
   setBackgroundColor,
 }) => (
@@ -96,6 +105,8 @@ export const BarChartSettingsPanel: FC<BarChartSettingsPanelProps> = ({
           setBarSketchEnabled={setBarSketchEnabled}
           barSketchIntensity={barSketchIntensity}
           setBarSketchIntensity={setBarSketchIntensity}
+          sketchTypographyPreset={sketchTypographyPreset}
+          setSketchTypographyPreset={setSketchTypographyPreset}
           barShowBackground={barShowBackground}
           setBarShowBackground={setBarShowBackground}
           barBackgroundColor={barBackgroundColor}
@@ -135,6 +146,8 @@ export const BarChartSettingsPanel: FC<BarChartSettingsPanelProps> = ({
           setTitle={setTitle}
           fontSizeInput={String(fontSize)}
           onFontSizeChange={(value) => setFontSize(Number(value))}
+          titleFontColor={titleFontColor}
+          setTitleFontColor={setTitleFontColor}
           backgroundColor={backgroundColor}
           setBackgroundColor={setBackgroundColor}
         />

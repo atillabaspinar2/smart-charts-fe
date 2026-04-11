@@ -9,6 +9,8 @@ export interface CommonChartSettingsTabContentProps {
   setTitle: (v: string) => void;
   fontSizeInput: string;
   onFontSizeChange: (value: string) => void;
+  titleFontColor: string;
+  setTitleFontColor: (v: string) => void;
   backgroundColor: string;
   setBackgroundColor: (v: string) => void;
 }
@@ -21,15 +23,17 @@ export const CommonChartSettingsTabContent: FC<
   setTitle,
   fontSizeInput,
   onFontSizeChange,
+  titleFontColor,
+  setTitleFontColor,
   backgroundColor,
   setBackgroundColor,
 }) => {
   return (
     <div className="space-y-4 pb-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <Label
           htmlFor="settings-title"
-          className="mb-1 block text-xs font-medium"
+          className="text-xs font-medium shrink-0"
         >
           {chartLabel} Title
         </Label>
@@ -39,14 +43,15 @@ export const CommonChartSettingsTabContent: FC<
           placeholder="Enter chart title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          className="max-w-[min(100%,14rem)]"
         />
       </div>
-      <div>
+      <div className="flex items-center justify-between gap-2">
         <Label
           htmlFor="settings-font-size"
-          className="mb-1 block text-xs font-medium"
+          className="text-xs font-medium shrink-0"
         >
-          Font Size (px)
+          Title font size (px)
         </Label>
         <Input
           id="settings-font-size"
@@ -54,9 +59,19 @@ export const CommonChartSettingsTabContent: FC<
           inputMode="numeric"
           pattern="[0-9]*"
           value={fontSizeInput}
-          placeholder="12"
+          placeholder="20"
           onChange={(e) => onFontSizeChange(e.target.value)}
+          className="w-16 tabular-nums"
         />
+      </div>
+      <div className="flex items-center justify-between gap-2">
+        <Label className="text-xs font-medium shrink-0">Title font color</Label>
+        <div className="flex items-center gap-2">
+          <ColorPicker
+            color={titleFontColor}
+            onChange={setTitleFontColor}
+          />
+        </div>
       </div>
       <div className="flex items-center justify-between">
         <Label className="mb-1 block text-xs font-medium">
@@ -65,9 +80,8 @@ export const CommonChartSettingsTabContent: FC<
         <div className="flex items-center gap-3">
           <ColorPicker
             color={backgroundColor}
-            onChange={(color) => setBackgroundColor(color)}
+            onChange={setBackgroundColor}
           />
-         
         </div>
       </div>
     </div>

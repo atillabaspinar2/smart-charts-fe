@@ -29,6 +29,8 @@ export interface PieChartSettingsPanelProps extends BaseSettingsPanelProps {
   // Common settings tab
   fontSize: number;
   setFontSize: (v: number) => void;
+  titleFontColor: string;
+  setTitleFontColor: (v: string) => void;
 }
 
 export const PieChartSettingsPanel: FC<PieChartSettingsPanelProps> = ({
@@ -48,6 +50,8 @@ export const PieChartSettingsPanel: FC<PieChartSettingsPanelProps> = ({
   setTitle,
   fontSize,
   setFontSize,
+  titleFontColor,
+  setTitleFontColor,
   backgroundColor,
   setBackgroundColor,
 }) => (
@@ -97,6 +101,8 @@ export const PieChartSettingsPanel: FC<PieChartSettingsPanelProps> = ({
           setTitle={setTitle}
           fontSizeInput={String(fontSize)}
           onFontSizeChange={(value) => setFontSize(Number(value))}
+          titleFontColor={titleFontColor}
+          setTitleFontColor={setTitleFontColor}
           backgroundColor={backgroundColor}
           setBackgroundColor={setBackgroundColor}
         />

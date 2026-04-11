@@ -9,7 +9,7 @@ import { LineChartStylesTabContent } from "./LineChartStylesTabContent";
 import { CommonLegendTabContent } from "./CommonLegendTabContent";
 import { CommonChartSettingsTabContent } from "./CommonChartSettingsTabContent";
 import type { DataOrientation } from "../../utils/spreadsheetImport";
-import type { LineSymbol } from "../chartTypes";
+import type { LineSymbol, SketchTypographyPresetId } from "../chartTypes";
 
 export interface LineChartSettingsPanelProps {
   activeChartAccordionItem: string;
@@ -34,6 +34,8 @@ export interface LineChartSettingsPanelProps {
   setLineSketchEnabled?: (value: boolean) => void;
   lineSketchIntensity?: number;
   setLineSketchIntensity?: (value: number) => void;
+  sketchTypographyPreset?: SketchTypographyPresetId;
+  setSketchTypographyPreset?: (value: SketchTypographyPresetId) => void;
   // Legend tab
   showLegend: boolean;
   setShowLegend: (v: boolean) => void;
@@ -48,6 +50,8 @@ export interface LineChartSettingsPanelProps {
   setTitle: (v: string) => void;
   fontSize: number;
   setFontSize: (v: number) => void;
+  titleFontColor: string;
+  setTitleFontColor: (v: string) => void;
   backgroundColor: string;
   setBackgroundColor: (v: string) => void;
 }
@@ -75,6 +79,8 @@ export const LineChartSettingsPanel: FC<LineChartSettingsPanelProps> = ({
   setLineSketchEnabled,
   lineSketchIntensity,
   setLineSketchIntensity,
+  sketchTypographyPreset,
+  setSketchTypographyPreset,
   showLegend,
   setShowLegend,
   legendTop,
@@ -87,6 +93,8 @@ export const LineChartSettingsPanel: FC<LineChartSettingsPanelProps> = ({
   setTitle,
   fontSize,
   setFontSize,
+  titleFontColor,
+  setTitleFontColor,
   backgroundColor,
   setBackgroundColor,
 }) => (
@@ -123,6 +131,8 @@ export const LineChartSettingsPanel: FC<LineChartSettingsPanelProps> = ({
           setLineSketchEnabled={setLineSketchEnabled}
           lineSketchIntensity={lineSketchIntensity}
           setLineSketchIntensity={setLineSketchIntensity}
+          sketchTypographyPreset={sketchTypographyPreset}
+          setSketchTypographyPreset={setSketchTypographyPreset}
         />
       </AccordionContent>
     </AccordionItem>
@@ -154,6 +164,8 @@ export const LineChartSettingsPanel: FC<LineChartSettingsPanelProps> = ({
           setTitle={setTitle}
           fontSizeInput={String(fontSize)}
           onFontSizeChange={(value) => setFontSize(Number(value))}
+          titleFontColor={titleFontColor}
+          setTitleFontColor={setTitleFontColor}
           backgroundColor={backgroundColor}
           setBackgroundColor={setBackgroundColor}
         />

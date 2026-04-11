@@ -16,6 +16,8 @@ export type CanvasSettings = {
   title: string;
   fontFamily: string;
   fontSize: number;
+  /** Default for new charts; synced with chart title color when applying to all. */
+  titleFontColor: string;
 };
 
 export type AppMode = "light" | "dark" | "system";
@@ -26,7 +28,8 @@ const defaultCanvasSettings: CanvasSettings = {
   backgroundColor: "#ffffff",
   title: "Workspace",
   fontFamily: "Noto Sans",
-  fontSize: 12,
+  fontSize: 20,
+  titleFontColor: "#333333",
 };
 
 const defaultAppTheme = "theme-red";
