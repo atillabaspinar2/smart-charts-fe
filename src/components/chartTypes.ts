@@ -17,6 +17,16 @@ export interface ChartItemData {
   };
 }
 
+/** Google Fonts–loaded stacks; see `SKETCH_TYPOGRAPHY_PRESETS` in sketchChartTypography.ts */
+export type SketchTypographyPresetId =
+  | "caveat"
+  | "kalam"
+  | "patrick-hand"
+  | "architects-daughter"
+  | "indie-flower"
+  | "comic-neue"
+  | "permanent-marker";
+
 // Base settings shared by all chart types
 export interface ChartSettingsBase {
   animationDuration: number;
@@ -24,10 +34,14 @@ export interface ChartSettingsBase {
   title: string;
   fontFamily: string;
   fontSize: number;
+  /** Title text color (Common settings). */
+  titleFontColor: string;
   showLegend: boolean;
   legendTop: "top" | "bottom";
   legendLeft: "left" | "right" | "center";
   legendOrient: "horizontal" | "vertical";
+  /** Hand-drawn text when sketch mode is on (line/bar/pie/map sketch). */
+  sketchTypographyPreset?: SketchTypographyPresetId;
 }
 
 export type LineSymbol =
@@ -170,11 +184,13 @@ export const defaultLineChartSettings: LineChartSettings = {
   backgroundColor: "#ffffff",
   title: "",
   fontFamily: "Inter, sans-serif",
-  fontSize: 14,
+  fontSize: 20,
+  titleFontColor: "#333333",
   showLegend: true,
   legendTop: "bottom",
   legendLeft: "center",
   legendOrient: "horizontal",
+  sketchTypographyPreset: "indie-flower",
   lineShowLabels: false,
   lineSketchEnabled: false,
   lineSketchIntensity: 50,
@@ -191,11 +207,13 @@ export const defaultBarChartSettings: BarChartSettings = {
   backgroundColor: "#ffffff",
   title: "",
   fontFamily: "Inter, sans-serif",
-  fontSize: 14,
+  fontSize: 20,
+  titleFontColor: "#333333",
   showLegend: true,
   legendTop: "bottom",
   legendLeft: "center",
   legendOrient: "horizontal",
+  sketchTypographyPreset: "indie-flower",
   barShowBackground: false,
   barBackgroundColor: "#eee",
   barAxisOrientation: "vertical",
@@ -209,11 +227,13 @@ export const defaultPieChartSettings: PieChartSettings = {
   backgroundColor: "#ffffff",
   title: "",
   fontFamily: "Inter, sans-serif",
-  fontSize: 14,
+  fontSize: 20,
+  titleFontColor: "#333333",
   showLegend: true,
   legendTop: "bottom",
   legendLeft: "center",
   legendOrient: "horizontal",
+  sketchTypographyPreset: "indie-flower",
   chartType: "pie",
   innerRadius: 40,
   outerRadius: 70,
@@ -238,6 +258,8 @@ export const defaultMapChartSettings: MapChartSettings = {
   title: "",
   fontFamily: "",
   fontSize: 0,
+  titleFontColor: "#333333",
+  sketchTypographyPreset: "indie-flower",
   showLegend: false,
   legendTop: "bottom",
   legendLeft: "left",

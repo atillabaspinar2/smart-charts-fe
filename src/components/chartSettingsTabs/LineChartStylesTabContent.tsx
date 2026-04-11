@@ -1,5 +1,4 @@
 import type { FC } from "react";
-import { SKETCH_ANIMATION_HINT } from "@/components/chartSettingsTabs/sketchAnimationHint";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -11,7 +10,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { DataOrientation } from "@/utils/spreadsheetImport";
-import type { LineSymbol } from "../chartTypes";
+import type { LineSymbol, SketchTypographyPresetId } from "../chartTypes";
+import { SketchChartOptionsSection } from "@/components/chartSettingsTabs/SketchChartOptionsSection";
 
 const SYMBOL_OPTIONS: { value: LineSymbol; label: string }[] = [
   { value: "circle", label: "Circle" },
@@ -45,6 +45,8 @@ export interface LineChartStylesTabContentProps {
   setLineSketchEnabled?: (value: boolean) => void;
   lineSketchIntensity?: number;
   setLineSketchIntensity?: (value: number) => void;
+  sketchTypographyPreset?: SketchTypographyPresetId;
+  setSketchTypographyPreset?: (value: SketchTypographyPresetId) => void;
 }
 
 export const LineChartStylesTabContent: FC<LineChartStylesTabContentProps> = ({
@@ -68,6 +70,8 @@ export const LineChartStylesTabContent: FC<LineChartStylesTabContentProps> = ({
   setLineSketchEnabled,
   lineSketchIntensity = 50,
   setLineSketchIntensity,
+  sketchTypographyPreset = "indie-flower",
+  setSketchTypographyPreset,
 }) => {
   const intensityValue = Number.isFinite(lineSketchIntensity)
     ? Math.min(100, Math.max(0, lineSketchIntensity))
@@ -75,39 +79,18 @@ export const LineChartStylesTabContent: FC<LineChartStylesTabContentProps> = ({
 
   return (
     <div className="space-y-4 pb-3">
-      {setLineSketchEnabled && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs">Sketchy</Label>
-            <Switch
-              checked={lineSketchEnabled}
-              onCheckedChange={setLineSketchEnabled}
-            />
-          </div>
-          {lineSketchEnabled && setLineSketchIntensity && (
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs">Sketch intensity</Label>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {intensityValue}
-                </span>
-              </div>
-              <Slider
-                min={0}
-                max={100}
-                step={1}
-                value={[intensityValue]}
-                onValueChange={([v]) => setLineSketchIntensity(v)}
-              />
-            </div>
-          )}
-          {lineSketchEnabled && (
-            <p className="text-[11px] text-muted-foreground leading-snug">
-              {SKETCH_ANIMATION_HINT}
-            </p>
-          )}
-        </div>
-      )}
+      {setLineSketchEnabled &&
+        setLineSketchIntensity &&
+        setSketchTypographyPreset && (
+          <SketchChartOptionsSection
+            sketchEnabled={lineSketchEnabled}
+            onSketchEnabledChange={setLineSketchEnabled}
+            sketchIntensity={intensityValue}
+            onSketchIntensityChange={setLineSketchIntensity}
+            sketchTypographyPreset={sketchTypographyPreset}
+            onSketchTypographyPresetChange={setSketchTypographyPreset}
+          />
+        )}
 
       {dataOrientation && setDataOrientation && (
         <div className="flex items-center justify-between">

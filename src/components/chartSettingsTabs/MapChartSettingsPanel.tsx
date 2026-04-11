@@ -16,6 +16,8 @@ export interface MapChartSettingsPanelProps {
   setTitle: (v: string) => void;
   fontSize: number;
   setFontSize: (v: number) => void;
+  titleFontColor: string;
+  setTitleFontColor: (v: string) => void;
   backgroundColor: string;
   setBackgroundColor: (v: string) => void;
   mapSettings: MapChartSettings;
@@ -29,6 +31,8 @@ const MapChartSettingsPanel: React.FC<MapChartSettingsPanelProps> = ({
   setTitle,
   fontSize,
   setFontSize,
+  titleFontColor,
+  setTitleFontColor,
   backgroundColor,
   setBackgroundColor,
   mapSettings,
@@ -65,6 +69,8 @@ const MapChartSettingsPanel: React.FC<MapChartSettingsPanelProps> = ({
             setTitle={setTitle}
             fontSizeInput={String(fontSize)}
             onFontSizeChange={(v) => setFontSize(Number(v))}
+            titleFontColor={titleFontColor}
+            setTitleFontColor={setTitleFontColor}
             backgroundColor={backgroundColor}
             setBackgroundColor={setBackgroundColor}
           />

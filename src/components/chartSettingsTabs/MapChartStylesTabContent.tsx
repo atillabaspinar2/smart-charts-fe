@@ -1,7 +1,10 @@
 import { type FC } from "react";
 
-import { SKETCH_ANIMATION_HINT } from "@/components/chartSettingsTabs/sketchAnimationHint";
-import type { MapChartSettings } from "@/components/chartTypes";
+import type {
+  MapChartSettings,
+  SketchTypographyPresetId,
+} from "@/components/chartTypes";
+import { SketchChartOptionsSection } from "@/components/chartSettingsTabs/SketchChartOptionsSection";
 import { Label } from "../ui/label";
 import { Slider } from "../ui/slider";
 import { ColorPicker } from "../ui/colorpicker";
@@ -28,42 +31,25 @@ export const MapChartStylesTabContent: FC<MapChartStylesTabContentProps> = ({
   const mapIntensity = Number.isFinite(mapSettings.mapSketchIntensity ?? NaN)
     ? Math.min(100, Math.max(0, mapSettings.mapSketchIntensity ?? 50))
     : 50;
+  const typoPreset = (mapSettings.sketchTypographyPreset ??
+    "indie-flower") as SketchTypographyPresetId;
 
   return (
     <div className="space-y-4 pb-3">
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label className="text-xs">Sketchy</Label>
-          <Switch
-            checked={Boolean(mapSettings.mapSketchEnabled)}
-            onCheckedChange={(checked) =>
-              setMapSettings({ mapSketchEnabled: checked })
-            }
-          />
-        </div>
-        {mapSettings.mapSketchEnabled && (
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs">Sketch intensity</Label>
-              <span className="text-xs text-muted-foreground tabular-nums">
-                {mapIntensity}
-              </span>
-            </div>
-            <Slider
-              min={0}
-              max={100}
-              step={1}
-              value={[mapIntensity]}
-              onValueChange={([v]) => setMapSettings({ mapSketchIntensity: v })}
-            />
-          </div>
-        )}
-        {mapSettings.mapSketchEnabled && (
-          <p className="text-[11px] text-muted-foreground leading-snug">
-            {SKETCH_ANIMATION_HINT}
-          </p>
-        )}
-      </div>
+      <SketchChartOptionsSection
+        sketchEnabled={Boolean(mapSettings.mapSketchEnabled)}
+        onSketchEnabledChange={(checked) =>
+          setMapSettings({ mapSketchEnabled: checked })
+        }
+        sketchIntensity={mapIntensity}
+        onSketchIntensityChange={(v) =>
+          setMapSettings({ mapSketchIntensity: v })
+        }
+        sketchTypographyPreset={typoPreset}
+        onSketchTypographyPresetChange={(v) =>
+          setMapSettings({ sketchTypographyPreset: v })
+        }
+      />
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label className="text-xs">Animation speed</Label>

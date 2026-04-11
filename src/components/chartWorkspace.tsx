@@ -51,6 +51,7 @@ import {
   defaultBarChartSettings,
   defaultMapChartSettings,
   type ChartSettingsUnion,
+  type SketchTypographyPresetId,
 } from "./chartTypes";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -219,7 +220,8 @@ export const ChartWorkspace: React.FC<{
     backgroundColor: "#ffffff",
     title: "Workspace",
     fontFamily: "Noto Sans",
-    fontSize: 12,
+    fontSize: 20,
+    titleFontColor: "#333333",
   });
   const [workspaceTheme, setWorkspaceTheme] = useState<string>("");
   const didInitWorkspaceUiRef = useRef(false);
@@ -259,7 +261,8 @@ export const ChartWorkspace: React.FC<{
       a.backgroundColor === b.backgroundColor &&
       a.title === b.title &&
       a.fontFamily === b.fontFamily &&
-      a.fontSize === b.fontSize,
+      a.fontSize === b.fontSize &&
+      a.titleFontColor === b.titleFontColor,
     [],
   );
 
@@ -486,6 +489,7 @@ export const ChartWorkspace: React.FC<{
         title: templateOptions?.title?.text || "",
         fontFamily: canvasSettings.fontFamily,
         fontSize: canvasSettings.fontSize,
+        titleFontColor: canvasSettings.titleFontColor,
       };
     } else if (type === "map") {
       nextSettings = {
@@ -493,6 +497,7 @@ export const ChartWorkspace: React.FC<{
         animationDuration: templateOptions.animationDuration || 1000,
         fontFamily: canvasSettings.fontFamily,
         fontSize: canvasSettings.fontSize,
+        titleFontColor: canvasSettings.titleFontColor,
       };
     } else {
       const baseDefaults = type === "bar" ? defaultBarChartSettings : defaultLineChartSettings;
@@ -503,6 +508,7 @@ export const ChartWorkspace: React.FC<{
         title: templateOptions?.title?.text || "",
         fontFamily: canvasSettings.fontFamily,
         fontSize: canvasSettings.fontSize,
+        titleFontColor: canvasSettings.titleFontColor,
       } as LineChartSettings | BarChartSettings;
     }
 
@@ -702,13 +708,23 @@ export const ChartWorkspace: React.FC<{
     | BarChartSettings
     | PieChartSettings
     | MapChartSettings => {
+    const defaults =
+      type === "pie"
+        ? defaultPieChartSettings
+        : type === "bar"
+          ? defaultBarChartSettings
+          : type === "map"
+            ? defaultMapChartSettings
+            : defaultLineChartSettings;
     const settings = chartSettingsMap[instanceId];
-    if (settings) return settings;
-    if (type === "pie") return defaultPieChartSettings;
-    if (type === "bar") return defaultBarChartSettings;
-    if (type === "line") return defaultLineChartSettings;
-    if (type === "map") return defaultMapChartSettings;
-    return defaultLineChartSettings; // fallback
+    if (settings) {
+      return { ...defaults, ...settings } as
+        | LineChartSettings
+        | BarChartSettings
+        | PieChartSettings
+        | MapChartSettings;
+    }
+    return defaults;
   };
 
   const getPieChartSettings = (instanceId: string): PieChartSettings => {
@@ -2122,6 +2138,14 @@ export const ChartWorkspace: React.FC<{
                 fontSize: value,
               })
             }
+            titleFontColor={
+              getChartSettings(selectedChartInstanceId, selectedChart?.type).titleFontColor
+            }
+            setTitleFontColor={(value) =>
+              updateChartSettings(selectedChartInstanceId, {
+                titleFontColor: value,
+              })
+            }
             mediaType={mediaType}
             setMediaType={setMediaType}
             backgroundColor={
@@ -2313,6 +2337,22 @@ export const ChartWorkspace: React.FC<{
                 lineSketchIntensity: Math.min(100, Math.max(0, value)),
               })
             }
+            sketchTypographyPreset={(() => {
+              const settings = getChartSettings(
+                selectedChartInstanceId,
+                selectedChart?.type,
+              );
+              const p =
+                "sketchTypographyPreset" in settings
+                  ? settings.sketchTypographyPreset
+                  : undefined;
+              return (p ?? "indie-flower") as SketchTypographyPresetId;
+            })()}
+            setSketchTypographyPreset={(value) =>
+              updateChartSettings(selectedChartInstanceId, {
+                sketchTypographyPreset: value,
+              })
+            }
             selectedChartType={
               charts.find((c) => c.instanceId === selectedChartInstanceId)?.type
             }
@@ -2366,6 +2406,23 @@ export const ChartWorkspace: React.FC<{
                 > = {};
                 Object.entries(prev).forEach(([instanceId, settings]) => {
                   next[instanceId] = { ...settings, fontSize: value };
+                });
+                return next;
+              });
+            }}
+            titleFontColor={canvasSettings.titleFontColor}
+            setTitleFontColor={(value) => {
+              setCanvasSettings((prev) => ({ ...prev, titleFontColor: value }));
+              setChartSettingsMap((prev) => {
+                const next: Record<
+                  string,
+                  | LineChartSettings
+                  | BarChartSettings
+                  | PieChartSettings
+                  | MapChartSettings
+                > = {};
+                Object.entries(prev).forEach(([instanceId, settings]) => {
+                  next[instanceId] = { ...settings, titleFontColor: value };
                 });
                 return next;
               });

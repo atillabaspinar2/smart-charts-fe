@@ -39,6 +39,12 @@ import {
   playSketchContainerEnter,
   playSketchContainerExit,
 } from "@/utils/sketchChartContainerMotion";
+import {
+  applyBodyFontSizeToEChartsOption,
+  CHART_BODY_DEFAULT_FONT_SIZE,
+  resolveTitleFontSize,
+} from "@/utils/chartTypographySizing";
+import { applySketchTypographyToEChartsOption } from "@/utils/sketchChartTypography";
 import type { JSAnimation } from "animejs";
 import { ChartContextMenu } from "./chartContextMenu";
 import { MapChart } from "./MapChart";
@@ -514,6 +520,9 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       }
     };
 
+    /** Sketch typography replaces body sizing; otherwise we apply fixed body font size (title uses common setting only). */
+    let sketchTypographyApplied = false;
+
     // For map charts, ensure option.series[0].map is set to chartData.mapName and inject style panel settings
     let chartOption = {
       ...opts,
@@ -526,7 +535,8 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         textStyle: {
           ...(opts.title?.textStyle || {}),
           fontFamily: settings.fontFamily,
-          fontSize: settings.fontSize,
+          fontSize: resolveTitleFontSize(settings.fontSize),
+          color: (settings as ChartSettingsBase).titleFontColor,
         },
       },
       textStyle: {
@@ -602,6 +612,13 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             geo,
             series: series as any,
           };
+          chartOption = applySketchTypographyToEChartsOption(
+            chartOption as Record<string, unknown>,
+            updatedMapSettings.fontFamily,
+            updatedMapSettings.sketchTypographyPreset,
+            resolveTitleFontSize(updatedMapSettings.fontSize),
+          ) as typeof chartOption;
+          sketchTypographyApplied = true;
         } else {
           chartOption = {
             mapName: chartData.mapName,
@@ -740,6 +757,13 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           min: ext.min,
           max: ext.max,
         };
+        chartOption = applySketchTypographyToEChartsOption(
+          chartOption as Record<string, unknown>,
+          settings.fontFamily,
+          settings.sketchTypographyPreset,
+          resolveTitleFontSize(settings.fontSize),
+        ) as typeof chartOption;
+        sketchTypographyApplied = true;
       } else {
         chartOption.series = chartData.series.map((series, index) => {
           const templateSeries = Array.isArray(opts.series)
@@ -761,6 +785,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
               ? {
                   show: true,
                   valueAnimation: animateOnNextMount,
+                  fontSize: CHART_BODY_DEFAULT_FONT_SIZE,
                   formatter: (params: any) =>
                     `${params.seriesName}: ${params.value ?? ""}`,
                 }
@@ -890,6 +915,13 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             max: ext.max,
           };
         }
+        chartOption = applySketchTypographyToEChartsOption(
+          chartOption as Record<string, unknown>,
+          settings.fontFamily,
+          settings.sketchTypographyPreset,
+          resolveTitleFontSize(settings.fontSize),
+        ) as typeof chartOption;
+        sketchTypographyApplied = true;
       } else {
         chartOption.series = chartData.series.map((series, index) => {
           const templateSeries = Array.isArray(opts.series)
@@ -1057,6 +1089,13 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             z: 10,
           },
         ];
+        chartOption = applySketchTypographyToEChartsOption(
+          chartOption as Record<string, unknown>,
+          pieLegend.fontFamily,
+          ps.sketchTypographyPreset,
+          resolveTitleFontSize(ps.fontSize),
+        ) as typeof chartOption;
+        sketchTypographyApplied = true;
       } else {
         chartOption.series = [
           {
@@ -1083,7 +1122,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
               label: {
                 show: ps.showLabel,
                 position: "inside",
-                fontSize: 12,
+                fontSize: CHART_BODY_DEFAULT_FONT_SIZE,
                 fontWeight: "bold",
               },
             },
@@ -1094,6 +1133,14 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
           },
         ];
       }
+    }
+
+    if (!sketchTypographyApplied) {
+      chartOption = applyBodyFontSizeToEChartsOption(
+        chartOption as Record<string, unknown>,
+        CHART_BODY_DEFAULT_FONT_SIZE,
+        settings.fontFamily,
+      ) as typeof chartOption;
     }
 
     // merge annotations into option.graphic

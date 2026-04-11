@@ -22,6 +22,9 @@ export interface BaseSettingsPanelProps {
 
 // Canvas-specific settings panel props
 export interface CanvasSettingsPanelProps extends BaseSettingsPanelProps {
+  /** When no chart is selected: default title color for new charts / sync-all. */
+  titleFontColor?: string;
+  setTitleFontColor?: (v: string) => void;
   fontFamily: string;
   setFontFamily: (v: string) => void;
   mediaType: string;
@@ -37,6 +40,8 @@ export interface CanvasSettingsPanelProps extends BaseSettingsPanelProps {
 export const CanvasSettingsPanel: FC<CanvasSettingsPanelProps> = ({
   title,
   setTitle,
+  titleFontColor,
+  setTitleFontColor,
   fontFamily,
   setFontFamily,
   backgroundColor,
@@ -82,6 +87,12 @@ export const CanvasSettingsPanel: FC<CanvasSettingsPanelProps> = ({
         </SelectContent>
       </Select>
     </div>
+    {typeof titleFontColor === "string" && setTitleFontColor && (
+      <div className="flex items-center justify-between gap-2">
+        <Label className="text-xs shrink-0">Default chart title color</Label>
+        <ColorPicker color={titleFontColor} onChange={setTitleFontColor} />
+      </div>
+    )}
     <div className="space-y-1.5 flex items-center justify-between">
       <Label className="text-xs ">Background Color</Label>
       <div className="flex items-center gap-3">

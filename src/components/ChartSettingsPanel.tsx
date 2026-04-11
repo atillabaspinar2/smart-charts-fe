@@ -20,7 +20,6 @@ import {
 import MapChartSettingsPanel, {
   type MapChartSettingsPanelProps,
 } from "./chartSettingsTabs/MapChartSettingsPanel";
-
 // Compose the main ChartSettingsPanelProps from all relevant panel/tab types
 export type ChartSettingsPanelProps = {
   animationDuration: number;
@@ -92,12 +91,16 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
     setLineSketchEnabled = () => {},
     lineSketchIntensity = 50,
     setLineSketchIntensity = () => {},
+    sketchTypographyPreset = "indie-flower",
+    setSketchTypographyPreset = () => {},
     pieSettings,
     setPieSettings,
     mapSettings,
     setMapSettings,
     fontSize,
     setFontSize,
+    titleFontColor = "#333333",
+    setTitleFontColor = () => {},
   } = props;
 
   const [animationInput, setAnimationInput] = useState(
@@ -154,6 +157,8 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
             setTitle={setTitle ?? (() => {})}
             fontSize={fontSize}
             setFontSize={setFontSize}
+            titleFontColor={titleFontColor}
+            setTitleFontColor={setTitleFontColor}
             backgroundColor={backgroundColor ?? "#fff"}
             setBackgroundColor={setBackgroundColor ?? (() => {})}
             mapSettings={mapSettings}
@@ -186,6 +191,8 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
             setLineSketchEnabled={setLineSketchEnabled}
             lineSketchIntensity={lineSketchIntensity}
             setLineSketchIntensity={setLineSketchIntensity}
+            sketchTypographyPreset={sketchTypographyPreset}
+            setSketchTypographyPreset={setSketchTypographyPreset}
             showLegend={showLegend}
             setShowLegend={setShowLegend}
             legendTop={legendTop}
@@ -198,6 +205,8 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
             setTitle={setTitle ?? (() => {})}
             fontSize={fontSize}
             setFontSize={setFontSize}
+            titleFontColor={titleFontColor}
+            setTitleFontColor={setTitleFontColor}
             backgroundColor={backgroundColor ?? "#fff"}
             setBackgroundColor={setBackgroundColor ?? (() => {})}
           />
@@ -222,6 +231,8 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
             setBarSketchEnabled={setBarSketchEnabled}
             barSketchIntensity={barSketchIntensity}
             setBarSketchIntensity={setBarSketchIntensity}
+            sketchTypographyPreset={sketchTypographyPreset}
+            setSketchTypographyPreset={setSketchTypographyPreset}
             showLegend={showLegend}
             setShowLegend={setShowLegend}
             legendTop={legendTop}
@@ -234,6 +245,8 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
             setTitle={setTitle ?? (() => {})}
             fontSize={fontSize}
             setFontSize={setFontSize}
+            titleFontColor={titleFontColor}
+            setTitleFontColor={setTitleFontColor}
             backgroundColor={backgroundColor ?? "#fff"}
             setBackgroundColor={setBackgroundColor ?? (() => {})}
           />
@@ -260,6 +273,8 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
             setTitle={setTitle ?? (() => {})}
             fontSize={fontSize}
             setFontSize={setFontSize}
+            titleFontColor={titleFontColor}
+            setTitleFontColor={setTitleFontColor}
             backgroundColor={backgroundColor ?? "#fff"}
             setBackgroundColor={setBackgroundColor ?? (() => {})}
           />
@@ -269,6 +284,8 @@ export const ChartSettingsPanel: FC<ChartSettingsPanelProps> = (props) => {
           <CanvasSettingsPanel
             title={title ?? ""}
             setTitle={setTitle ?? (() => {})}
+            titleFontColor={titleFontColor}
+            setTitleFontColor={setTitleFontColor}
             fontFamily={fontFamily ?? "Noto Sans"}
             setFontFamily={setFontFamily ?? (() => {})}
             backgroundColor={backgroundColor ?? "#fff"}

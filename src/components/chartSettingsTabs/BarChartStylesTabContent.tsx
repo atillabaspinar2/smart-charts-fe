@@ -1,10 +1,10 @@
 import type { FC } from "react";
-import { SKETCH_ANIMATION_HINT } from "@/components/chartSettingsTabs/sketchAnimationHint";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import type { DataOrientation } from "@/utils/spreadsheetImport";
 import { ColorPicker } from "../ui/colorpicker";
+import type { SketchTypographyPresetId } from "../chartTypes";
+import { SketchChartOptionsSection } from "@/components/chartSettingsTabs/SketchChartOptionsSection";
 
 export interface BarChartStylesTabContentProps {
   dataOrientation?: DataOrientation;
@@ -13,6 +13,8 @@ export interface BarChartStylesTabContentProps {
   setBarSketchEnabled?: (value: boolean) => void;
   barSketchIntensity?: number;
   setBarSketchIntensity?: (value: number) => void;
+  sketchTypographyPreset?: SketchTypographyPresetId;
+  setSketchTypographyPreset?: (value: SketchTypographyPresetId) => void;
   barShowBackground: boolean;
   setBarShowBackground: (value: boolean) => void;
   barBackgroundColor: string;
@@ -30,6 +32,8 @@ export const BarChartStylesTabContent: FC<BarChartStylesTabContentProps> = ({
   setBarSketchEnabled,
   barSketchIntensity = 50,
   setBarSketchIntensity,
+  sketchTypographyPreset = "indie-flower",
+  setSketchTypographyPreset,
   barShowBackground,
   setBarShowBackground,
   barBackgroundColor,
@@ -45,41 +49,20 @@ export const BarChartStylesTabContent: FC<BarChartStylesTabContentProps> = ({
 
   return (
     <div className="space-y-4 pb-3">
-      {setBarSketchEnabled && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs">Sketchy</Label>
-            <Switch
-              checked={barSketchEnabled}
-              onCheckedChange={setBarSketchEnabled}
-            />
-          </div>
-          {barSketchEnabled && setBarSketchIntensity && (
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs">Sketch intensity</Label>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {barIntensity}
-                </span>
-              </div>
-              <Slider
-                min={0}
-                max={100}
-                step={1}
-                value={[barIntensity]}
-                onValueChange={([v]) => setBarSketchIntensity(v)}
-              />
-            </div>
-          )}
-          {barSketchEnabled && (
-            <p className="text-[11px] text-muted-foreground leading-snug">
-              {SKETCH_ANIMATION_HINT}
-            </p>
-          )}
-        </div>
-      )}
+      {setBarSketchEnabled &&
+        setBarSketchIntensity &&
+        setSketchTypographyPreset && (
+          <SketchChartOptionsSection
+            sketchEnabled={barSketchEnabled}
+            onSketchEnabledChange={setBarSketchEnabled}
+            sketchIntensity={barIntensity}
+            onSketchIntensityChange={setBarSketchIntensity}
+            sketchTypographyPreset={sketchTypographyPreset}
+            onSketchTypographyPresetChange={setSketchTypographyPreset}
+          />
+        )}
 
-            {dataOrientation && setDataOrientation && (
+      {dataOrientation && setDataOrientation && (
         <div className="flex items-center justify-between">
           <Label className="text-xs">Columns as Series</Label>
           <Switch
@@ -145,8 +128,6 @@ export const BarChartStylesTabContent: FC<BarChartStylesTabContentProps> = ({
           onCheckedChange={setBarStackEnabled}
         />
       </div>
-
-
     </div>
   );
 };
