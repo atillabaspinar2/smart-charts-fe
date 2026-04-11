@@ -7,10 +7,20 @@ import type {
 
 export type ChartData = LineChartData | BarChartData | PieChartData | MapChartData;
 
+/** RFC 4180 field quoting (handles commas, quotes, newlines, Unicode). */
+function csvEscapeField(value: string): string {
+  const s = String(value ?? "");
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
 // ── Low-level helpers ────────────────────────────────────────────────────────
 
 function downloadCSVFile(csv: string, filename: string) {
-  const blob = new Blob([csv], { type: "text/csv" });
+  // UTF-8 BOM helps Excel and other tools recognize encoding on Windows.
+  const blob = new Blob(["\uFEFF" + csv], {
+    type: "text/csv;charset=utf-8",
+  });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -24,19 +34,21 @@ function downloadCSVFile(csv: string, filename: string) {
 // ── Per-type converters ──────────────────────────────────────────────────────
 
 function mapChartDataToCSV(data: MapChartData): string {
-  const rows = ["Region,Value"];
+  // Row 1 col1 must be map id (see buildChartDataFromSheetRows); col2 is value column label.
+  const mapId = data.mapName || "usa";
+  const rows = [`${csvEscapeField(mapId)},Value`];
   (data.series?.data || []).forEach((region) => {
-    rows.push(`"${region.name}",${region.value}`);
+    rows.push(`${csvEscapeField(region.name)},${region.value}`);
   });
   return rows.join("\n");
 }
 
 function lineOrBarChartDataToCSV(data: LineChartData | BarChartData): string {
-  const seriesNames = data.series.map((s) => `"${s.name}"`).join(",");
+  const seriesNames = data.series.map((s) => csvEscapeField(s.name)).join(",");
   const header = `Category,${seriesNames}`;
   const dataRows = data.categories.map((cat, catIdx) => {
     const values = data.series.map((s) => s.values[catIdx] ?? "").join(",");
-    return `"${cat}",${values}`;
+    return `${csvEscapeField(cat)},${values}`;
   });
   return [header, ...dataRows].join("\n");
 }
@@ -44,7 +56,7 @@ function lineOrBarChartDataToCSV(data: LineChartData | BarChartData): string {
 function pieChartDataToCSV(data: PieChartData): string {
   const rows = ["Name,Value"];
   data.data.forEach((point) => {
-    rows.push(`"${point.name}",${point.value}`);
+    rows.push(`${csvEscapeField(point.name)},${point.value}`);
   });
   return rows.join("\n");
 }

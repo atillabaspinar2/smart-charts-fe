@@ -246,7 +246,7 @@ export const defaultPieChartSettings: PieChartSettings = {
 };
 
 export const defaultMapChartSettings: MapChartSettings = {
-  mapName: "countries",
+  mapName: "usa",
   regionColor: "#c23531",
   animationDelayUpdateValue: 20,
   showLabel: false,

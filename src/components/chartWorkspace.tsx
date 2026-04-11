@@ -597,7 +597,7 @@ export const ChartWorkspace: React.FC<{
     }
 
     if (type === "map") {
-      const mapName = "countries";
+      const mapName = "usa";
       const nextData: MapChartData & {
         series: { data: { name: string; value: number }[] };
       } = {
@@ -608,11 +608,13 @@ export const ChartWorkspace: React.FC<{
 
       commitChartData(instanceId, nextData);
 
-      // Fill region rows for the data panel (same as changing map in the panel).
+      // Fill region rows (population defaults from assets/mapPopulation when available).
       void (async () => {
         try {
-          const { getMapData } = await import("./mapChartOptions");
-          const regions = await getMapData(mapName);
+          const { getMapDataWithPopulationDefaults } = await import(
+            "./mapChartOptions"
+          );
+          const regions = await getMapDataWithPopulationDefaults(mapName);
           if (regions.length === 0) return;
           commitChartData(instanceId, {
             type: "map",
@@ -1539,7 +1541,7 @@ export const ChartWorkspace: React.FC<{
           const mapSettings = chartSettingsMap[selected.instanceId] as
             | MapChartSettings
             | undefined;
-          mapName = mapSettings?.mapName || "countries";
+          mapName = mapSettings?.mapName || "usa";
         }
         nextData = buildChartDataFromSheetRows(
           rows,
@@ -1779,18 +1781,28 @@ export const ChartWorkspace: React.FC<{
     </div>
   );
 
-  // List of available maps (from assets/maps)
+  // Map ids match `src/assets/maps/<id>.geo.json` (Highcharts mapdata / GeoJSON).
   const availableMaps: Record<string, string>[] = [
-    { name: "Iceland", value: "iceland" },
-    { name: "USA", value: "usa" },
-    { name: "Turkiye", value: "turkiye" },
-    { name: "Africa", value: "africa" },
-    // { name: "Continents", value: "contitents" },
+    { name: "United States", value: "usa" },
+    { name: "World (low resolution)", value: "world-lowres" },
+    { name: "Continents", value: "continents" },
     { name: "Countries", value: "countries" },
-    // { name: "Russia", value: "russia" },
+    { name: "Africa", value: "africa" },
     { name: "Europe", value: "europe" },
     { name: "European Union", value: "european-union" },
-    // { name: "South America", value: "southameriaca" },
+    { name: "South America", value: "southamerica" },
+    { name: "China", value: "cn-all" },
+    { name: "France (mainland)", value: "fr-all-mainland" },
+    { name: "Germany", value: "germany" },
+    { name: "Germany (admin)", value: "de-all" },
+    { name: "Spain", value: "es-all" },
+    { name: "United Kingdom", value: "gb-all" },
+    { name: "Netherlands", value: "nl-all" },
+    { name: "Russia", value: "ru-all" },
+    { name: "Iran", value: "ir-all" },
+    { name: "Iceland", value: "iceland" },
+    { name: "Türkiye", value: "turkiye" },
+    { name: "United States (small)", value: "us-small" },
   ];
 
   const handleMapNameChange = async (mapName: string) => {
@@ -1802,14 +1814,19 @@ export const ChartWorkspace: React.FC<{
       (chartDataMap[selectedChartInstanceId] as MapChartData) ||
       (chartEntities?.[selectedChartInstanceId]?.chartData as MapChartData | undefined);
     if (current && current.mapName !== mapName) {
-      // Dynamically import getMapData
-      const { getMapData } = await import("./mapChartOptions");
+      const { getMapData, loadMapPopulationDefaults } = await import(
+        "./mapChartOptions"
+      );
       const regions = await getMapData(mapName);
-      // Optionally, preserve values for matching regions
+      const populationDefaults = await loadMapPopulationDefaults(mapName);
       const prevData = current.series?.data || [];
       const mergedRegions = regions.map((region) => {
         const prev = prevData.find((r) => r.name === region.name);
-        return prev ? { ...region, value: prev.value } : region;
+        if (prev) return { ...region, value: prev.value };
+        return {
+          ...region,
+          value: populationDefaults[region.name] ?? 0,
+        };
       });
       updateChartDataDraft(selectedChartInstanceId, {
         ...current,
