@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { exportChartDataToCSV } from "../utils/spreadsheetExport";
+import { drawExportWatermark } from "@/utils/videoWatermark";
 import debounce from "lodash/debounce";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowUp01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
@@ -1241,6 +1242,7 @@ export const ChartWorkspace: React.FC<{
           snapshotCanvas.width,
           snapshotCanvas.height,
         );
+        drawExportWatermark(ctx, snapshotCanvas.width, snapshotCanvas.height);
       };
 
       const startedAt = performance.now();
@@ -1311,6 +1313,10 @@ export const ChartWorkspace: React.FC<{
     const snapshotCanvas = buildCanvasSnapshot();
     if (!snapshotCanvas) return;
 
+    const ctx = snapshotCanvas.getContext("2d");
+    if (ctx) {
+      drawExportWatermark(ctx, snapshotCanvas.width, snapshotCanvas.height);
+    }
     const url = snapshotCanvas.toDataURL("image/png");
     const link = document.createElement("a");
     link.href = url;
