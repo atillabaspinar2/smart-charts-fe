@@ -533,6 +533,12 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
     /** Sketch typography replaces body sizing; otherwise we apply fixed body font size (title uses common setting only). */
     let sketchTypographyApplied = false;
 
+    // Map charts used to omit title in initializeChartSettings; fall back to template text like defaultMapOptions.
+    const titleText =
+      type === "map" && !String(settings.title ?? "").trim()
+        ? String(opts.title?.text ?? "")
+        : settings.title;
+
     // For map charts, ensure option.series[0].map is set to chartData.mapName and inject style panel settings
     let chartOption = {
       ...opts,
@@ -541,7 +547,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
       animationDuration: undefined,
       title: {
         ...(opts.title || {}),
-        text: settings.title,
+        text: titleText,
         textStyle: {
           ...(opts.title?.textStyle || {}),
           fontFamily: settings.fontFamily,

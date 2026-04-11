@@ -496,6 +496,7 @@ export const ChartWorkspace: React.FC<{
       nextSettings = {
         ...defaultMapChartSettings,
         animationDuration: templateOptions.animationDuration || 1000,
+        title: templateOptions?.title?.text || "",
         fontFamily: canvasSettings.fontFamily,
         fontSize: canvasSettings.fontSize,
         titleFontColor: canvasSettings.titleFontColor,
