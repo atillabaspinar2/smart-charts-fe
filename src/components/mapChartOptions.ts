@@ -1,14 +1,21 @@
 import * as echarts from "echarts";
 
-// Helper to extract region names from geoJson
+/** Default map: `usa` is lighter than world/countries GeoJSON for first paint. */
+export const DEFAULT_MAP_NAME = "usa";
+
+// Helper to extract region names from geoJson (Highcharts mapdata uses `name`; fallback `hc-key`)
 export function getRegionsFromGeoJson(
   geoJson: any,
 ): { name: string; value: number }[] {
   if (!geoJson || !geoJson.features) return [];
-  return geoJson.features.map((feature: any) => ({
-    name: feature.properties.name,
-    value: 0,
-  }));
+  return geoJson.features.map((feature: any) => {
+    const p = feature.properties ?? {};
+    const name =
+      (typeof p.name === "string" && p.name.trim()) ||
+      (typeof p["hc-key"] === "string" && p["hc-key"]) ||
+      (feature.id != null ? String(feature.id) : "");
+    return { name, value: 0 };
+  });
 }
 
 export const getMapData = async (
@@ -27,6 +34,34 @@ export const getMapData = async (
     return [];
   }
 };
+
+/**
+ * Optional per-map defaults in `src/assets/mapPopulation/<mapName>.json`:
+ * `{ "<region name from geo>": populationNumber }`. Keys must match `properties.name` from the geo file.
+ */
+export async function loadMapPopulationDefaults(
+  mapName: string,
+): Promise<Record<string, number>> {
+  try {
+    const mod = await import(`../assets/mapPopulation/${mapName}.json`);
+    return (mod.default ?? mod) as Record<string, number>;
+  } catch {
+    return {};
+  }
+}
+
+/** Region list with values from `mapPopulation` file when present, else 0. */
+export async function getMapDataWithPopulationDefaults(
+  mapName: string,
+): Promise<{ name: string; value: number }[]> {
+  const regions = await getMapData(mapName);
+  const defaults = await loadMapPopulationDefaults(mapName);
+  if (Object.keys(defaults).length === 0) return regions;
+  return regions.map((r) => ({
+    name: r.name,
+    value: defaults[r.name] ?? 0,
+  }));
+}
 
 export const colorRanges: { [key: string]: string[] } = {
   Blue: ["#e0f2fe", "#0369a1"],
@@ -70,12 +105,15 @@ export function formatMapGeoLabelText(
 }
 
 export const defaultMapOptions = (mapName?: string) => {
-  // Default to 'countries' if not provided
-  const effectiveMapName = mapName || "countries";
+  const effectiveMapName = mapName || DEFAULT_MAP_NAME;
+  const mapTitle =
+    effectiveMapName === "usa"
+      ? "USA"
+      : effectiveMapName.charAt(0).toUpperCase() + effectiveMapName.slice(1);
 
   return {
     title: {
-      text: `${effectiveMapName.charAt(0).toUpperCase() + effectiveMapName.slice(1) || "Map"} Map`,
+      text: `${mapTitle || "Map"} Map`,
       left: "center",
     },
     tooltip: {
@@ -95,7 +133,7 @@ export const defaultMapOptions = (mapName?: string) => {
     series: [
       {
         // geoIndex: 0,
-        name: `${effectiveMapName.charAt(0).toUpperCase() + effectiveMapName.slice(1)} Map`,
+        name: `${mapTitle} Map`,
         type: "map",
         map: effectiveMapName,
         // Disable roam/pan so users can't accidentally drag the map (center moves)
