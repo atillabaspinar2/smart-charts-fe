@@ -15,11 +15,12 @@ export function resolveLineSketchIntensity(s: {
   return 50;
 }
 
-/** Shared 0–100 sketch intensity for line, bar, or pie chart settings. */
+/** Shared 0–100 sketch intensity for line, bar, pie, or map chart settings. */
 export function resolveSketchIntensity(s: {
   lineSketchIntensity?: number;
   barSketchIntensity?: number;
   pieSketchIntensity?: number;
+  mapSketchIntensity?: number;
   lineSketchRoughness?: number;
 }): number {
   if (typeof s.lineSketchIntensity === "number") {
@@ -31,9 +32,21 @@ export function resolveSketchIntensity(s: {
   if (typeof s.pieSketchIntensity === "number") {
     return Math.min(100, Math.max(0, s.pieSketchIntensity));
   }
+  if (typeof s.mapSketchIntensity === "number") {
+    return Math.min(100, Math.max(0, s.mapSketchIntensity));
+  }
   return resolveLineSketchIntensity({
     lineSketchRoughness: s.lineSketchRoughness,
   });
+}
+
+export function resolveMapSketchIntensity(s: {
+  mapSketchIntensity?: number;
+}): number {
+  if (typeof s.mapSketchIntensity === "number") {
+    return Math.min(100, Math.max(0, s.mapSketchIntensity));
+  }
+  return 50;
 }
 
 /** 0 = subtle, 100 = strongest sketch (roughness + bowing + stroke width). */

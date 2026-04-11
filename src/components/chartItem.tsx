@@ -25,10 +25,12 @@ import {
   buildRoughPieCustomSeries,
   getRoughBarValueAxisExtent,
 } from "@/utils/roughBarPieSeries";
+import { buildRoughMapSketchLayers } from "@/utils/roughMapSeries";
 import {
   buildRoughLineCustomSeries,
   getRoughLineYAxisExtent,
   resolveLineSketchIntensity,
+  resolveMapSketchIntensity,
   resolveSketchIntensity,
   roughSeedFromInstanceId,
 } from "@/utils/roughLineSeries";
@@ -40,7 +42,7 @@ import {
 import type { JSAnimation } from "animejs";
 import { ChartContextMenu } from "./chartContextMenu";
 import { MapChart } from "./MapChart";
-import { colorRanges } from "./mapChartOptions";
+import { colorRanges, mapSeriesLabelFormatter } from "./mapChartOptions";
 import { useAnnotations } from "@/hooks/useAnnotation";
 import type { AnyAnnotation } from "@/hooks/useAnnotation";
 import { AnnotationStylePanel } from "@/components/annotations/AnnotationStylePanel";
@@ -141,8 +143,16 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         );
       })();
 
+    const isRoughMapSketch =
+      type === "map" &&
+      chartData?.type === "map" &&
+      Boolean((settings as MapChartSettings).mapSketchEnabled);
+
     const isSketchMotionChart =
-      isRoughLineSketch || isRoughBarSketch || isRoughPieSketch;
+      isRoughLineSketch ||
+      isRoughBarSketch ||
+      isRoughPieSketch ||
+      isRoughMapSketch;
 
     /** Remount ECharts when pie sketch vs non-sketch layout diverges (avoids merged `series` + `grid` leftovers). */
     const pieEchartsRemountKey =
@@ -155,6 +165,13 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
               ps.roseType === false;
             return sketchRoughPie ? "sk" : "std";
           })()
+        : "";
+
+    const mapEchartsRemountKey =
+      type === "map" && chartData?.type === "map"
+        ? Boolean((settings as MapChartSettings).mapSketchEnabled)
+          ? "sk"
+          : "std"
         : "";
 
     const containerRef = useRef<HTMLDivElement>(null);
@@ -534,37 +551,93 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
             : (updatedMapSettings?.animationDelayUpdateValue || 20) * dataLength;
         const perItemDelayMs = clipDuration / dataLength;
 
-        chartOption = {
-          mapName: chartData.mapName,
-          ...chartOption,
-          visualMap: {
-            ...chartOption.visualMap,
-            inRange: {
-              color:
-                colorRanges[
-                  updatedMapSettings.visualMapColorRange || "Indigo"
-                ] || colorRanges.Indigo,
-            },
-          },
-          series: [
-            {
-              ...chartOption.series[0],
-              map: chartData.mapName,
-              animationDelayUpdate: (idx: number) => idx * perItemDelayMs,
+        const rangeColors =
+          colorRanges[updatedMapSettings.visualMapColorRange || "Indigo"] ||
+          colorRanges.Indigo;
 
-              label: {
-                show: updatedMapSettings.showLabel,
-                color:
-                  updatedMapSettings.labelFontColor ||
-                  chartOption.series[0].label?.color,
-                fontSize:
-                  updatedMapSettings.labelFontSize ||
-                  chartOption.series[0].label?.fontSize,
-              },
-              data: chartData.series.data,
+        const mapRows = chartData.series.data;
+        const minVal =
+          mapRows.length > 0
+            ? Math.min(...mapRows.map((d) => d.value))
+            : 0;
+        const maxVal =
+          mapRows.length > 0
+            ? Math.max(...mapRows.map((d) => d.value))
+            : 1000;
+
+        if (updatedMapSettings.mapSketchEnabled) {
+          const { geo, series } = buildRoughMapSketchLayers({
+            mapName: chartData.mapName,
+            data: mapRows,
+            min: minVal,
+            max: maxVal,
+            colors: [
+              rangeColors[0] ?? "#dbeafe",
+              rangeColors[1] ?? "#1e40af",
+            ],
+            intensity: resolveMapSketchIntensity(updatedMapSettings),
+            roughSeed: roughSeedFromInstanceId(data.instanceId),
+            borderColor: "#4B5563",
+            showLabel: Boolean(updatedMapSettings.showLabel),
+            showMapValues: Boolean(updatedMapSettings.showMapValues),
+            labelColor: updatedMapSettings.labelFontColor || "#000",
+            labelFontSize: updatedMapSettings.labelFontSize || 10,
+            aspectScale:
+              typeof chartOption.aspectScale === "number"
+                ? chartOption.aspectScale
+                : 1,
+          });
+
+          chartOption = {
+            mapName: chartData.mapName,
+            ...chartOption,
+            visualMap: {
+              ...chartOption.visualMap,
+              min: minVal,
+              max: maxVal,
+              dimension: "value",
+              seriesIndex: 0,
+              inRange: { color: rangeColors },
             },
-          ],
-        };
+            geo,
+            series: series as any,
+          };
+        } else {
+          chartOption = {
+            mapName: chartData.mapName,
+            ...chartOption,
+            visualMap: {
+              ...chartOption.visualMap,
+              inRange: {
+                color: rangeColors,
+              },
+            },
+            series: [
+              {
+                ...chartOption.series[0],
+                map: chartData.mapName,
+                animationDelayUpdate: (idx: number) => idx * perItemDelayMs,
+
+                label: {
+                  show:
+                    Boolean(updatedMapSettings.showLabel) ||
+                    Boolean(updatedMapSettings.showMapValues),
+                  color:
+                    updatedMapSettings.labelFontColor ||
+                    chartOption.series[0].label?.color,
+                  fontSize:
+                    updatedMapSettings.labelFontSize ||
+                    chartOption.series[0].label?.fontSize,
+                  formatter: mapSeriesLabelFormatter(
+                    Boolean(updatedMapSettings.showLabel),
+                    Boolean(updatedMapSettings.showMapValues),
+                  ),
+                },
+                data: chartData.series.data,
+              },
+            ],
+          };
+        }
       }
     }
 
@@ -1175,7 +1248,7 @@ export const ChartItem: React.FC<ChartItemProps> = React.memo(
         {type === "map" && chartData && chartData.type === "map" ? (
           <MapChart
             chartRef={mapChartRef}
-            keyMap={`${type}-${recordKey}-${id}-${theme || "default"}`}
+            keyMap={`${type}-${recordKey}-${id}-${theme || "default"}${mapEchartsRemountKey ? `-${mapEchartsRemountKey}` : ""}`}
             mapName={chartData.mapName}
             option={chartOption}
             seriesData={chartData.series.data || []}
