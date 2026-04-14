@@ -38,7 +38,7 @@ export const AboutDialog: React.FC<{
                 <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                   <li><strong>Line / Bar:</strong> first column is the category axis; subsequent columns are numeric series values. The first row must be headers (used as series names).</li>
                   <li><strong>Pie:</strong> two columns — <code className="bg-muted rounded px-1">name</code> and <code className="bg-muted rounded px-1">value</code>.</li>
-                  <li><strong>Map:</strong> two columns — <code className="bg-muted rounded px-1">name</code> (region/country) and <code className="bg-muted rounded px-1">value</code> (numeric).</li>
+                  <li><strong>Map:</strong> two columns — region name and numeric value. A header row is optional (you can include <code className="bg-muted rounded px-1">mapId,Value</code> in the first row when exporting from Chart Studio). Import picks the map by matching names to a built-in map.</li>
                 </ul>
                 <p className="text-muted-foreground mt-2">
                   Click the chart's context menu (⋯ button on hover) and choose <strong>Import</strong> to load your file. Invalid rows are skipped automatically. The chart title is set from the file name (without extension).

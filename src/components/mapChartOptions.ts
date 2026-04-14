@@ -3,6 +3,34 @@ import * as echarts from "echarts";
 /** Default map: `usa` is lighter than world/countries GeoJSON for first paint. */
 export const DEFAULT_MAP_NAME = "usa";
 
+/** Map ids matching `src/assets/maps/<id>.geo.json` — single source for picker + import matching. */
+export const AVAILABLE_MAP_OPTIONS: readonly { name: string; value: string }[] = [
+  { name: "United States", value: "usa" },
+  { name: "World (low resolution)", value: "world-lowres" },
+  { name: "Continents", value: "continents" },
+  { name: "Countries", value: "countries" },
+  { name: "Africa", value: "africa" },
+  { name: "Europe", value: "europe" },
+  { name: "European Union", value: "european-union" },
+  { name: "South America", value: "southamerica" },
+  { name: "China", value: "cn-all" },
+  { name: "France (mainland)", value: "fr-all-mainland" },
+  { name: "Germany", value: "germany" },
+  { name: "Germany (admin)", value: "de-all" },
+  { name: "Spain", value: "es-all" },
+  { name: "United Kingdom", value: "gb-all" },
+  { name: "Netherlands", value: "nl-all" },
+  { name: "Russia", value: "ru-all" },
+  { name: "Iran", value: "ir-all" },
+  { name: "Iceland", value: "iceland" },
+  { name: "Türkiye", value: "turkiye" },
+  { name: "United States (small)", value: "us-small" },
+] as const;
+
+export const KNOWN_MAP_IDS: readonly string[] = AVAILABLE_MAP_OPTIONS.map(
+  (o) => o.value,
+);
+
 // Helper to extract region names from geoJson (Highcharts mapdata uses `name`; fallback `hc-key`)
 export function getRegionsFromGeoJson(
   geoJson: any,

@@ -32,6 +32,8 @@ import {
   readSheetRowsFromFile,
   type DataOrientation,
 } from "../utils/spreadsheetImport";
+import { resolveMapChartImport } from "../utils/mapSpreadsheetImport";
+import { AVAILABLE_MAP_OPTIONS } from "./mapChartOptions";
 import {
   resolveLineSketchIntensity,
   resolveSketchIntensity,
@@ -1534,23 +1536,17 @@ export const ChartWorkspace: React.FC<{
 
       let nextData;
       if (selected.type === "map") {
-        // Extract map name from file name (remove extension)
-        let mapName = file.name.split(".")[0];
-        // fallback to settings if file name is empty
-        if (!mapName) {
-          const mapSettings = chartSettingsMap[selected.instanceId] as
-            | MapChartSettings
-            | undefined;
-          mapName = mapSettings?.mapName || "usa";
+        const mapSettings = chartSettingsMap[selected.instanceId] as
+          | MapChartSettings
+          | undefined;
+        const result = await resolveMapChartImport(rows, {
+          preferredMapName: mapSettings?.mapName,
+        });
+        if (!result.ok) {
+          window.alert(result.message);
+          return;
         }
-        nextData = buildChartDataFromSheetRows(
-          rows,
-          "map",
-          selected.instanceId,
-          getThemeColor,
-          undefined,
-          mapName,
-        );
+        nextData = result.data;
       } else {
         nextData = buildChartDataFromSheetRows(
           rows,
@@ -1579,7 +1575,7 @@ export const ChartWorkspace: React.FC<{
             "Could not map this file. For pie charts, expected header row + at least one data row with label in the first column and numeric value in the second column.";
         } else if (selected.type === "map") {
           message =
-            "Could not map this file. For map charts, expected header row + at least one data row with region name in the first column and numeric value in the second column.";
+            "Could not use this file for a map chart. Add at least one row with a region name in the first column and a number in the second.";
         } else {
           message =
             "Could not map this file. Expected header row + at least one data row with one x-axis column and one or more numeric series columns.";
@@ -1781,29 +1777,8 @@ export const ChartWorkspace: React.FC<{
     </div>
   );
 
-  // Map ids match `src/assets/maps/<id>.geo.json` (Highcharts mapdata / GeoJSON).
-  const availableMaps: Record<string, string>[] = [
-    { name: "United States", value: "usa" },
-    { name: "World (low resolution)", value: "world-lowres" },
-    { name: "Continents", value: "continents" },
-    { name: "Countries", value: "countries" },
-    { name: "Africa", value: "africa" },
-    { name: "Europe", value: "europe" },
-    { name: "European Union", value: "european-union" },
-    { name: "South America", value: "southamerica" },
-    { name: "China", value: "cn-all" },
-    { name: "France (mainland)", value: "fr-all-mainland" },
-    { name: "Germany", value: "germany" },
-    { name: "Germany (admin)", value: "de-all" },
-    { name: "Spain", value: "es-all" },
-    { name: "United Kingdom", value: "gb-all" },
-    { name: "Netherlands", value: "nl-all" },
-    { name: "Russia", value: "ru-all" },
-    { name: "Iran", value: "ir-all" },
-    { name: "Iceland", value: "iceland" },
-    { name: "Türkiye", value: "turkiye" },
-    { name: "United States (small)", value: "us-small" },
-  ];
+  const availableMaps: Record<string, string>[] =
+    AVAILABLE_MAP_OPTIONS as unknown as Record<string, string>[];
 
   const handleMapNameChange = async (mapName: string) => {
     // When map changes, update draft data with new regions, but do not commit until Apply is clicked

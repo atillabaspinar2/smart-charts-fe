@@ -34,7 +34,7 @@ function downloadCSVFile(csv: string, filename: string) {
 // ── Per-type converters ──────────────────────────────────────────────────────
 
 function mapChartDataToCSV(data: MapChartData): string {
-  // Row 1 col1 must be map id (see buildChartDataFromSheetRows); col2 is value column label.
+  // Row 1: map id + Value label (optional header; see mapSpreadsheetImport.parseMapImportRows).
   const mapId = data.mapName || "usa";
   const rows = [`${csvEscapeField(mapId)},Value`];
   (data.series?.data || []).forEach((region) => {
