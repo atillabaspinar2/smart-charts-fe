@@ -1,5 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { getApiBaseUrl } from "@/config/apiBaseUrl";
 
 type Cached = {
   client: Client;
@@ -8,15 +9,10 @@ type Cached = {
 
 let cached: Promise<Cached> | null = null;
 
-function getBaseUrl() {
-  const raw = (import.meta.env.VITE_API_URL as string | undefined) ?? "";
-  return raw.trim() || "http://localhost:3000";
-}
-
 export async function getMcpClient(): Promise<Cached> {
   if (!cached) {
     cached = (async () => {
-      const baseUrl = getBaseUrl();
+      const baseUrl = getApiBaseUrl();
       const transport = new StreamableHTTPClientTransport(
         new URL("/mcp", baseUrl),
       );
