@@ -15,6 +15,7 @@ Opening the app shows a **landing page** (features, demo videos, tech credits) w
 - **Sketch style (optional)** — For line, bar, and normal pie charts, enable **Sketchy** in the Styles tab for a hand-drawn look and adjust **Sketch intensity**. Playback on the animation timeline uses a different motion than the default chart animation.
 - **Export** — Record the animated canvas as **WebM** or **MP4** (timeline-aware; format in canvas settings) and download individual charts as **PNG**.
 - **Responsive layout** — On touch devices, pick a chart type from the sidebar, then tap the canvas to place it.
+- **Assistant (MCP + Gemini)** — Open **Assistant** from the sidebar, enter your [Google AI Studio](https://aistudio.google.com/apikey) API key and a Gemini model, describe what you want to visualize, and Chart Studio will call tools on your backend (web search) and generate chart data. Each run creates a **new chart**. LLM calls run **in your browser** with your key; the backend exposes an MCP server for tools only (see [Local development](#local-development)).
 
 Optional **Sign in / Sign up** is available when a backend API is configured (see [Local development](#local-development)).
 
@@ -65,9 +66,17 @@ Use **Export** from the chart menu to download the current data as CSV.
 
 The workspace toolbar and canvas context menu support actions such as arranging charts, fitting the container, refreshing, capturing or downloading assets, and clearing the canvas—exact options depend on context (see the in-app **Help / About** dialog for the full walkthrough).
 
+### Assistant (AI charts)
+
+1. Configure the **backend base URL** for production: set **`VITE_API_URL`** to your deployed NestJS origin when you build (see [Environment](#environment)). The app uses it for MCP (`/mcp`) and optional auth.
+2. Open **Assistant** in the sidebar (text icon).
+3. Paste your **Gemini API key** and choose a **model** (use **List models** or type a model id).
+4. Enter a prompt (for example population over time, or “bar chart of …”). Send and wait for progress.
+5. A **new chart** is added to the workspace with generated data; set a chart type in the prompt if you need bar, pie, or map—otherwise the assistant defaults to a line chart.
+
 ### Help in the app
 
-Open **Help / About** from the question icon at the bottom of the sidebar. The **How To** tab mirrors data formats, editing, timeline, and styles; the **About** tab summarizes product features.
+Open **Help / About** from the question icon at the bottom of the sidebar. The **How To** tab covers data, timeline, styles, and the Assistant; the **About** tab summarizes features and technical notes (including MCP and Gemini).
 
 ## Local development
 
@@ -84,13 +93,15 @@ npm install
 
 ### Environment
 
-If you use authentication against an API, copy the example env file and point it at your backend:
+Copy the example file and set the backend URL your SPA should talk to:
 
 ```bash
 cp .env.example .env
 ```
 
-`VITE_API_URL` defaults to `http://localhost:3000` in `.env.example`; adjust to match your server.
+- **`VITE_API_URL`** — Base URL of the Chart Studio **NestJS** backend (no trailing slash), used for **MCP** (`/mcp`) and optional **auth** API calls. For local dev, `http://localhost:3000` is typical. For **production**, set this to your deployed API origin in the **build environment** (Vite inlines it at build time). If it is missing on a public site, the app cannot call `localhost` from the browser (browsers block public pages from accessing loopback).
+
+Assistant **does not** use `VITE_*` for Gemini: you enter the API key and model in the Assistant dialog (stored in the browser).
 
 ### Scripts
 

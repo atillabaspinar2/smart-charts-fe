@@ -81,6 +81,17 @@ export const AboutDialog: React.FC<{
                 </ul>
               </section>
 
+              <section>
+                <h3 className="font-semibold text-base mb-1">Assistant (AI charts)</h3>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  <li>Open <strong>Assistant</strong> from the sidebar (text icon). The app must reach your Chart Studio backend to use MCP tools.</li>
+                  <li>Create Gemini profiles (API key + model) under <strong>User menu → Settings</strong> (or the <strong>Assistant settings</strong> button when signed out). Keys come from <a href="https://aistudio.google.com/apikey" className="underline underline-offset-2" target="_blank" rel="noreferrer">Google AI Studio</a>.</li>
+                  <li>In settings, use <strong>Refresh model list</strong> to populate the model dropdown. The model list is cached in your browser so you don’t have to fetch it again after refresh.</li>
+                  <li>In the Assistant dialog, select a saved <strong>profile</strong> and enter your prompt. Mention the chart type if you need bar, pie, or map; otherwise a line chart is used.</li>
+                  <li>Each successful run adds a <strong>new chart</strong> to the canvas with generated data. Edit it like any other chart (Data, Styles, timeline).</li>
+                </ul>
+              </section>
+
             </div>
           </TabsContent>
 
@@ -112,6 +123,22 @@ export const AboutDialog: React.FC<{
                   <li><strong>Image export</strong> — Download any individual chart as a PNG.</li>
                   <li><strong>Annotations</strong> — Add shapes, lines, and text overlays directly on charts.</li>
                   <li><strong>Persistent workspaces</strong> — All charts, data, settings, and timeline clips are saved automatically in your browser.</li>
+                  <li><strong>Assistant</strong> — Generate chart data from a natural-language prompt using Gemini (your API key) and optional backend tools (MCP) such as web search.</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-base mb-1">Assistant: technical overview</h3>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  <li>
+                    <strong>LLM:</strong> Chart routing and structured chart data are produced by calling Google&apos;s Gemini API <strong>directly from your browser</strong> with the key you enter. Nothing in Chart Studio sends your Gemini key to Chart Studio servers.
+                  </li>
+                  <li>
+                    <strong>MCP:</strong> The app acts as an MCP client to backend. That server exposes tools (for example web search) the model can invoke while building an answer.
+                  </li>
+                  <li>
+                    <strong>Scope:</strong> Each Assistant run creates a new chart; there is no server-side “Chart Studio LLM” beyond tool execution on your backend.
+                  </li>
                 </ul>
               </section>
 

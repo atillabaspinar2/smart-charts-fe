@@ -12,7 +12,8 @@ import { WorkspacesDialog } from "@/components/WorkspacesDialog";
 export const UserPopover: React.FC<{
   user: { fullName: string; email: string };
   signOut: () => void;
-}> = ({ user, signOut }) => {
+  onOpenAssistantSettings?: () => void;
+}> = ({ user, signOut, onOpenAssistantSettings }) => {
   const [workspacesOpen, setWorkspacesOpen] = useState(false);
 
   return (
@@ -33,7 +34,14 @@ export const UserPopover: React.FC<{
           >
             My Workspaces
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => {}}>Settings</DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              onOpenAssistantSettings?.();
+            }}
+          >
+            Settings
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onSelect={() => {

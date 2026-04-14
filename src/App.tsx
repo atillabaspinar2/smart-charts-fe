@@ -10,6 +10,7 @@ import { AppHeader } from "./components/AppHeader";
 import { IntroPage } from "./pages/IntroPage";
 import { WorkspacePage } from "./pages/WorkspacePage";
 import { Button } from "./components/ui/button";
+import { AssistantSettingsDialog } from "./components/AssistantSettingsDialog";
 function App() {
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
   const [authModal, setAuthModal] = useState<"signup" | "signin" | null>(null);
@@ -18,6 +19,7 @@ function App() {
     string | null
   >(null);
   const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
+  const [assistantSettingsOpen, setAssistantSettingsOpen] = useState(false);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(pointer: coarse)");
@@ -53,6 +55,11 @@ function App() {
         />
       )}
 
+      <AssistantSettingsDialog
+        open={assistantSettingsOpen}
+        onOpenChange={setAssistantSettingsOpen}
+      />
+
       <Routes>
         <Route
           path="/"
@@ -63,6 +70,7 @@ function App() {
                 headerMenuOpen={headerMenuOpen}
                 setHeaderMenuOpen={setHeaderMenuOpen}
                 openAuthModal={setAuthModal}
+                onOpenAssistantSettings={() => setAssistantSettingsOpen(true)}
                 endAdornment={
                   <Button asChild size="lg" className="text-xs shrink-0">
                     <Link to="/app">Open Chart Studio</Link>
@@ -83,6 +91,7 @@ function App() {
                 headerMenuOpen={headerMenuOpen}
                 setHeaderMenuOpen={setHeaderMenuOpen}
                 openAuthModal={setAuthModal}
+                onOpenAssistantSettings={() => setAssistantSettingsOpen(true)}
               />
               <WorkspacePage
                 isCoarsePointer={isCoarsePointer}

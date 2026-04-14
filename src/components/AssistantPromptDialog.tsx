@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   Dialog,
@@ -10,12 +10,18 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { getMcpClient } from "@/mcp/mcpClient";
 import { callMcpToolCached, decideNextActionCached } from "@/assistant/assistantCached";
 import { synthesizeChartDataLLM } from "@/llm/llm";
 import type { LlmRuntime } from "@/llm/llm";
-import { listGeminiModels } from "@/llm/geminiModels";
 import { useWorkspaceLayoutStore } from "@/store/workspaceLayoutStore";
 import { useWorkspaceChartsStore } from "@/store/workspaceChartsStore";
 import type { ChartData, ChartSettingsUnion } from "@/components/chartTypes";
@@ -25,6 +31,18 @@ import {
   defaultMapChartSettings,
   defaultPieChartSettings,
 } from "@/components/chartTypes";
+import {
+  loadAssistantProfilesState,
+  setSelectedAssistantProfileId,
+  type AssistantProfile,
+  type AssistantProfilesState,
+} from "@/assistant/assistantProfiles";
+
+function profileSelectLabel(p: AssistantProfile) {
+  return `${p.label?.trim() || "Profile"}${
+    p.geminiModel?.trim() ? ` — ${p.geminiModel.trim()}` : ""
+  }`;
+}
 
 function defaultChartSettingsForData(data: ChartData): ChartSettingsUnion {
   switch (data.type) {
@@ -46,61 +64,66 @@ type AssistantPromptDialogProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-const LS_GEMINI_KEY = "assistant:geminiApiKey";
-const LS_GEMINI_MODEL = "assistant:geminiModel";
-
 export function AssistantPromptDialog({
   open,
   onOpenChange,
 }: AssistantPromptDialogProps) {
   const [prompt, setPrompt] = useState("");
   const [isWorking, setIsWorking] = useState(false);
-  const [progressLines, setProgressLines] = useState<string[]>([]);
-  const [geminiKey, setGeminiKey] = useState("");
-  const [geminiModel, setGeminiModel] = useState("");
-  const [modelOptions, setModelOptions] = useState<{ id: string; displayName: string }[]>([]);
-  const [modelsLoading, setModelsLoading] = useState(false);
-  const [modelsError, setModelsError] = useState<string | null>(null);
+  const [hasCompleted, setHasCompleted] = useState(false);
+  const [progressLines, setProgressLines] = useState<
+    Array<{ kind: "info" | "error"; code?: string; text: string }>
+  >([]);
+  const [profilesState, setProfilesState] = useState<AssistantProfilesState>(() =>
+    loadAssistantProfilesState(),
+  );
   const promptRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const selectedProfile: AssistantProfile | null = useMemo(() => {
+    const id = profilesState.selectedProfileId;
+    if (!id) return null;
+    return profilesState.profiles.find((p) => p.id === id) ?? null;
+  }, [profilesState.profiles, profilesState.selectedProfileId]);
 
   const canSend = useMemo(
     () =>
       prompt.trim().length > 0 &&
-      geminiKey.trim().length > 0 &&
-      geminiModel.trim().length > 0 &&
+      !!selectedProfile?.geminiApiKey?.trim() &&
+      !!selectedProfile?.geminiModel?.trim() &&
       !isWorking,
-    [prompt, geminiKey, geminiModel, isWorking],
+    [prompt, selectedProfile?.geminiApiKey, selectedProfile?.geminiModel, isWorking],
   );
 
-  const appendProgress = (line: string) => {
-    setProgressLines((prev) => [...prev, line]);
+  const appendProgressInfo = (text: string) => {
+    setProgressLines((prev) => [...prev, { kind: "info", text }]);
+  };
+
+  const appendProgressError = (code: string, text: string) => {
+    setProgressLines((prev) => [...prev, { kind: "error", code, text }]);
+  };
+
+  const normalizeError = (e: unknown): { code: string; text: string } => {
+    if (e instanceof Error) {
+      const code = e.name?.trim() || "Error";
+      const text = (e.message || "Unknown error").trim();
+      return { code, text: text.replace(/\s+/g, " ").slice(0, 220) };
+    }
+    const text = String(e ?? "Unknown error").trim();
+    return { code: "Error", text: text.replace(/\s+/g, " ").slice(0, 220) };
   };
 
   useEffect(() => {
     if (open) return;
     setPrompt("");
     setIsWorking(false);
+    setHasCompleted(false);
     setProgressLines([]);
   }, [open]);
 
   useEffect(() => {
     if (!open) return;
-    try {
-      setGeminiKey(localStorage.getItem(LS_GEMINI_KEY) ?? "");
-      setGeminiModel(localStorage.getItem(LS_GEMINI_MODEL) ?? "");
-    } catch {
-      // ignore
-    }
+    setProfilesState(loadAssistantProfilesState());
   }, [open]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(LS_GEMINI_KEY, geminiKey);
-      localStorage.setItem(LS_GEMINI_MODEL, geminiModel);
-    } catch {
-      // ignore
-    }
-  }, [geminiKey, geminiModel]);
 
   useEffect(() => {
     const el = promptRef.current;
@@ -108,25 +131,6 @@ export function AssistantPromptDialog({
     el.style.height = "0px";
     el.style.height = `${el.scrollHeight}px`;
   }, [prompt, open]);
-
-  const loadGeminiModels = useCallback(async () => {
-    if (!geminiKey.trim()) {
-      setModelsError("Enter an API key first.");
-      return;
-    }
-    setModelsLoading(true);
-    setModelsError(null);
-    try {
-      const list = await listGeminiModels(geminiKey.trim());
-      setModelOptions(list);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setModelsError(msg);
-      setModelOptions([]);
-    } finally {
-      setModelsLoading(false);
-    }
-  }, [geminiKey]);
 
   const onCancel = () => {
     onOpenChange(false);
@@ -136,23 +140,29 @@ export function AssistantPromptDialog({
     if (!canSend) return;
 
     setIsWorking(true);
-    appendProgress("Queued request…");
+    setHasCompleted(false);
+    appendProgressInfo("Queued request…");
 
     try {
-      if (!geminiKey.trim() || !geminiModel.trim()) {
-        appendProgress("Enter your Gemini API key and model id.");
+      if (!selectedProfile?.geminiApiKey?.trim() || !selectedProfile?.geminiModel?.trim()) {
+        appendProgressInfo(
+          "Select an Assistant profile (API key + model) in User menu → Settings.",
+        );
         return;
       }
 
       const runtime: LlmRuntime = {
-        gemini: { apiKey: geminiKey.trim(), model: geminiModel.trim() },
+        gemini: {
+          apiKey: selectedProfile.geminiApiKey.trim(),
+          model: selectedProfile.geminiModel.trim(),
+        },
       };
 
-      appendProgress("Connecting to MCP…");
+      appendProgressInfo("Connecting to MCP…");
       const { tools } = await getMcpClient();
-      appendProgress(`Discovered ${tools.tools.length} tools.`);
+      appendProgressInfo(`Discovered ${tools.tools.length} tools.`);
 
-      appendProgress("Asking Gemini API what to do…");
+      appendProgressInfo("Asking Gemini API what to do…");
       const toolInputs = tools.tools.map((t) => ({
         name: t.name,
         description: t.description,
@@ -164,23 +174,23 @@ export function AssistantPromptDialog({
         tools: toolInputs,
         runtime,
       });
-      if (routerFromCache) appendProgress("Router cache hit.");
+      if (routerFromCache) appendProgressInfo("Router cache hit.");
 
       if (decision.kind === "none") {
-        appendProgress(`No tool call: ${decision.reason}`);
+        appendProgressInfo(`No tool call: ${decision.reason}`);
         return;
       }
 
-      appendProgress(`Calling tool: ${decision.tool}`);
+      appendProgressInfo(`Calling tool: ${decision.tool}`);
       const { result, fromCache: toolFromCache } = await callMcpToolCached(
         decision.tool,
         decision.args,
       );
-      if (toolFromCache) appendProgress("Tool cache hit.");
-      appendProgress("Tool call done.");
+      if (toolFromCache) appendProgressInfo("Tool cache hit.");
+      appendProgressInfo("Tool call done.");
       console.log("[assistant] tool result", result);
 
-      appendProgress("Generating ChartData with Gemini API…");
+      appendProgressInfo("Generating ChartData with Gemini API…");
       const synthesized = await synthesizeChartDataLLM({
         prompt,
         toolName: decision.tool,
@@ -189,7 +199,7 @@ export function AssistantPromptDialog({
       });
       const chartData = synthesized.chartData;
 
-      appendProgress("Applying chart to workspace…");
+      appendProgressInfo("Applying chart to workspace…");
       const layoutState = useWorkspaceLayoutStore.getState();
       const workspaceId = layoutState.activeWorkspaceId;
       // Always create a new chart for each assistant result.
@@ -213,9 +223,13 @@ export function AssistantPromptDialog({
           title: nextTitle,
         });
       }
-      appendProgress("Done.");
+      appendProgressInfo("Done.");
+    } catch (e) {
+      const { code, text } = normalizeError(e);
+      appendProgressError(code, text);
     } finally {
       setIsWorking(false);
+      setHasCompleted(true);
     }
   };
 
@@ -225,8 +239,8 @@ export function AssistantPromptDialog({
         <DialogHeader>
           <DialogTitle>Assistant</DialogTitle>
           <DialogDescription>
-            Ask a question and we’ll fetch data + generate a chart. You need a Gemini API key and
-            model (bring your own credentials).
+            Ask a question and we’ll fetch data + generate a chart. Pick a saved Gemini profile
+            (API key + model) from settings.
           </DialogDescription>
         </DialogHeader>
 
@@ -236,7 +250,7 @@ export function AssistantPromptDialog({
             id="assistant-prompt"
             ref={promptRef}
             value={prompt}
-            placeholder='e.g. "ankara population over time"'
+            placeholder="e.g., New York vs Los Angeles population growth from 1960 to now, in two series in bar chart. one series for New York, another for Los Angeles. x axis should be years from 1900 to present, each year being a series item."
             onChange={(e) => setPrompt(e.target.value)}
             disabled={isWorking}
             rows={2}
@@ -247,77 +261,45 @@ export function AssistantPromptDialog({
         </div>
 
         <div className="grid gap-2">
-          <div className="text-xs font-medium text-foreground/80">Gemini API</div>
-          <div className="grid gap-2 md:grid-cols-2">
-            <div className="grid gap-1 md:col-span-2">
-              <Label htmlFor="assistant-gemini-key">API key</Label>
-              <input
-                id="assistant-gemini-key"
-                type="password"
-                autoComplete="off"
-                value={geminiKey}
-                placeholder="Your Google AI Studio / Gemini API key"
-                onChange={(e) => setGeminiKey(e.target.value)}
-                disabled={isWorking}
-                className={cn(
-                  "w-full rounded-md border border-input bg-input/20 px-2 py-1 text-sm transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-xs/relaxed dark:bg-input/30",
-                )}
-              />
-            </div>
-            <div className="grid gap-1 md:col-span-2">
-              <div className="flex flex-wrap items-end gap-2">
-                <div className="min-w-0 flex-1">
-                  <Label htmlFor="assistant-gemini-model">Model</Label>
-                  <input
-                    id="assistant-gemini-model"
-                    list="assistant-gemini-model-datalist"
-                    value={geminiModel}
-                    placeholder="Model id (use list or type)"
-                    onChange={(e) => setGeminiModel(e.target.value)}
-                    disabled={isWorking}
-                    className={cn(
-                      "mt-1 w-full rounded-md border border-input bg-input/20 px-2 py-1 text-sm transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-xs/relaxed dark:bg-input/30",
-                    )}
-                  />
-                  <datalist id="assistant-gemini-model-datalist">
-                    {modelOptions.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.displayName}
-                      </option>
-                    ))}
-                  </datalist>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0"
-                  disabled={isWorking || modelsLoading || !geminiKey.trim()}
-                  onClick={() => void loadGeminiModels()}
-                >
-                  {modelsLoading ? "Loading…" : "List models"}
-                </Button>
-              </div>
-              {modelsError && (
-                <p className="text-xs text-destructive" role="status">
-                  {modelsError}
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="text-xs text-muted-foreground">
-            Requests go from your browser to{" "}
-            <code className="rounded bg-muted px-1 py-0.5">generativelanguage.googleapis.com</code>
-            . Chart Studio does not supply an API key; use{" "}
-            <a
-              className="underline underline-offset-2 hover:text-foreground"
-              href="https://aistudio.google.com/apikey"
-              target="_blank"
-              rel="noreferrer"
+          <div className="text-xs font-medium text-foreground/80">Profile</div>
+          <div className="grid gap-1">
+            <Label htmlFor="assistant-profile">API key + model</Label>
+            <Select
+              value={profilesState.selectedProfileId ?? undefined}
+              onValueChange={(id) => {
+                setProfilesState((prev) =>
+                  setSelectedAssistantProfileId(prev, id || null),
+                );
+              }}
+              disabled={isWorking || profilesState.profiles.length === 0}
             >
-              Google AI Studio
-            </a>{" "}
-            to create a key.
+              <SelectTrigger
+                id="assistant-profile"
+                className="h-auto min-h-8 w-full py-1.5 md:text-xs/relaxed"
+              >
+                <SelectValue
+                  placeholder={
+                    profilesState.profiles.length === 0
+                      ? "No profiles (User menu → Settings → add a Gemini profile)"
+                      : "Select a profile"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent position="popper" className="z-[10002]">
+                {profilesState.profiles.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {profileSelectLabel(p)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="text-xs text-muted-foreground">
+              LLM requests go from your browser to{" "}
+              <code className="rounded bg-muted px-1 py-0.5">
+                generativelanguage.googleapis.com
+              </code>
+              . Manage profiles under <span className="font-medium">User menu → Settings</span>.
+            </div>
           </div>
         </div>
 
@@ -327,11 +309,24 @@ export function AssistantPromptDialog({
             {progressLines.length === 0 ? (
               <div className="text-muted-foreground">Idle.</div>
             ) : (
-              progressLines.map((line, idx) => (
-                <div key={`${idx}-${line}`} className="text-muted-foreground">
-                  {line}
-                </div>
-              ))
+              progressLines.map((line, idx) => {
+                const key = `${idx}-${line.kind}-${line.code ?? ""}-${line.text}`;
+                if (line.kind === "error") {
+                  return (
+                    <div key={key} className="text-destructive">
+                      <code className="rounded bg-destructive/10 px-1 py-0.5 text-[11px]">
+                        {line.code ?? "Error"}
+                      </code>{" "}
+                      <span className="text-xs">{line.text}</span>
+                    </div>
+                  );
+                }
+                return (
+                  <div key={key} className="text-muted-foreground">
+                    {line.text}
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
@@ -340,9 +335,15 @@ export function AssistantPromptDialog({
           <Button variant="outline" onClick={onCancel} disabled={isWorking}>
             Cancel
           </Button>
-          <Button onClick={onSend} disabled={!canSend || isWorking}>
-            {isWorking ? "Sending…" : "Send"}
-          </Button>
+          {hasCompleted ? (
+            <Button onClick={onCancel} disabled={isWorking}>
+              Close
+            </Button>
+          ) : (
+            <Button onClick={onSend} disabled={!canSend || isWorking}>
+              {isWorking ? "Sending…" : "Send"}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

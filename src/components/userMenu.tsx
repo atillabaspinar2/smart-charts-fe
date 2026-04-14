@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 
 export const UserMenu: React.FC<{
   openAuthModal: (mode: "signup" | "signin") => void;
+  onOpenAssistantSettings?: () => void;
   stacked?: boolean;
-}> = ({ openAuthModal, stacked }) => {
+}> = ({ openAuthModal, onOpenAssistantSettings, stacked }) => {
   const { user, logout } = useAuth();
 
   return (
@@ -23,6 +24,14 @@ export const UserMenu: React.FC<{
           <Button
             variant="outline"
             size="lg"
+            type="button"
+            onClick={() => onOpenAssistantSettings?.()}
+          >
+            Assistant settings
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
             onClick={() => openAuthModal("signin")}
           >
             Login
@@ -36,7 +45,11 @@ export const UserMenu: React.FC<{
           </Button>
         </div>
       ) : (
-        <UserPopover user={user} signOut={logout} />
+        <UserPopover
+          user={user}
+          signOut={logout}
+          onOpenAssistantSettings={onOpenAssistantSettings}
+        />
       )}
     </div>
   );

@@ -1,1 +1,6 @@
-show new york vs los angeles population growth from 1960 to now, in two series in bar chart. one series for new york, another for los angeles. x axis should be years from 1900 to present, each year being a series item. 
+new york vs los angeles population growth from 1960 to now, in two series in bar chart. one series for new york, another for los angeles. x axis should be years from 1900 to present, each year being a series item. 
+
+
+
+show detroit vs atlanta population growth from 1960 to now, in two series in line chart. one series for detroit, another for atlanta. x axis should be years from 1900 to present, each year being a series item. 
+

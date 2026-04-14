@@ -8,6 +8,7 @@ type AppHeaderProps = {
   headerMenuOpen: boolean;
   setHeaderMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
   openAuthModal: (mode: "signup" | "signin") => void;
+  onOpenAssistantSettings?: () => void;
   /** Extra content on the right before the user menu (e.g. intro CTA). */
   endAdornment?: React.ReactNode;
   /** e.g. `col-span-2` when the header spans the workspace grid above sidebar + main. */
@@ -19,6 +20,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   headerMenuOpen,
   setHeaderMenuOpen,
   openAuthModal,
+  onOpenAssistantSettings,
   endAdornment,
   className,
 }) => {
@@ -57,6 +59,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                       openAuthModal(mode);
                       setHeaderMenuOpen(false);
                     }}
+                    onOpenAssistantSettings={() => {
+                      onOpenAssistantSettings?.();
+                      setHeaderMenuOpen(false);
+                    }}
                     stacked
                   />
                 </div>
@@ -64,7 +70,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             </div>
           ) : (
             <div className="right-6 top-4">
-              <UserMenu openAuthModal={openAuthModal} />
+              <UserMenu
+                openAuthModal={openAuthModal}
+                onOpenAssistantSettings={onOpenAssistantSettings}
+              />
             </div>
           )}
         </div>
