@@ -18,6 +18,7 @@ Run from this directory (`chartstudioFE/`):
 
 - Copy `.env.example` → `.env` if you need auth against an API.
 - `VITE_API_URL` points at the backend (default in example: `http://localhost:3000`).
+- The Assistant uses **Gemini** with a user-provided API key and model in the UI (no `VITE_*` LLM variables).
 
 ## Layout (where things live)
 
