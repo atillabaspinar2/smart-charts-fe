@@ -11,6 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { getMcpClient } from "@/mcp/mcpClient";
+import { callMcpToolCached, decideNextActionCached } from "@/assistant/assistantCached";
 
 type AssistantPromptDialogProps = {
   open: boolean;
@@ -61,10 +63,35 @@ export function AssistantPromptDialog({
     appendProgress("Queued request…");
 
     try {
-      appendProgress("Preparing…");
-      // Intentionally minimal for now; real MCP+LLM work will be wired next.
-      await new Promise((r) => setTimeout(r, 400));
-      appendProgress("Done (stub). Check Network once wired.");
+      appendProgress("Connecting to MCP…");
+      const { tools } = await getMcpClient();
+      appendProgress(`Discovered ${tools.tools.length} tools.`);
+
+      appendProgress("Asking Gemini what to do…");
+      const { decision, fromCache: routerFromCache } = await decideNextActionCached({
+        prompt,
+        tools: tools.tools.map((t) => ({
+          name: t.name,
+          description: t.description,
+          inputSchema: t.inputSchema,
+        })),
+      });
+      if (routerFromCache) appendProgress("Router cache hit (no Gemini call).");
+
+      if (decision.kind === "none") {
+        appendProgress(`No tool call: ${decision.reason}`);
+        return;
+      }
+
+      appendProgress(`Calling tool: ${decision.tool}`);
+      const { result, fromCache: toolFromCache } = await callMcpToolCached(
+        decision.tool,
+        decision.args,
+      );
+      if (toolFromCache) appendProgress("Tool cache hit (no backend call).");
+      appendProgress("Tool call done. Check Network/console.");
+      // eslint-disable-next-line no-console
+      console.log("[assistant] tool result", result);
     } finally {
       setIsWorking(false);
     }
