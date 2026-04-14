@@ -19,11 +19,13 @@ export const Sidebar: React.FC<{
   pendingMobileChartType: string | null;
   setAboutOpen: React.Dispatch<React.SetStateAction<boolean>>;
   onSelectMobileChartType: (chartType: string | null) => void;
+  onOpenAssistant?: () => void;
 }> = ({
   isMobileMode,
   pendingMobileChartType,
   setAboutOpen,
   onSelectMobileChartType,
+  onOpenAssistant,
 }) => {
   const getItemClassName = (chartType: string) => {
     const isActive = isMobileMode && pendingMobileChartType === chartType;
@@ -181,6 +183,16 @@ export const Sidebar: React.FC<{
         </Tooltip>
       </li> */}
       <li className="mt-auto">
+        <Tooltip content="Assistant">
+          <div
+            className={getItemClassName("assistant")}
+            onClick={() => onOpenAssistant?.()}
+          >
+            <HugeiconsIcon icon={TextIcon} />
+          </div>
+        </Tooltip>
+      </li>
+      <li>
         <Tooltip content="Help / About">
           <div
             className={getItemClassName("help")}

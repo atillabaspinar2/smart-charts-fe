@@ -1,6 +1,7 @@
-import type { Dispatch, FC, SetStateAction } from "react";
+import { useState, type Dispatch, type FC, type SetStateAction } from "react";
 import { ChartWorkspace } from "@/components/chartWorkspace";
 import { Sidebar } from "@/components/sidebar";
+import { AssistantPromptDialog } from "@/components/AssistantPromptDialog";
 import { useWorkspaceLayoutStore } from "@/store/workspaceLayoutStore";
 import { useWorkspaceChartsStore } from "@/store/workspaceChartsStore";
 
@@ -19,6 +20,7 @@ export const WorkspacePage: FC<WorkspacePageProps> = ({
   setAuthModal,
   setAboutDialogOpen,
 }) => {
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const activeWorkspaceId = useWorkspaceLayoutStore(
     (s) => s.activeWorkspaceId,
   );
@@ -48,6 +50,10 @@ export const WorkspacePage: FC<WorkspacePageProps> = ({
 
   return (
     <>
+      <AssistantPromptDialog
+        open={assistantOpen}
+        onOpenChange={setAssistantOpen}
+      />
       <aside className="shadow-md bg-zinc-900 text-zinc-100 h-full row-span-2 flex flex-col">
         <nav className="flex-1 flex flex-col p-2 h-full">
           <Sidebar
@@ -55,6 +61,7 @@ export const WorkspacePage: FC<WorkspacePageProps> = ({
             setAboutOpen={setAboutDialogOpen}
             pendingMobileChartType={pendingMobileChartType}
             onSelectMobileChartType={setPendingMobileChartType}
+            onOpenAssistant={() => setAssistantOpen(true)}
           />
         </nav>
       </aside>
